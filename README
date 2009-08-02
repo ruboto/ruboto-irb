@@ -1,0 +1,17 @@
+To get this working on Android, you'll need to do two things:
+
+1. Modify the "dx" tool for the target platform to support 1024M of memory. You'll see where.
+
+2. After running "ant release" to build the .apk, sign it using this command:
+
+  jarsigner -keystore ruboto-key.keystore bin/IRB-unsigned.apk ruboto
+
+The keyphrase is simply "ruboto"
+
+3. Install it on the phone or emulator like this:
+
+  ANDROID_HOME/tools/adb -s emulator-5554 install -r bin/IRB-unsigned.apk
+
+Replace "emulator-5554" with the name of your target device.
+
+That's it! Have fun!
