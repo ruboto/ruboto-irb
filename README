@@ -129,4 +129,18 @@ Or uninstall it (use the -k option to keep data and cache directories, if you wa
 
     adb uninstall -k com.your.app.package.Name 
 
+
+Some debugging help:
+
+  adb -s <avd-serial> catlog
+
+will cat the log of the specified emulator.  Works for the actual device as well.  Use 
+
+   adb devices
+
+to get the serials.
+
+
+
+
 More help at http://developer.android.com/guide/developing/tools/adb.html
