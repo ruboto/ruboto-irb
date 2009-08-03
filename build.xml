@@ -58,4 +58,8 @@
          targets are used.
     -->
     <setup />
+
+    <target name="jarsigner" description="Sign the jar">
+      <signjar keystore="ruboto-key.keystore" storepass="ruboto" jar="bin/IRB-unsigned.apk" alias="ruboto" />
+    </target>
 </project>
