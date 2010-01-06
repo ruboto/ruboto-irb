@@ -1,6 +1,6 @@
 #Ruboto-IRB
 
-http://ruboto.com
+[http://ruboto.com](http://ruboto.com)
 
 To get this working on Android, you'll need to do two things:
 
@@ -38,7 +38,7 @@ That's it! Have fun!
 
 Some useful Android stuff:
 
-See http://developer.android.com/guide/developing/other-ide.html for help on running assorted commands from a shell.
+See [http://developer.android.com/guide/developing/other-ide.html](http://developer.android.com/guide/developing/other-ide.html) for help on running assorted commands from a shell.
 
 Much of what follows was stolen from that site.
 
@@ -133,4 +133,4 @@ will cat the log of the specified emulator.  Works for the actual device as well
 
 to get the serials.
 
-More help at http://developer.android.com/guide/developing/tools/adb.html
+More help at [http://developer.android.com/guide/developing/tools/adb.html](http://developer.android.com/guide/developing/tools/adb.html)
