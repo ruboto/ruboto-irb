@@ -4,19 +4,16 @@
 
 To get this working on Android, you'll need to do two things:
 
-* Look at the various *.EXAMPLE files, copy over without without the EXAMPLE part, and edit
-accordingly if needed.  Some toolkits will generate needed files, but if not then hack by hand.
+* Copy local.properties.EXAMPLE to local.properties and adjust the SDK location.
 
-This is particuallry true if you are doing development vis the command line and vi, and not 
-wussing out by using some girlyman IDE.  Just sayin'.
+This is particularly true if you are doing development with the command line and vi, and not wussing out by using some girlyman IDE.  Just sayin'.
 
 For example,
 
      cp local.properties.EXAMPLE  local.properties
      vi local.properties
 
-
- * Modify the "dx" tool for the target platform to support 1024M of memory. You'll see where.
+ * Modify the "dx" tool for the target platform to support 1024M of memory. Edit SDK_PATH/platforms/android-1.x/tools/dx, uncomment javaopts and set it to javaOpts="-Xmx1024M".
 
  * After running "ant release" to build the .apk, sign it using this command:
 
