@@ -1,4 +1,4 @@
-package org.jruby;
+package org.jruby.ruboto;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -11,6 +11,9 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+
+import org.jruby.Ruby;
+import org.jruby.RubyInstanceConfig;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.parser.EvalStaticScope;
 import org.jruby.runtime.DynamicScope;
@@ -41,11 +44,11 @@ public class IRB extends Activity
         });
         config.setOutput(textViewStream);
         config.setLoader(getClass().getClassLoader());
-        //comment out for debugging
+        //uncomment for debugging
         //config.processArguments(new String[] {"-d"});
 
         ruby = Ruby.newInstance(config);
-        // makes Activity available in IRB
+        // make Activity available in IRB
         ruby.defineGlobalConstant("Activity", JavaUtil.convertJavaToRuby(ruby, this));
         
         Log.d(TAG, "initialized JRuby instance");
