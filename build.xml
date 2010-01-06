@@ -62,4 +62,9 @@
     <target name="jarsigner" description="Sign the jar">
       <signjar keystore="ruboto-key.keystore" storepass="ruboto" jar="bin/IRB-unsigned.apk" alias="ruboto" />
     </target>
+    
+    <target name="clean" description="clean">
+      <delete dir="bin"/>
+      <delete dir="gen"/>
+    </target>
 </project>
