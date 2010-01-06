@@ -131,3 +131,7 @@ will cat the log of the specified emulator.  Works for the actual device as well
 to get the serials.
 
 More help at [http://developer.android.com/guide/developing/tools/adb.html](http://developer.android.com/guide/developing/tools/adb.html)
+
+##Credits
+
+Ruby Icon obtained from [Ruby Visual Identity Team](http://rubyidentity.org/), CC ShareAlike 2.5.
