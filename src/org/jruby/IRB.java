@@ -7,6 +7,7 @@ import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.util.Log;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -15,10 +16,12 @@ import org.jruby.parser.EvalStaticScope;
 import org.jruby.runtime.DynamicScope;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.scope.ManyVarsDynamicScope;
+import org.jruby.javasupport.JavaUtil;
 
 public class IRB extends Activity
 {
     private Ruby ruby;
+    private static final String TAG = "IRB";
 
     /** Called when the activity is first created. */
     @Override
@@ -38,9 +41,15 @@ public class IRB extends Activity
         });
         config.setOutput(textViewStream);
         config.setLoader(getClass().getClassLoader());
+        //comment out for debugging
+        //config.processArguments(new String[] {"-d"});
 
         ruby = Ruby.newInstance(config);
-
+        // makes Activity available in IRB
+        ruby.defineGlobalConstant("Activity", JavaUtil.convertJavaToRuby(ruby, this));
+        
+        Log.d(TAG, "initialized JRuby instance");
+        
         ThreadContext context = ruby.getCurrentContext();
         DynamicScope currentScope = context.getCurrentScope();
         DynamicScope newScope = new ManyVarsDynamicScope(new EvalStaticScope(currentScope.getStaticScope()), currentScope);
@@ -68,7 +77,6 @@ public class IRB extends Activity
                 return false;
             }
         });
-
         tv.setText(">> ");
     }
 }
