@@ -37,18 +37,14 @@ public class IRB extends Activity
             }
         });
         config.setOutput(textViewStream);
+        config.setLoader(getClass().getClassLoader());
 
-        DynamicScope newScope = null;
-        try {
-            ruby = Ruby.newInstance(config);
+        ruby = Ruby.newInstance(config);
 
-            ThreadContext context = ruby.getCurrentContext();
-            DynamicScope currentScope = context.getCurrentScope();
-            newScope = new ManyVarsDynamicScope(new EvalStaticScope(currentScope.getStaticScope()), currentScope);
-        } catch (Throwable t) {
-            tv.setText("");
-            t.printStackTrace(textViewStream);
-        }
+        ThreadContext context = ruby.getCurrentContext();
+        DynamicScope currentScope = context.getCurrentScope();
+        DynamicScope newScope = new ManyVarsDynamicScope(new EvalStaticScope(currentScope.getStaticScope()), currentScope);
+
         final DynamicScope scope = newScope;
 
         final EditText et = (EditText)findViewById(R.id.edit);
