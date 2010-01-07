@@ -33,7 +33,9 @@ public class IRB extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        final TextView tv = (TextView)findViewById(R.id.text);
+        final TextView tv = (TextView)findViewById(R.id.text);        
+        tv.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+        
         RubyInstanceConfig config = new RubyInstanceConfig();
         config.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
         final PrintStream textViewStream = new PrintStream(new OutputStream() {
@@ -71,6 +73,8 @@ public class IRB extends Activity
                         String inspected = ruby.evalScriptlet(rubyCode.toString(), scope).inspect().asJavaString();
                         tv.append("=> " + inspected + "\n");
                     } catch (RaiseException re) {
+                        Log.w(TAG, "exception", re);
+                        
                         re.printStackTrace(textViewStream);
                     }
                     tv.append(">> ");
