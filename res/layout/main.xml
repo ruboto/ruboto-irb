@@ -4,7 +4,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
-<EditText
+<view class="org.jruby.ruboto.IRB$HistoryEditText"
     android:id="@+id/edit"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
