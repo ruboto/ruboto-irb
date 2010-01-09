@@ -4,30 +4,20 @@
 
 To get this working on Android, you'll need to do two things:
 
-* Copy local.properties.EXAMPLE to local.properties and adjust the SDK location.
+  * Copy local.properties.EXAMPLE to local.properties and adjust the SDK location.
 
 This is particularly true if you are doing development with the command line and vi, and not wussing out by using some girlyman IDE.  Just sayin'.
 
 For example,
 
-     cp local.properties.EXAMPLE  local.properties
+     cp local.properties.EXAMPLE local.properties
      vi local.properties
 
  * Modify the "dx" tool for the target platform to support 1024M of memory. Edit SDK_PATH/platforms/android-1.x/tools/dx, uncomment javaopts and set it to javaOpts="-Xmx1024M".
 
- * After running "ant release" to build the .apk, sign it using this command:
+After running "ant debug" to build the .apk, install it using the command
 
-        jarsigner -keystore ruboto-key.keystore bin/IRB-unsigned.apk ruboto
-
-The keyphrase is simply "ruboto"
-
- * Install it on the phone or emulator like this:
-
-        ANDROID_HOME/tools/adb -s emulator-5554 install -r bin/IRB-unsigned.apk
-
-(though you might do better to just have those tools in your PATH ...)
-
-Replace "emulator-5554" with the name of your target device.
+     adb -e install -r bin/IRB-debug.apk
 
 That's it! Have fun!
 
