@@ -16,7 +16,7 @@ import android.test.ActivityInstrumentationTestCase;
 public class IRBTest extends ActivityInstrumentationTestCase<IRB> {
 
     public IRBTest() {
-        super("org.jruby", IRB.class);
+        super("org.jruby.ruboto", IRB.class);
     }
 
 }
