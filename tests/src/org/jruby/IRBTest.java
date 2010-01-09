@@ -1,5 +1,6 @@
-package org.jruby;
+package org.jruby.ruboto.tests;
 
+import org.jruby.ruboto.*;
 import android.test.ActivityInstrumentationTestCase;
 
 /**
