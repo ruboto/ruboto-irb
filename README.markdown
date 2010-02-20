@@ -10,14 +10,14 @@ This is particularly true if you are doing development with the command line and
 
 For example,
 
-     cp local.properties.EXAMPLE local.properties
-     vi local.properties
+     $ cp local.properties.EXAMPLE local.properties
+     $ vi local.properties
 
  * Modify the "dx" tool for the target platform to support 1024M of memory. Edit SDK_PATH/platforms/android-1.x/tools/dx, uncomment javaopts and set it to javaOpts="-Xmx1024M". (you may need a higher value than 1024 on some systems)
 
-After running "ant debug" to build the .apk, install it using the command
-
-     adb -e install -r bin/IRB-debug.apk
+     $ ant debug     # build package
+     $ ant reinstall # build and install package
+     $ adb -[e|d] install -r bin/IRB-debug.apk # manual install (emulator, device)
 
 That's it! Have fun!
 
