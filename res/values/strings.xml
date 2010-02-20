@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">IRB</string>
+
+    <string name="IRB_Tab">IRB</string>
+    <string name="Editor_Tab">Editor</string>
+    <string name="Scripts_Tab">Scripts</string>
+
+    <string name="Enter_source">Enter source code here.</string>
+    <string name="No_scripts">No scripts loaded yet.</string>
+
+    <string name="Menu_run">Execute</string>
+    <string name="Menu_save">Save</string>
+    <string name="Menu_new">New</string>
+    <string name="Menu_history">Edit history</string>
+    <string name="Menu_edit">Edit</string>
+    <string name="Menu_delete">Delete</string>
+    <string name="Menu_rescan">Reload scripts</string>
+
+    <string name="Delete_confirm">Yes</string>
+    <string name="Delete_cancel">No</string>
 </resources>
