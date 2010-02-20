@@ -9,7 +9,10 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Arrays;
 
 import org.jruby.Ruby;
 import org.jruby.RubyInstanceConfig;
@@ -20,9 +23,14 @@ import org.jruby.runtime.DynamicScope;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.scope.ManyVarsDynamicScope;
 
+import android.os.Environment;
+
 public class Script {
 	public static final String SCRIPTS_DIR = "/sdcard/jruby";
+	public static final String UNTITLED_RB = "untitled.rb";
 	
+	public static final File SCRIPTS_DIR_FILE = new File(SCRIPTS_DIR);
+		
 	private static final int STATE_EMPTY = 1;
 	private static final int STATE_ON_DISK = 2;
 	private static final int STATE_IN_MEMORY = 3;
@@ -32,8 +40,7 @@ public class Script {
 	private static RubyInstanceConfig config;
 	private static Ruby ruby;
 	private static DynamicScope scope;
-	private static PrintStream textViewStream;
-	private static Boolean initialized = false;
+	private static boolean initialized = false;
 	
 	private String contents = null;
 	private Integer state = null;
@@ -42,12 +49,18 @@ public class Script {
 	 * 
 	 * Static Methods: JRuby Execution 
 	 */
+		
+	public static final FilenameFilter RUBY_FILES = new FilenameFilter() {
+		public boolean accept(File dir, String fname){
+			return fname.endsWith(".rb");
+		}
+	};
 	
 	public static boolean initialized() {
 		return initialized;
 	}
 
-	public static void setUpJRuby(OutputStream out){
+	public static synchronized Ruby setUpJRuby(PrintStream out) {
 		if (ruby == null) {
 			config = new RubyInstanceConfig();
 			config.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
@@ -55,9 +68,10 @@ public class Script {
 			config.setJRubyHome("/data/app/se.kth.pascalc.JRubyAndroid.apk");
 		
 	        config.setLoader(Script.class.getClassLoader());
-			textViewStream = new PrintStream(out);
-	        config.setOutput(textViewStream);
-
+	        	        
+	        config.setOutput(out);
+	        config.setError(out);
+	        
 	        /* Set up Ruby environment */
 	        ruby = Ruby.newInstance(config);
 	        
@@ -66,6 +80,8 @@ public class Script {
 	        scope = new ManyVarsDynamicScope(new EvalStaticScope(currentScope.getStaticScope()), currentScope);
 	        initialized = true;
 	    }
+	    
+	    return ruby;
 	}
 	
 	public static String execute(String code) {
@@ -73,7 +89,7 @@ public class Script {
 		try {
 			return ruby.evalScriptlet(code, scope).inspect().asJavaString();
         } catch (RaiseException re) {                
-            re.printStackTrace(textViewStream);
+            re.printStackTrace(ruby.getErrorStream());
             return null;
         }
 	}
@@ -87,27 +103,32 @@ public class Script {
 	 * Static Methods: Scripts List 
 	 */
 
-	public static ArrayList<String> list() throws SecurityException {
+	public static boolean isSDCardAvailable() {
+	    return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);	    	    
+	}
+
+	public static List<String> list() throws SecurityException {
 		return Script.list(new ArrayList<String>());
 	}
-	
-	public static ArrayList<String> list(ArrayList<String> list) throws SecurityException {
+
+	public static List<String> list(List<String> list) throws SecurityException {	    
+	    if (!isSDCardAvailable()) {
+	        return Collections.emptyList();
+	    }
+	    
 		File scriptsDir = new File(SCRIPTS_DIR);
 		
 		/* Create directory if it doesn't exist */
-		if (!scriptsDir.exists()) scriptsDir.mkdir();
-		
-		String[] scriptsArray = scriptsDir.list(new FilenameFilter() {
-			public boolean accept(File dir, String fname){
-				return fname.endsWith(".rb");
-			}
-		});
-		
+		if (!scriptsDir.exists()) {
+		    // TODO check return code
+		    scriptsDir.mkdir();
+	    }
+	    		
 		list.clear();
-		for(int i = 0; i < scriptsArray.length; i++){
-			list.add(scriptsArray[i]);
-		}
-		return list;
+        for (String file : scriptsDir.list(RUBY_FILES)) {
+            list.add(file);            
+        }		
+        return list;
 	}
 	
 	/*************************************************************************************************
@@ -122,7 +143,7 @@ public class Script {
 	public Script(String name, String contents) {
 		this.name = name;
 		this.contents = contents;
-		File file = new File(SCRIPTS_DIR + "/" + name);
+		File file = getFile();
 		
 		if (contents == null && !file.exists()) {
 			state = STATE_EMPTY;
@@ -144,6 +165,10 @@ public class Script {
 	public String getName() {
 		return name;
 	}
+	
+	public File getFile() {
+	    return new File(SCRIPTS_DIR, name);
+	}
 
 	public Script setName(String name) {
 		this.name = name;
@@ -154,7 +179,7 @@ public class Script {
 
 	public String getContents() throws IOException {
 		if (state == STATE_ON_DISK) {
-			BufferedReader buffer = new BufferedReader(new FileReader(SCRIPTS_DIR + "/" + name));
+			BufferedReader buffer = new BufferedReader(new FileReader(getFile()));
 			StringBuilder source = new StringBuilder();
 			while(true) {
 				String line = buffer.readLine();
@@ -185,7 +210,7 @@ public class Script {
 
 	public void save() throws IOException {
 		if (state != STATE_ON_DISK) {
-			BufferedWriter buffer = new BufferedWriter(new FileWriter(SCRIPTS_DIR + "/" + name));
+			BufferedWriter buffer = new BufferedWriter(new FileWriter(getFile()));
 			buffer.write(contents);
 			buffer.close();
 			state = STATE_IN_MEMORY;
@@ -197,6 +222,6 @@ public class Script {
 	}
 	
 	public boolean delete() {
-		return (new File(SCRIPTS_DIR + "/" + name)).delete();
+		return getFile().delete();
 	}
 }

@@ -1,7 +1,9 @@
 package org.jruby.ruboto;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.ArrayList;
 
 import android.app.Activity;
@@ -10,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Process;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,7 +44,7 @@ public class IRB extends Activity implements OnItemClickListener {
 
 	/* Script_Tab Elements */
 	private ArrayAdapter<String> adapter;
-	private ArrayList<String> scripts;
+	private List<String> scripts;
 
 	/* Tab identifiers */
 	private static final int IRB_TAB = 0;
@@ -76,6 +79,7 @@ public class IRB extends Activity implements OnItemClickListener {
         irbSetUp();
         editorSetUp();
         scriptsListSetUp();
+        checkSDCard();                
         setUpJRuby();
     }
 
@@ -107,7 +111,7 @@ public class IRB extends Activity implements OnItemClickListener {
 	    
 		sourceEditor = (EditText)findViewById(R.id.source_editor);
 		fnameTextView = (TextView)findViewById(R.id.fname_textview);
-		editScript("untitled.rb", false);
+		editScript(Script.UNTITLED_RB, false);
 	}
 
 	private void scriptsListSetUp() {
@@ -116,6 +120,7 @@ public class IRB extends Activity implements OnItemClickListener {
         		.setIndicator(getString(R.string.Scripts_Tab)));
         
         ListView scriptsList = (ListView)findViewById(R.id.scripts_listview);
+        
 		scripts = Script.list();
 		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, scripts);
 		scriptsList.setAdapter(adapter);
@@ -130,17 +135,19 @@ public class IRB extends Activity implements OnItemClickListener {
 	private void setUpJRuby() {
 		if (!Script.initialized()) {
 			irbOutput.append("Initializing JRuby...");
-	    	Thread t = new Thread() {
-	    		public void run(){
-	    			Script.setUpJRuby(new OutputStream() {
+            new Thread("JRuby-init") {
+	    		public void run() {
+	    		    // try to avoid ANR's	    		    
+	    		    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);	    		    
+	    			Script.setUpJRuby(new PrintStream(new OutputStream() {
 	    	            @Override
 	    	            public void write(int arg0) throws IOException {
 	    	            	IRB.appendToIRB(Character.toString((char)arg0));
-	    	            }});
+	    	            }
+	    	        }));
 	    	   	    handler.post(notifyComplete);
 	    		}
-	    	};
-	    	t.start();
+	    	}.start();
 		} else {
 	        Script.defineGlobalConstant("Activity", this);
 	        irbOutput.append("\n>>");
@@ -209,10 +216,10 @@ public class IRB extends Activity implements OnItemClickListener {
     		runEditorScript();
     		return true;
     	case NEW_MENU:
-    		editScript("untitled.rb", true);
+    		editScript(Script.UNTITLED_RB, true);
     		return true;
     	case HISTORY_MENU:
-    		editScript(new Script("untitled.rb", irbInput.getHistoryString()), true);
+    		editScript(new Script(Script.UNTITLED_RB, irbInput.getHistoryString()), true);
     		return true;
     	case RESCAN_MENU:
     		scanScripts();
@@ -329,7 +336,7 @@ public class IRB extends Activity implements OnItemClickListener {
 	
 	/* Delete script and reload scripts list */
 	private void deleteScript(String fname) {
-		if (new Script(fname == null ? currentDelete : fname).delete()) {
+		if (new Script(fname).delete()) {
 			Toast.makeText(this, fname + " deleted!", Toast.LENGTH_SHORT).show();
 		} else {
 			Toast.makeText(this, "Could not delete " + fname, Toast.LENGTH_SHORT).show();
@@ -342,16 +349,13 @@ public class IRB extends Activity implements OnItemClickListener {
 	 * Context menu for scripts list.
 	 * Options: Edit, Execute, Delete
 	 */
-
-	private static String currentDelete = null;
-	private void comfirmDelete(String fname) {
-		currentDelete = fname;
+	private void comfirmDelete(final String fname) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage("Delete " + fname + "?")
 		       .setCancelable(false)
 		       .setPositiveButton(R.string.Delete_confirm, new DialogInterface.OnClickListener() {
 		           public void onClick(DialogInterface dialog, int id) {
-		                deleteScript(null);
+		                deleteScript(fname);
 		           }
 		       })
 		       .setNegativeButton(R.string.Delete_cancel, new DialogInterface.OnClickListener() {
@@ -382,5 +386,11 @@ public class IRB extends Activity implements OnItemClickListener {
 			resultCode = res;
 			data = dat;
 		}
+	}
+	
+	private void checkSDCard() {
+	    if (!Script.isSDCardAvailable()) {
+	       appendToIRB("No SD card found. Loading/Saving disabled.\n");
+	    }
 	}
 }
