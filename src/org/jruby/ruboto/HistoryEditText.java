@@ -55,16 +55,16 @@ public class HistoryEditText extends EditText implements
     }
     
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-    	if (savedInstanceState.containsKey("history")) history = (List<String>)savedInstanceState.getStringArrayList("history");
+    	if (savedInstanceState.containsKey("history")) history = savedInstanceState.getStringArrayList("history");
     	if (savedInstanceState.containsKey("cursor")) cursor = savedInstanceState.getInt("cursor");
     }
     
     public String getHistoryString() {
     	StringBuilder string = new StringBuilder();
-    	for (int i=0; i < history.size(); i++) {
-    		string.append(history.get(i));
-    		string.append("\n");
-    	}
+        for (String aHistory : history) {
+            string.append(aHistory);
+            string.append("\n");
+        }
     	return string.toString();
     }
     
