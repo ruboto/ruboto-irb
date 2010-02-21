@@ -19,6 +19,8 @@ For example,
      $ ant reinstall # build and install package
      $ adb -[e|d] install -r bin/IRB-debug.apk # manual install (emulator, device)
 
+There are also some prebuilt packages available: [github.com/headius/ruboto-irb/downloads](http://github.com/headius/ruboto-irb/downloads).
+
 That's it! Have fun!
 
 ##Credits
