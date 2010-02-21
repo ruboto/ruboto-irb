@@ -1,0 +1,7 @@
+== 0.x 02/21/10
+
+ Various improvements from Pascal Chatterjee
+ (http://code.google.com/p/jruby-for-android) and Scott Moyer:
+
+   * scripts can now be edited and saved to sd card
+   * fix for issue #2 (rotating display is slow) (rscottm)
