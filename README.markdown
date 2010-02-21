@@ -32,3 +32,5 @@ That's it! Have fun!
 ##Credits
 
 Ruby Icon obtained from [Ruby Visual Identity Team](http://rubyidentity.org/), CC ShareAlike 2.5.
+Editor/script support from Pascal Chatterjee's [jruby-for-android](http://code.google.com/p/jruby-for-android/) project, adapted by [Scott Meyer](http://github.com/rscottm/).
+
