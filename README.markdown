@@ -23,6 +23,10 @@ There are also some prebuilt packages available: [github.com/headius/ruboto-irb/
 
 That's it! Have fun!
 
+##Screenshot
+
+![Ruboto-IRB screenshot](http://cloud.github.com/downloads/headius/ruboto-irb/ruboto-screenshot.png)
+
 ##Credits
 
 Ruby Icon obtained from [Ruby Visual Identity Team](http://rubyidentity.org/), CC ShareAlike 2.5.
