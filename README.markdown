@@ -21,6 +21,8 @@ For example,
 
 There are also some prebuilt packages available: [github.com/headius/ruboto-irb/downloads](http://github.com/headius/ruboto-irb/downloads).
 
+You can also check out the [JRuby on Android](http://groups.google.com/group/ruboto) Google group for more information.
+
 That's it! Have fun!
 
 ##Screenshot
