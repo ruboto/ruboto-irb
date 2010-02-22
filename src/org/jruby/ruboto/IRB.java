@@ -148,7 +148,7 @@ public class IRB extends Activity implements OnItemClickListener {
                 }
             }.start();
         } else {
-            Script.defineGlobalConstant("Activity", this);
+            Script.defineGlobalConstant("Activity", IRB.this);
             irbOutput.append("\n>>");
         }
     }
@@ -156,7 +156,7 @@ public class IRB extends Activity implements OnItemClickListener {
     /* Called when jruby finishes loading */
     protected final Runnable notifyComplete = new Runnable() {
         public void run() {
-            Script.defineGlobalConstant("Activity", this);
+            Script.defineGlobalConstant("Activity", IRB.this);
             irbOutput.append("Done\n>>");
         }
     };
