@@ -16,7 +16,7 @@ For example,
   Modify the "dx" tool for the target platform to support 1024M of memory. Edit SDK_PATH/platforms/android-1.x/tools/dx, uncomment javaopts and set it to javaOpts="-Xmx1024M" (you may need a higher value than 1024 on some systems).
 
      $ ant debug     # build package
-     $ ant reinstall # build and install package
+     $ ant install   # build and install package
      $ adb -[e|d] install -r bin/IRB-debug.apk # manual install (emulator, device)
 
 There are also some prebuilt packages available: [github.com/headius/ruboto-irb/downloads](http://github.com/headius/ruboto-irb/downloads).
