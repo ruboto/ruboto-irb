@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">IRB</string>
+    <string name="app_name">Ruboto IRB</string>
 
     <string name="IRB_Tab">IRB</string>
     <string name="Editor_Tab">Editor</string>
