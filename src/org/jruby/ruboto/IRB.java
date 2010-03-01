@@ -148,15 +148,14 @@ public class IRB extends Activity implements OnItemClickListener {
                 }
             }.start();
         } else {
-            Script.defineGlobalConstant("Activity", IRB.this);
-            irbOutput.append("\n>>");
+            notifyComplete.run();
         }
     }
 
     /* Called when jruby finishes loading */
     protected final Runnable notifyComplete = new Runnable() {
         public void run() {
-            Script.defineGlobalConstant("Activity", IRB.this);
+            Script.defineGlobalVariable("$activity", IRB.this);
             irbOutput.append("Done\n>>");
         }
     };
@@ -374,10 +373,10 @@ public class IRB extends Activity implements OnItemClickListener {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Script.defineGlobalConstant("LastActivityResult", new ActivityResult(requestCode, resultCode, data));
+        Script.defineGlobalVariable("$last_activity_result", new ActivityResult(requestCode, resultCode, data));
     }
 
-    private class ActivityResult {
+    public static class ActivityResult {
         public int requestCode, resultCode;
         public Intent data;
 

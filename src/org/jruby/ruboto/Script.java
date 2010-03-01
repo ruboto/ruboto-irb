@@ -94,6 +94,11 @@ public class Script {
     public static void defineGlobalConstant(String name, Object object) {
         ruby.defineGlobalConstant(name, JavaUtil.convertJavaToRuby(ruby, object));
     }
+    
+    public static void defineGlobalVariable(String name, Object object) {
+        ruby.getGlobalVariables().set(name, JavaUtil.convertJavaToRuby(ruby, object));
+    }
+    
 
     /*************************************************************************************************
      *
