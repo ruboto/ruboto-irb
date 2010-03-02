@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.jruby.ruboto"
+      package="org.jruby.ruboto.irb"
       android:versionCode="1"
       android:versionName="0.1">
       
     <application android:icon="@drawable/app_icon" android:label="@string/app_name">
-        <activity android:name=".IRB"
+        <activity android:name="org.jruby.ruboto.IRB"
                   android:label="@string/app_name">                  
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
