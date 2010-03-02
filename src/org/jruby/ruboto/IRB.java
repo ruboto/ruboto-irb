@@ -1,6 +1,10 @@
 package org.jruby.ruboto;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -12,6 +16,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
@@ -28,6 +33,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class IRB extends Activity implements OnItemClickListener {
+    public static final String TAG = "Ruboto-IRB";
+    
     private TabHost tabs;
     private final Handler handler = new Handler();
 
@@ -62,6 +69,8 @@ public class IRB extends Activity implements OnItemClickListener {
     private static final int EXECUTE_MENU = 11;
     private static final int DELETE_MENU = 12;
 
+    private static final String DEMO_SCRIPTS = "demo-scripts";
+    
     /*********************************************************************************************
      *
      * Setup
@@ -74,11 +83,11 @@ public class IRB extends Activity implements OnItemClickListener {
 
         tabs = (TabHost) findViewById(R.id.tabhost);
         tabs.setup();
-
+                
         irbSetUp();
+        checkSDCard();
         editorSetUp();
         scriptsListSetUp();
-        checkSDCard();
         setUpJRuby();
     }
 
@@ -390,6 +399,42 @@ public class IRB extends Activity implements OnItemClickListener {
     private void checkSDCard() {
         if (!Script.isSDCardAvailable()) {
             appendToIRB("No SD card found. Loading/Saving disabled.\n");
+        } else {            
+            if (!Script.SCRIPTS_DIR_FILE.exists()) {
+                // on first install init directory + copy sample scripts
+                copyDemoScripts(DEMO_SCRIPTS, Script.SCRIPTS_DIR_FILE);                
+            }
         }
     }
+        
+    private void copyDemoScripts(String from, File to) {                        
+        if (!to.mkdirs()) {
+            Log.e(TAG, "error creating script directory " + to);
+            return;
+        }                                    
+                
+        try {
+            byte[] buffer = new byte[8192];        
+            for (String f : getAssets().list(from)) {
+                File dest = new File(to, f);
+                
+                if (dest.exists()) 
+                    continue;
+                
+                Log.d(TAG, "copying file " + f);                    
+                                
+                InputStream is = getAssets().open(from+ "/" +f);                    
+                OutputStream fos = new BufferedOutputStream(new FileOutputStream(dest));    
+
+                int n;
+                while ((n = is.read(buffer, 0, buffer.length)) != -1)
+                    fos.write(buffer, 0, n);                
+                
+                is.close();
+                fos.close();                
+            }
+        } catch (IOException iox) {
+            Log.e(TAG, "error copying demo scripts", iox);     
+        }
+    }    
 }

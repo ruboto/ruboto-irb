@@ -61,8 +61,6 @@ public class Script {
         if (ruby == null) {
             RubyInstanceConfig config = new RubyInstanceConfig();
             config.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
-            // TODO: Change
-            config.setJRubyHome("/data/app/se.kth.pascalc.JRubyAndroid.apk");
 
             config.setLoader(Script.class.getClassLoader());
 
@@ -98,7 +96,6 @@ public class Script {
     public static void defineGlobalVariable(String name, Object object) {
         ruby.getGlobalVariables().set(name, JavaUtil.convertJavaToRuby(ruby, object));
     }
-    
 
     /*************************************************************************************************
      *
