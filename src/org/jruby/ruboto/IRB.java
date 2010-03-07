@@ -1,5 +1,7 @@
 package org.jruby.ruboto;
 
+import org.jruby.ruboto.irb.R;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
