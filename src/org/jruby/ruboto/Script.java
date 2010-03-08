@@ -124,7 +124,9 @@ public class Script {
         }
 
         list.clear();
-        list.addAll(Arrays.asList(scriptsDir.list(RUBY_FILES)));
+        String[] tmpList = scriptsDir.list(RUBY_FILES);
+        Arrays.sort(tmpList, 0, tmpList.length, String.CASE_INSENSITIVE_ORDER);
+        list.addAll(Arrays.asList(tmpList));
         return list;
     }
 
