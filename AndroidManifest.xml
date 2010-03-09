@@ -1,16 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.jruby.ruboto.irb"
-      android:versionCode="1"
-      android:versionName="0.1">
+      android:versionCode="2"
+      android:versionName="0.2">
       
-    <application android:icon="@drawable/app_icon" android:label="@string/app_name">
+    <application android:icon="@drawable/app_icon" android:label="@string/app_name" android:debuggable="true">
         <activity android:name="org.jruby.ruboto.IRB"
                   android:label="@string/app_name">                  
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name="org.jruby.ruboto.ShortcutBuilder">                  
+			<intent-filter>
+			  <action android:name="android.intent.action.CREATE_SHORTCUT" />
+			  <category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+        </activity>
+        <activity android:name="org.jruby.ruboto.RubotoActivity">
+			<intent-filter>
+			  <action android:name="org.jruby.ruboto.irb.intent.action.LAUNCH_SCRIPT" />
+			  <category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
         </activity>
     </application>
     
