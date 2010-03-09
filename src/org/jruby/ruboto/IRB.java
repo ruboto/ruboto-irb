@@ -65,6 +65,7 @@ public class IRB extends Activity implements OnItemClickListener {
     private static final int NEW_MENU = 3;
     private static final int HISTORY_MENU = 4;
     private static final int RESCAN_MENU = 5;
+    private static final int RELOAD_DEMOS = 6;
 
     /* Context menu option identifiers for script list */
     private static final int EDIT_MENU = 10;
@@ -212,6 +213,7 @@ public class IRB extends Activity implements OnItemClickListener {
         menu.add(0, NEW_MENU, 0, R.string.Menu_new);
         menu.add(0, HISTORY_MENU, 0, R.string.Menu_history);
         menu.add(0, RESCAN_MENU, 0, R.string.Menu_rescan);
+        if (Script.isSDCardAvailable()) menu.add(0, RELOAD_DEMOS, 0, "Reload Demos");
         return true;
     }
 
@@ -232,6 +234,13 @@ public class IRB extends Activity implements OnItemClickListener {
                 editScript(new Script(Script.UNTITLED_RB, irbInput.getHistoryString()), true);
                 return true;
             case RESCAN_MENU:
+                scanScripts();
+                tabs.setCurrentTab(SCRIPTS_TAB);
+                return true;
+            case RELOAD_DEMOS:
+                Toast.makeText(this, 
+                		recopyDemoScripts(DEMO_SCRIPTS, Script.SCRIPTS_DIR_FILE), 
+                		Toast.LENGTH_SHORT).show();
                 scanScripts();
                 tabs.setCurrentTab(SCRIPTS_TAB);
                 return true;
@@ -438,5 +447,37 @@ public class IRB extends Activity implements OnItemClickListener {
         } catch (IOException iox) {
             Log.e(TAG, "error copying demo scripts", iox);     
         }
+    }    
+
+    private String recopyDemoScripts(String from, File to) {      
+    	String rv = "Copied:";
+        try {
+            byte[] buffer = new byte[8192];        
+            for (String f : getAssets().list(from)) {
+                File dest = new File(to, f);
+                
+                if (dest.exists()) {
+                    Log.d(TAG, "replacing file " + f);                    
+                } else {
+                    Log.d(TAG, "copying file " + f);                    
+                }
+                
+                                
+                InputStream is = getAssets().open(from+ "/" +f);                    
+                OutputStream fos = new BufferedOutputStream(new FileOutputStream(dest));    
+
+                int n;
+                while ((n = is.read(buffer, 0, buffer.length)) != -1)
+                    fos.write(buffer, 0, n);                
+                
+                is.close();
+                fos.close();   
+                rv += "\n" + f;
+            }
+        } catch (IOException iox) {
+            Log.e(TAG, "error copying demo scripts", iox);
+            rv = "Copy failed";
+        }
+        return rv;
     }    
 }
