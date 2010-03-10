@@ -253,8 +253,8 @@ public class RubotoActivity extends Activity
     	if (callbackOptions[CB_KEY]) {
 	        Script.defineGlobalVariable("$view", v);
 	        Script.defineGlobalVariable("$event", event);
-			Script.execute(remoteVariable + "on_key($view," + keyCode + ", $event)");
-	    	return true;
+			String rv = Script.execute(remoteVariable + "on_key($view," + keyCode + ", $event)");
+			return (rv != null) && rv.equals("true");
     	}
     	return false;
     }
@@ -263,8 +263,8 @@ public class RubotoActivity extends Activity
     	if (callbackOptions[CB_EDITOR_ACTION]) {
 	        Script.defineGlobalVariable("$view", arg0);
 	        Script.defineGlobalVariable("$event", event);
-			Script.execute(remoteVariable + "on_editor_action($view," + actionId + ", $event)");
-	    	return true;
+			String rv = Script.execute(remoteVariable + "on_editor_action($view," + actionId + ", $event)");
+			return (rv != null) && rv.equals("true");
     	}
 		return false;
 	}
