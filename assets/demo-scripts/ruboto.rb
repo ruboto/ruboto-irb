@@ -132,7 +132,20 @@ class RubotoActivity
   end
 
   def on_key(view, event)
-    instance_eval {@on_key_block.call(view, event)}
+    instance_eval {@on_key_block.call(view, key_code, event)}
+  end
+
+  #
+  # Editor Action
+  #
+
+  def when_editor_action &block
+    requestCallback RubotoActivity::CB_EDITOR_ACTION
+    @on_editor_action = block
+  end
+
+  def on_editor_action(view, action_id, event)
+    instance_eval {@on_editor_action.call(view, action_id, event)}
   end
 
   #
