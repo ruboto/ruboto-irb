@@ -47,6 +47,10 @@ class Activity
 end
 
 class RubotoActivity
+  #
+  # Initialize
+  #
+
   def initialize_activity()
     instance_eval &@@init_block 
     @initialized = true
@@ -62,13 +66,43 @@ class RubotoActivity
   end
 
   #
-  # Option Menus
+  # Setup Callbacks
   #
 
-  def when_creating_options_menu(&block)
-    requestCallback RubotoActivity::CB_OPTIONS_MENU
-    @options_menu_block = block
+  def self.create_callback(callback, parameters=[], additional_code="")
+    class_eval "
+      def handle_#{callback} &block
+        requestCallback RubotoActivity::CB_#{callback.upcase}
+        @#{callback}_block = block
+      end
+    
+      def on_#{callback}(#{parameters.join(',')})
+        #{additional_code}
+        instance_eval {@#{callback}_block.call(#{parameters.join(',')})} if @#{callback}_block
+      end
+    "
   end
+
+  create_callback :start
+  create_callback :resume
+  create_callback :restart
+  create_callback :pause
+  create_callback :stop
+  create_callback :destroy
+  create_callback :activity_result, [:intent]
+
+  create_callback :save_instance_state, [:bundle]
+  create_callback :restore_instance_state, [:bundle]
+  create_callback :create_options_menu, [:menu], "@menu, @context_menu = menu, nil"
+  create_callback :create_context_menu, [:menu, :view, :menu_info], "@menu, @context_menu = nil, menu"
+  create_callback :item_click, [:adapter_view, :view, :pos, :item_id]
+  create_callback :key, [:view, :key_code, :event]
+  create_callback :editor_action, [:view, :action_id, :event]
+  create_callback :click, [:view]
+
+  #
+  # Option Menus
+  #
 
   def add_menu title, &block
     mi = @menu.add(title)
@@ -76,11 +110,6 @@ class RubotoActivity
     mi.on_click = block
   end
  
-  def on_create_options_menu(menu)
-    @menu, @context_menu = menu, nil
-    instance_eval {@options_menu_block.call(@menu)}
-  end
-  
   def on_menu_item_selected(num,menu_item)
     instance_eval &(menu_item.on_click) if @menu
   end
@@ -89,76 +118,14 @@ class RubotoActivity
   # Context Menus
   #
 
-  def when_creating_context_menu(&block)
-    requestCallback RubotoActivity::CB_CONTEXT_MENU 
-    @context_menu_block = block
-  end
-
   def add_context_menu title, &block
     mi = @context_menu.add(title)
     mi.class.class_eval {attr_accessor :on_click}
     mi.on_click = block
   end
  
-  def on_create_context_menu(menu, view, menu_info)
-    @menu, @context_menu = nil, menu
-    instance_eval {@context_menu_block.call(@context_menu)}
-  end
-  
   def on_context_item_selected(menu_item)
     (instance_eval {menu_item.on_click.call(menu_item.getMenuInfo.position)}) if menu_item.on_click
-  end
-
-  #
-  # Item Click
-  #
-
-  def when_item_clicked &block
-    requestCallback RubotoActivity::CB_ITEM_CLICK
-    @item_clicked_block = block
-  end
-
-  def on_item_click(adapter_view, view, pos, id)
-    instance_eval {@item_clicked_block.call(view, pos)}
-  end
-
-  #
-  # On Key
-  #
-
-  def when_on_key &block
-    requestCallback RubotoActivity::CB_KEY
-    @on_key_block = block
-  end
-
-  def on_key(view, event)
-    instance_eval {@on_key_block.call(view, key_code, event)}
-  end
-
-  #
-  # Editor Action
-  #
-
-  def when_editor_action &block
-    requestCallback RubotoActivity::CB_EDITOR_ACTION
-    @on_editor_action = block
-  end
-
-  def on_editor_action(view, action_id, event)
-    instance_eval {@on_editor_action.call(view, action_id, event)}
-  end
-
-  #
-  # On Click
-  #
-
-  def when_on_clicked &block
-    requestCallback RubotoActivity::CB_CLICK
-    @on_clicked_block = block
-  end
-
-  def on_click(view)
-    instance_eval {@on_clicked_block.call(view)}
   end
 
   #
@@ -208,4 +175,3 @@ class RubotoActivity
     rv
   end
 end
-  
