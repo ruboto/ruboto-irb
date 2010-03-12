@@ -28,23 +28,24 @@ public class RubotoActivity extends Activity
 		OnEditorActionListener,
 		OnClickListener {
 	
-	public static final int CB_ACTIVITY_START 	= 0;
-	public static final int CB_ACTIVITY_RESTART = 1;
-	public static final int CB_ACTIVITY_RESUME 	= 2;
-	public static final int CB_ACTIVITY_PAUSE 	= 3;
-	public static final int CB_ACTIVITY_STOP 	= 4;
-	public static final int CB_ACTIVITY_DESTROY = 5;
-	public static final int CB_INSTANCE_STATE	= 6;
-	public static final int CB_ACTIVITY_RESULT 	= 7;
+	public static final int CB_START 					= 0;
+	public static final int CB_RESTART 					= 1;
+	public static final int CB_RESUME 	      			= 2;
+	public static final int CB_PAUSE 	                = 3;
+	public static final int CB_STOP 	                = 4;
+	public static final int CB_DESTROY                  = 5;
+	public static final int CB_SAVE_INSTANCE_STATE	    = 6;
+	public static final int CB_RESTORE_INSTANCE_STATE	= 7;
+	public static final int CB_ACTIVITY_RESULT 			= 8;
 	
-	public static final int CB_ITEM_CLICK 		= 8;
-	public static final int CB_OPTIONS_MENU 	= 9;
-	public static final int CB_CONTEXT_MENU 	= 10;
-	public static final int CB_KEY 				= 11;
-	public static final int CB_EDITOR_ACTION 	= 12;
-	public static final int CB_CLICK 			= 13;
+	public static final int CB_ITEM_CLICK 				= 9;
+	public static final int CB_CREATE_OPTIONS_MENU 		= 10;
+	public static final int CB_CREATE_CONTEXT_MENU 		= 11;
+	public static final int CB_KEY 						= 12;
+	public static final int CB_EDITOR_ACTION 			= 13;
+	public static final int CB_CLICK 					= 14;
 	
-	public static final int CB_LAST 			= 20;
+	public static final int CB_LAST 					= 20;
 	
 	private boolean[] callbackOptions = new boolean [CB_LAST];
 	private String remoteVariable = "";
@@ -124,44 +125,44 @@ public class RubotoActivity extends Activity
 	
 	@Override
 	public void onStart() {
-		if (callbackOptions[CB_ACTIVITY_START]) Script.execute(remoteVariable + "on_start()");
+		if (callbackOptions[CB_START]) Script.execute(remoteVariable + "on_start()");
 		super.onStart();
 	}
 	
 	@Override
 	public void onResume() {
-		if (callbackOptions[CB_ACTIVITY_RESUME]) Script.execute(remoteVariable + "on_resume()");
+		if (callbackOptions[CB_RESUME]) Script.execute(remoteVariable + "on_resume()");
 		super.onResume();
 	}
 	
 	@Override
 	public void onRestart() {
-		if (callbackOptions[CB_ACTIVITY_RESTART]) Script.execute(remoteVariable + "on_restart()");
+		if (callbackOptions[CB_RESTART]) Script.execute(remoteVariable + "on_restart()");
 		super.onRestart();
 	}
 	
 	@Override
 	public void onPause() {
-		if (callbackOptions[CB_ACTIVITY_PAUSE]) Script.execute(remoteVariable + "on_pause()");
+		if (callbackOptions[CB_PAUSE]) Script.execute(remoteVariable + "on_pause()");
 		super.onPause();
 	}
 	
 	@Override
 	public void onStop() {
-		if (callbackOptions[CB_ACTIVITY_STOP]) Script.execute(remoteVariable + "on_stop()");
+		if (callbackOptions[CB_STOP]) Script.execute(remoteVariable + "on_stop()");
 		super.onStop();
 	}
 	
 	@Override
 	public void onDestroy() {
-		if (callbackOptions[CB_ACTIVITY_DESTROY]) Script.execute(remoteVariable + "on_destroy()");
+		if (callbackOptions[CB_DESTROY]) Script.execute(remoteVariable + "on_destroy()");
 		super.onDestroy();
 	}
 	
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-		if (callbackOptions[CB_INSTANCE_STATE]) {
+		if (callbackOptions[CB_SAVE_INSTANCE_STATE]) {
 	        Script.defineGlobalVariable("$bundle", savedInstanceState);
 			Script.execute(remoteVariable + "on_save_instance_state($bundle)");
 		}
@@ -170,7 +171,7 @@ public class RubotoActivity extends Activity
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-		if (callbackOptions[CB_INSTANCE_STATE]) {
+		if (callbackOptions[CB_RESTORE_INSTANCE_STATE]) {
 	        Script.defineGlobalVariable("$bundle", savedInstanceState);
 			Script.execute(remoteVariable + "on_restore_instance_state($bundle)");
 		}
@@ -191,7 +192,7 @@ public class RubotoActivity extends Activity
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		if (callbackOptions[CB_OPTIONS_MENU]) {
+		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
 	        Script.defineGlobalVariable("$menu", menu);
 			Script.execute(remoteVariable + "on_create_options_menu($menu)");
 		}
@@ -200,7 +201,7 @@ public class RubotoActivity extends Activity
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
-		if (callbackOptions[CB_OPTIONS_MENU]) {
+		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
 	        Script.defineGlobalVariable("$menu_item", item);
 			Script.execute(remoteVariable + "on_menu_item_selected(" + featureId + ", $menu_item)");
 		}
@@ -212,7 +213,7 @@ public class RubotoActivity extends Activity
 	 */
 	
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-    	if (callbackOptions[CB_CONTEXT_MENU]) {
+    	if (callbackOptions[CB_CREATE_CONTEXT_MENU]) {
 	        Script.defineGlobalVariable("$menu", menu);
 	        Script.defineGlobalVariable("$view", v);
 	        Script.defineGlobalVariable("$menu_info", menuInfo);
@@ -221,7 +222,7 @@ public class RubotoActivity extends Activity
     }
     
     public boolean onContextItemSelected(MenuItem item) {
-    	if (callbackOptions[CB_OPTIONS_MENU]) {
+    	if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
 	        Script.defineGlobalVariable("$menu_item", item);
 			Script.execute(remoteVariable + "on_context_item_selected($menu_item)");
 	    	return true;
