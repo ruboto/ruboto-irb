@@ -13,13 +13,13 @@ $activity.start_ruboto_activity "$ruboto_demo" do
     end
   end
 
-  when_creating_options_menu do |menu|
+  handle_create_options_menu do |menu|
     add_menu("Hello, World") {my_click "Hello, World"}
     add_menu("Hello, Ruboto") {my_click "Hello, Ruboto"}
     add_menu("Exit") {finish}
   end
 
-  when_on_clicked do |view|
+  handle_click do |view|
     view.getText == "List" ? launch_list : my_click(view.getText)
   end
 
@@ -33,7 +33,7 @@ $activity.start_ruboto_activity "$ruboto_demo" do
     self.start_ruboto_activity("$my_list") do
       setTitle "Pick Something"
       setup_content {list_view :list => ["Hello, World", "Hello, Ruboto"]}
-      when_item_clicked {|view, pos| toast(@list[pos]); finish}
+      handle_item_click {|adapter_view, view, pos, item_id| toast(@list[pos]); finish}
     end
   end
 end
