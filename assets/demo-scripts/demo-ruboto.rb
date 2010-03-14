@@ -2,9 +2,9 @@ require "/sdcard/jruby/ruboto.rb"
 
 $activity.start_ruboto_activity "$ruboto_demo" do
   setup_content do
-    linear_layout(:orientation => :vertical) do
+    linear_layout(:orientation => LinearLayout::VERTICAL) do
       @et = edit_text
-      linear_layout(:orientation => :horizontal) do
+      linear_layout do
         button :text => "Hello, World"
         button :text => "Hello, Ruboto"
         button :text => "List"
@@ -20,19 +20,25 @@ $activity.start_ruboto_activity "$ruboto_demo" do
   end
 
   handle_click do |view|
-    view.getText == "List" ? launch_list : my_click(view.getText)
+    case view.getText
+      when "List"
+        launch_list
+      else
+        my_click(view.getText)
+    end
   end
 
   def self.my_click(text)
-      toast text
-      @tv.setText "#{@tv.getText}\n#{text}"
-      @et.setText text
+    toast text
+    @tv.append "\n#{text}"
+    @et.setText text
   end
 
   def self.launch_list
     self.start_ruboto_activity("$my_list") do
       setTitle "Pick Something"
-      setup_content {list_view :list => ["Hello, World", "Hello, Ruboto"]}
+      @list = ["Hello, World", "Hello, Ruboto"]
+      setup_content {list_view :list => @list}
       handle_item_click {|adapter_view, view, pos, item_id| toast(@list[pos]); finish}
     end
   end
