@@ -3,6 +3,7 @@ include_class "org.jruby.ruboto.RubotoActivity"
 include_class "android.app.Activity"
 include_class "android.content.Intent"
 include_class "android.os.Bundle"
+include_class "android.view.View"
 include_class "android.widget.Toast"
 include_class "android.widget.ListView"
 include_class "android.widget.Button"
@@ -46,6 +47,38 @@ class Activity
   end
 end
 
+class View
+   #[:background, :clickable, :contentDescription, 
+   # :drawingCacheQuality, :fadingEdge, :fadingEdgeLength, :focusable, 
+   # :focusableInTouchMode, :hapticFeedbackEnabled, :id, :keepScreenOn, 
+   # :longClickable, :nextFocusDown, :nextFocusLeft, :nextFocusRight, 
+   # :nextFocusUp, :saveEnabled, :soundEffectsEnabled, :visibility]
+
+  def configure(context, params = {})
+    params.each do |k, v|
+      self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", v)
+    end
+  end
+end
+
+class ListView
+  def configure(context, params = {})
+    if params.has_key? :list
+      setAdapter context.arrayAdapterForList(params[:list].to_java(:string))
+      params.delete :list
+    end
+    setOnItemClickListener(context)
+    super(context, params)
+  end
+end
+
+class Button
+  def configure(context, params = {})
+    setOnClickListener(context)
+    super(context, params)
+  end
+end
+
 class RubotoActivity
   #
   # Initialize
@@ -72,7 +105,7 @@ class RubotoActivity
   def self.create_callback(callback, parameters=[], additional_code="")
     class_eval "
       def handle_#{callback} &block
-        requestCallback RubotoActivity::CB_#{callback.upcase}
+        requestCallback RubotoActivity::CB_#{callback.to_s.upcase}
         @#{callback}_block = block
       end
     
@@ -134,44 +167,27 @@ class RubotoActivity
 
   @view_parent = nil
 
-  def list_view(params={})
-    @list = params[:list]
-    rv = ListView.new self
-    rv.setAdapter arrayAdapterForList(@list.to_java(:string))
-    rv.setOnItemClickListener(self)
-    @view_parent.addView(rv) if @view_parent
-    rv
+  def self.create_view_factory(view_class)
+    class_name = view_class.name.split("::")[-1]
+    class_eval "
+       def #{(class_name.gsub(/([A-Z])/) {'_' + $1.downcase})[1..-1]}(params={})
+          rv = #{class_name}.new self
+          rv.configure self, params
+          @view_parent.addView(rv) if @view_parent
+          if block_given?
+            old_view_parent, @view_parent = @view_parent, rv
+            yield 
+            @view_parent = old_view_parent
+          end
+          rv
+       end
+     "
   end
 
-  def text_view(params={})
-    rv = TextView.new self
-    rv.setText params[:text] if params[:text]
-    @view_parent.addView(rv) if @view_parent
-    rv
-  end
-
-  def edit_text(params={})
-    rv = EditText.new self
-    rv.setText params[:text] if params[:text]
-    @view_parent.addView(rv) if @view_parent
-    rv
-  end
-
-  def button(params={})
-    rv = Button.new self
-    rv.setOnClickListener self
-    rv.setText params[:text] if params[:text]
-    @view_parent.addView(rv) if @view_parent
-    rv
-  end
-
-  def linear_layout(params={}, &block)
-    rv = LinearLayout.new self
-    rv.setOrientation params[:orientation] == :vertical ? LinearLayout::VERTICAL : LinearLayout::HORIZONTAL
-    @view_parent.addView(rv) if @view_parent
-    old_view_parent, @view_parent = @view_parent, rv
-    yield block
-    @view_parent = old_view_parent
-    rv
-  end
+  create_view_factory TextView
+  create_view_factory EditText
+  create_view_factory Button
+  create_view_factory ListView
+  create_view_factory LinearLayout
 end
+ 
