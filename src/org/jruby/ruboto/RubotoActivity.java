@@ -3,7 +3,10 @@ package org.jruby.ruboto;
 import java.io.IOException;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.DatePickerDialog.OnDateSetListener;
+import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,16 +20,24 @@ import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.DatePicker;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.DatePicker.OnDateChangedListener;
 import android.widget.TextView.OnEditorActionListener;
+import android.widget.TimePicker.OnTimeChangedListener;
 
 public class RubotoActivity extends Activity 
 	implements 
 		OnItemClickListener, 
 		OnKeyListener,
 		OnEditorActionListener,
-		OnClickListener {
+		OnClickListener,
+		OnDateChangedListener,
+		OnDateSetListener,
+		OnTimeChangedListener,
+		OnTimeSetListener {
 	
 	public static final int CB_START 					= 0;
 	public static final int CB_RESTART 					= 1;
@@ -45,12 +56,21 @@ public class RubotoActivity extends Activity
 	public static final int CB_EDITOR_ACTION 			= 13;
 	public static final int CB_CLICK 					= 14;
 	
+	public static final int CB_CREATE_DIALOG			= 15;
+	public static final int CB_PREPARE_DIALOG			= 16;
+	
+	public static final int CB_TIME_SET					= 17;
+	public static final int CB_TIME_CHANGED				= 18;
+	public static final int CB_DATE_SET					= 19;
+	public static final int CB_DATE_CHANGED				= 20;
+	
 	public static final int CB_LAST 					= 20;
 	
 	private boolean[] callbackOptions = new boolean [CB_LAST];
 	private String remoteVariable = "";
 	private ProgressDialog loadingDialog; 
     private final Handler loadingHandler = new Handler();
+    private Object scriptReturnObject = null;
 
 	public RubotoActivity setRemoteVariable(String var) {
 		remoteVariable = ((var == null) ? "" : (var + "."));
@@ -75,6 +95,11 @@ public class RubotoActivity extends Activity
 		callbackOptions[id] = false;
 	}
 	
+    /* Used by a script to pass an object back to back an object */
+	public void setScriptReturnObject(Object object) {
+    	scriptReturnObject = object;
+    }
+    
 	/* 
 	 *  Activity Lifecycle
 	 */
@@ -261,22 +286,74 @@ public class RubotoActivity extends Activity
     }
     
 	public boolean onEditorAction(TextView arg0, int actionId, KeyEvent event) {
-    	if (callbackOptions[CB_EDITOR_ACTION]) {
+		if (callbackOptions[CB_EDITOR_ACTION]) {
 	        Script.defineGlobalVariable("$view", arg0);
 	        Script.defineGlobalVariable("$event", event);
 			String rv = Script.execute(remoteVariable + "on_editor_action($view," + actionId + ", $event)");
 			return (rv != null) && rv.equals("true");
-    	}
+		}
 		return false;
 	}
 
-	
 	/* 
 	 *  Click
 	 */
     
     public void onClick (View v) {
-        Script.defineGlobalVariable("$view", v);
-		Script.execute(remoteVariable + "on_click($view)");
+		if (callbackOptions[CB_CLICK]) {
+	        Script.defineGlobalVariable("$view", v);
+			Script.execute(remoteVariable + "on_click($view)");
+		}
+    }
+
+	/* 
+	 *  Dialogs
+	 */
+
+    public Dialog onCreateDialog(int id) {
+		if (callbackOptions[CB_CREATE_DIALOG]) {
+			Script.execute(remoteVariable + "on_create_dialog(" + id + ")");
+			return (Dialog)scriptReturnObject;
+		}
+		return null;
+    }
+
+    public void onPrepareDialog(int id, Dialog dialog) {
+		if (callbackOptions[CB_CREATE_DIALOG]) {
+	        Script.defineGlobalVariable("$prepare", dialog);
+			Script.execute(remoteVariable + "on_prepare_dialog(" + id + ", $dialog)");
+		}    	
+    }
+
+	/* 
+	 *  Date and Time Change
+	 */
+
+    public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+		if (callbackOptions[CB_DATE_CHANGED]) {
+	        Script.defineGlobalVariable("$view", view);
+			Script.execute(remoteVariable + "on_date_changed($view, " + year + ", " + monthOfYear + ", " + dayOfMonth + ")");
+		}
+    }
+
+    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+		if (callbackOptions[CB_DATE_SET]) {
+	        Script.defineGlobalVariable("$view", view);
+			Script.execute(remoteVariable + "on_date_set($view, " + year + ", " + monthOfYear + ", " + dayOfMonth + ")");
+		}
+    }
+
+    public void onTimeChanged(TimePicker view, int hourOfDay, int minute) {
+		if (callbackOptions[CB_TIME_CHANGED]) {
+	        Script.defineGlobalVariable("$view", view);
+			Script.execute(remoteVariable + "on_time_changed($view, " + hourOfDay + ", " + minute + ")");
+		}
+    }
+
+    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+		if (callbackOptions[CB_TIME_SET]) {
+	        Script.defineGlobalVariable("$view", view);
+			Script.execute(remoteVariable + "on_time_set($view, " + hourOfDay + ", " + minute + ")");
+		}
     }
 }
