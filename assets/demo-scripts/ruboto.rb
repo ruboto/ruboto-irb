@@ -4,12 +4,19 @@ include_class "android.app.Activity"
 include_class "android.content.Intent"
 include_class "android.os.Bundle"
 include_class "android.view.View"
+include_class "android.view.ViewGroup"
 include_class "android.widget.Toast"
 include_class "android.widget.ListView"
 include_class "android.widget.Button"
+include_class "android.widget.ToggleButton"
 include_class "android.widget.LinearLayout"
 include_class "android.widget.EditText"
 include_class "android.widget.TextView"
+include_class "android.widget.TimePicker"
+include_class "android.widget.DatePicker"
+include_class "android.app.TimePickerDialog"
+include_class "android.app.DatePickerDialog"
+include_class "android.widget.Chronometer"
 
 class Activity
   attr_accessor :init_block
@@ -48,12 +55,6 @@ class Activity
 end
 
 class View
-   #[:background, :clickable, :contentDescription, 
-   # :drawingCacheQuality, :fadingEdge, :fadingEdgeLength, :focusable, 
-   # :focusableInTouchMode, :hapticFeedbackEnabled, :id, :keepScreenOn, 
-   # :longClickable, :nextFocusDown, :nextFocusLeft, :nextFocusRight, 
-   # :nextFocusUp, :saveEnabled, :soundEffectsEnabled, :visibility]
-
   def configure(context, params = {})
     params.each do |k, v|
       self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", v)
@@ -132,6 +133,12 @@ class RubotoActivity
   create_callback :key, [:view, :key_code, :event]
   create_callback :editor_action, [:view, :action_id, :event]
   create_callback :click, [:view]
+  create_callback :time_changed, [:view, :hour, :minute]
+  create_callback :date_changed, [:view, :year, :month, :day]
+  create_callback :time_set, [:view, :hour, :minute]
+  create_callback :date_set, [:view, :year, :month, :day]
+  create_callback :create_dialog, [:dialog_id]
+  create_callback :prepare_dialog, [:dialog_id, :dialog]
 
   #
   # Option Menus
@@ -187,7 +194,20 @@ class RubotoActivity
   create_view_factory TextView
   create_view_factory EditText
   create_view_factory Button
+  create_view_factory ToggleButton
   create_view_factory ListView
   create_view_factory LinearLayout
+#  create_view_factory CheckBox
+#  create_view_factory RadioGroup
+#  create_view_factory RadioButton
+#  create_view_factory TableLayout
+#  create_view_factory TableRow
+#  create_view_factory ScrollView
+#  create_view_factory Spinner
+#  create_view_factory AutoCompleteTextView
+#  create_view_factory GridView
+  create_view_factory TimePicker
+  create_view_factory DatePicker
+  create_view_factory Chronometer
 end
- 
+  
