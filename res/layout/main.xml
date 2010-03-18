@@ -52,7 +52,7 @@ s			</LinearLayout>
 					android:hint="@string/Enter_source"
 					android:gravity="top"
 	    			android:layout_weight="1"
-					android:scrollbars="vertical|horizontal"
+					android:scrollHorizontally="true"
 				/>
 			</LinearLayout>
 			<LinearLayout
