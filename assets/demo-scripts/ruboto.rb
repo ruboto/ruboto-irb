@@ -1,3 +1,13 @@
+#######################################################
+#
+# ruboto.rb (by Scott Moyer)
+# 
+# Wrapper for using RubotoActivity in Ruboto IRB
+#
+#######################################################
+
+$RUBOTO_VERSION = 1
+
 include Java
 include_class "org.jruby.ruboto.RubotoActivity"
 include_class "android.app.Activity"
@@ -17,6 +27,15 @@ include_class "android.widget.DatePicker"
 include_class "android.app.TimePickerDialog"
 include_class "android.app.DatePickerDialog"
 include_class "android.widget.Chronometer"
+include_class "android.widget.TableLayout"
+include_class "android.widget.TableRow"
+include_class "android.widget.ArrayAdapter"
+include_class "android.widget.ScrollView"
+include_class "java.util.Arrays"
+include_class "java.util.ArrayList"
+
+Layout = JavaUtilities.get_proxy_class('android.R$layout')
+
 
 class Activity
   attr_accessor :init_block
@@ -55,7 +74,20 @@ class Activity
 end
 
 class View
+  @@convert_params = {
+     :wrap_content => ViewGroup::LayoutParams::WRAP_CONTENT,
+     :fill_parent  => ViewGroup::LayoutParams::FILL_PARENT,
+  }
+
   def configure(context, params = {})
+    if width = params.delete(:width)
+      getLayoutParams.width = @@convert_params[width] or width
+    end
+
+    if height = params.delete(:height)
+      getLayoutParams.height = @@convert_params[height] or height
+    end
+
     params.each do |k, v|
       self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", v)
     end
@@ -63,13 +95,24 @@ class View
 end
 
 class ListView
+  attr_reader :adapter, :adapter_list
+
   def configure(context, params = {})
     if params.has_key? :list
-      setAdapter context.arrayAdapterForList(params[:list].to_java(:string))
+      @adapter_list = ArrayList.new
+      @adapter_list.addAll(params[:list])
+      @adapter = ArrayAdapter.new(context, Layout::simple_list_item_1, @adapter_list)
+      setAdapter @adapter
       params.delete :list
     end
     setOnItemClickListener(context)
     super(context, params)
+  end
+
+  def reload_list(list)
+    @adapter_list.clear();
+    @adapter_list.addAll(list)
+    @adapter.notifyDataSetChanged
   end
 end
 
@@ -179,8 +222,8 @@ class RubotoActivity
     class_eval "
        def #{(class_name.gsub(/([A-Z])/) {'_' + $1.downcase})[1..-1]}(params={})
           rv = #{class_name}.new self
-          rv.configure self, params
           @view_parent.addView(rv) if @view_parent
+          rv.configure self, params
           if block_given?
             old_view_parent, @view_parent = @view_parent, rv
             yield 
@@ -200,9 +243,9 @@ class RubotoActivity
 #  create_view_factory CheckBox
 #  create_view_factory RadioGroup
 #  create_view_factory RadioButton
-#  create_view_factory TableLayout
-#  create_view_factory TableRow
-#  create_view_factory ScrollView
+  create_view_factory TableLayout
+  create_view_factory TableRow
+  create_view_factory ScrollView
 #  create_view_factory Spinner
 #  create_view_factory AutoCompleteTextView
 #  create_view_factory GridView
