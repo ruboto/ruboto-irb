@@ -1,4 +1,5 @@
 require "/sdcard/jruby/ruboto.rb"
+confirm_ruboto_version(2)
 
 $activity.start_ruboto_activity "$ruboto_demo" do
   setup_content do

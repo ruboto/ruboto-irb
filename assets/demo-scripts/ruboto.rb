@@ -6,7 +6,12 @@
 #
 #######################################################
 
-$RUBOTO_VERSION = 1
+$RUBOTO_VERSION = 2
+
+def confirm_ruboto_version(required_version, exact=true)
+  raise "requires $RUBOTO_VERSION=#{required_version} or greater, current version #{$RUBOTO_VERSION}" if $RUBOTO_VERSION < required_version and not exact
+  raise "requires $RUBOTO_VERSION=#{required_version}, current version #{$RUBOTO_VERSION}" if $RUBOTO_VERSION != required_version and exact
+end
 
 include Java
 include_class "org.jruby.ruboto.RubotoActivity"
@@ -34,8 +39,12 @@ include_class "android.widget.ScrollView"
 include_class "java.util.Arrays"
 include_class "java.util.ArrayList"
 
-Layout = JavaUtilities.get_proxy_class('android.R$layout')
+include_class "android.R"
 
+class R
+  Layout = JavaUtilities.get_proxy_class('android.R$layout')
+  Style = JavaUtilities.get_proxy_class('android.R$style')
+end
 
 class Activity
   attr_accessor :init_block
@@ -55,7 +64,7 @@ class Activity
 
       self.startActivity i
     else
-       instance_eval "#{remote_variable}=self"
+      instance_eval "#{remote_variable}=self"
       setRemoteVariable remote_variable
       initialize_activity
       on_create nil
@@ -101,7 +110,7 @@ class ListView
     if params.has_key? :list
       @adapter_list = ArrayList.new
       @adapter_list.addAll(params[:list])
-      @adapter = ArrayAdapter.new(context, Layout::simple_list_item_1, @adapter_list)
+      @adapter = ArrayAdapter.new(context, R::Layout::simple_list_item_1, @adapter_list)
       setAdapter @adapter
       params.delete :list
     end
@@ -253,4 +262,3 @@ class RubotoActivity
   create_view_factory DatePicker
   create_view_factory Chronometer
 end
-  

@@ -1,17 +1,22 @@
 require "/sdcard/jruby/ruboto.rb"
+confirm_ruboto_version(2)
 
 include_class "android.os.SystemClock"
 include_class "android.view.Gravity"
+include_class "android.content.Context"
+include_class "android.util.AttributeSet"
 
 class RubotoActivity
   @@lists = {
 #    :main      => %w(App Content Graphics Media OS Text Views),
-    :main      => %w(Views),
-    "App"      => ["Activity", "Alarm", "Dialog" "Intents", 
-                     "Launcher Shortcuts", "Menus", "Notification", 
-                     "Preferences", "Search", "Service", "Voice Recognition"],
-    "Content"  => %w(Assests Resources),
-    "Graphics" => ["AlphaBitmap", "AnimatedDrawables", "Arcs", "BitmapDecode", 
+    :main       => %w(App OS Views),
+#    "App"       => ["Activity", "Alarm", "Dialog" "Intents", 
+#                     "Launcher Shortcuts", "Menus", "Notification", 
+#                     "Preferences", "Search", "Service", "Voice Recognition"],
+    "App"       => ["Activity"],
+    "Activity"  => ["Custom Dialog"],
+    "Content"   => %w(Assests Resources),
+    "Graphics"  => ["AlphaBitmap", "AnimatedDrawables", "Arcs", "BitmapDecode", 
                      "BitmapMesh", "BitmapPixles", "CameraPreview", "Clipping", 
                      "ColorMatrix", "Compass", "Density", "Drawable", 
                      "FingerPaint", "Layers", "MeasureText", "OpenGL ES",
@@ -20,9 +25,9 @@ class RubotoActivity
                      "RoundRects", "ScaleToFit", "SensorTest", 
                      "SurfaceView Overlay", "Sweep", "Text Align", "Touch Paint", 
                      "Typefaces", "UnicodeChart", "Verticies", "Xfermodes"],
-    "Media"    => nil,
-    "OS"       => nil,
-    "Text"     => nil,
+    "Media"     => nil,
+    "OS"        => ["Morse Code"],
+    "Text"      => nil,
 #    "Views"    => ["Animation", "Auto Complete", "Buttons", "Chronometer", 
 #                     "Controls", "Custom", "Date Widgets", "Expandable Lists", 
 #                     "Focus", "Gallery", "ImageButton", "ImageSwitcher", 
@@ -30,10 +35,8 @@ class RubotoActivity
 #                     "Progress Bar", "Radio Group", "Rating Bar", "ScrollBars", 
 #                     "Seek Bar", "Spinner", "Tabs", "TextSwitcher", "Visibility", 
 #                     "WebView"],
-    "Views"    => ["Buttons", "Chronometer", "Date Widgets"],
-    "Animation"=> ["3D Transition", "Interpolators", "Push", "Shake"],
-
-
+    "Views"     => ["Buttons", "Chronometer", "Date Widgets"],
+    "Animation" => ["3D Transition", "Interpolators", "Push", "Shake"],
     "Date Widgets" => ["1. Dialog", "2. Inline"], 
   }
 
@@ -42,10 +45,12 @@ class RubotoActivity
       RubotoActivity.launch_list context, "$sl_#{title.downcase.gsub(' ', '_')}", "Api Dems", title
     else
       case title
-      when "Buttons"     : buttons(context)
-      when "Chronometer" : chronometer_demo(context)
-      when "1. Dialog"   : date_dialog(context)
-      when "2. Inline"   : date_inline(context)
+      when "Custom Dialog": custom_dialog(context)
+      when "Morse Code"   : morse_code(context)
+      when "Buttons"      : buttons(context)
+      when "Chronometer"  : chronometer_demo(context)
+      when "1. Dialog"    : date_dialog(context)
+      when "2. Inline"    : date_inline(context)
       else
         context.toast "Not Implemented Yet"
       end
@@ -72,20 +77,57 @@ class RubotoActivity
     end
   end
 
+  def self.custom_dialog(context)
+    context.start_ruboto_activity "$custom_dialog" do
+      setup_content do
+        text_view :text => "This is a test"
+      end
+    end
+  end
+
+  def self.morse_code(context)
+    context.start_ruboto_activity "$morse_code" do
+      @base  = 100
+      @durations = {"." => [@base, @base],  "-" => [@base* 3, @base], 
+                    "|" => [0, @base * 2],  " " => [0, @base * 6]}
+      @codes = {"A" => ".-",   "B" => "-...", "C" => "-.-.", "D" => "-..",
+                "E" => ".",    "F" => "..-.", "G" => "--.",  "H" => "....",
+                "I" => "..",   "J" => ".---", "K" => "-.-",  "L" => ".-..",
+                "M" => "--",   "N" => "-.",   "O" => "---",  "P" => ".--.",
+                "Q" => "--.-", "R" => ".-.",  "S" => "...",  "T" => "-",
+                "U" => "..-",  "V" => "..-",  "W" => ".--",  "X" => "-..-",
+                "Y" => "-.--", "Z" => "--..", "0" => "-----","1" => ".----",
+                "2" => "..---","3" => "...--","4" => "....-","5" => ".....",
+                "6" => "-....","7" => "--...","8" => "---..","9" => "----."}
+      setTitle "OS/Morse Code"
+      setup_content do
+        linear_layout :orientation => LinearLayout::VERTICAL do
+          @et = edit_text
+          button :text => "Vibrate", :width => :wrap_content
+        end
+      end
+      handle_click do |view|
+        getSystemService(Context::VIBRATOR_SERVICE).vibrate(
+          @et.getText.to_s.upcase.split('').
+          map {|i| @codes[i] || " "}.join('|').split('').
+          map {|i| @durations[i]}.flatten.unshift(0).to_java(:long), -1)
+      end
+    end
+  end
+
   def self.chronometer_demo(context)
     context.start_ruboto_activity "$chronometer_demo" do
       setTitle "Views/Chronometer"
       setup_content do
         linear_layout :orientation => LinearLayout::VERTICAL, 
                       :gravity => Gravity::CENTER_HORIZONTAL do
-          [@c = chronometer(:format => "Initial format: %s"),
-          button(:text => "Start"),
-          button(:text => "Stop"),
-          button(:text => "Reset"),
-          button(:text => "Set format string"),
-          button(:text => "Clear format string")
-          ].each {|i| i.getLayoutParams.width = ViewGroup::LayoutParams::WRAP_CONTENT}
+          @c = chronometer :format => "Initial format: %s", :width => :wrap_content
           @c.setPadding(0,30,0,30)
+          button :text => "Start", :width => :wrap_content
+          button :text => "Stop", :width => :wrap_content
+          button :text => "Reset", :width => :wrap_content
+          button :text => "Set format string", :width => :wrap_content
+          button :text => "Clear format string", :width => :wrap_content
         end
       end
 
@@ -105,17 +147,12 @@ class RubotoActivity
     context.start_ruboto_activity "$buttons" do
       setTitle "Views/Buttons"
       setup_content do
-        ll = linear_layout :orientation => LinearLayout::VERTICAL do
-          nb = button :text => "Normal"
-          @sb = button :text => "Small"
-          tb = toggle_button
-          [nb, @sb, tb].each {|i| i.getLayoutParams.width = ViewGroup::LayoutParams::WRAP_CONTENT}
+        linear_layout :orientation => LinearLayout::VERTICAL do
+          nb = button :text => "Normal", :width => :wrap_content
+          sb = button :text => "Small", :width => :wrap_content
+          sb.setPadding(8,0,8,0)
+          tb = toggle_button :width => :wrap_content
         end
-        lp = @sb.getLayoutParams
-        lp.height = ViewGroup::LayoutParams::WRAP_CONTENT
-        @sb.setLayoutParams lp
-        @sb.setPadding(8,0,8,0)
-        ll
       end
     end
   end
@@ -126,13 +163,9 @@ class RubotoActivity
       setup_content do
         linear_layout :orientation => LinearLayout::VERTICAL do
           @time  = Time.now
-          @current_date = @time.strftime("%m-%d-%Y")
-          @current_time = @time.strftime("%R")
-          @tv = text_view :text => "#{@current_date} #{@current_time}"
-          bd = button :text => "change the date"
-          bd.getLayoutParams.width = ViewGroup::LayoutParams::WRAP_CONTENT
-          bt = button :text => "change the time"
-          bt.getLayoutParams.width = ViewGroup::LayoutParams::WRAP_CONTENT
+          @tv = text_view :text => @time.strftime("%m-%d-%Y %R")
+          button :text => "change the date", :width => :wrap_content
+          button :text => "change the time", :width => :wrap_content
         end
       end
 
@@ -151,13 +184,11 @@ class RubotoActivity
       end
 
       handle_date_set do |view, year, month, day|
-        @current_date = "%d-%d-%d" % [month+1, day, year]
-        @tv.setText("#{@current_date} #{@current_time}")
+        @tv.setText("%d-%d-%d #{@tv.getText.split(' ')[1]}" % [month+1, day, year])
       end
 
       handle_time_set do |view, hour, minute|
-        @current_time = "%02d:%02d" % [hour, minute]
-        @tv.setText("#{@current_date} #{@current_time}")
+        @tv.setText("#{@tv.getText.split(' ')[0]} %02d:%02d" % [hour, minute])
       end
     end
   end
@@ -172,6 +203,7 @@ class RubotoActivity
           @tv = text_view :text => "12:15"
         end
       end
+
       handle_time_changed do |view, hour, minute|
         @tv.setText("%02d:%02d" % [hour, minute]) if @tv
       end

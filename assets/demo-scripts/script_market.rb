@@ -8,10 +8,7 @@
 #######################################################
 
 require "/sdcard/jruby/ruboto.rb"
-
-REQUIRE_RUBOTO_VERSION = 1
-
-raise "requires RUBOTO_VERSION #{REQUIRE_RUBOTO_VERSION} or greater" if $RUBOTO_VERSION < REQUIRE_RUBOTO_VERSION 
+confirm_ruboto_version(2)
 
 require "net/http"
 
@@ -136,13 +133,10 @@ def launch_script_list(context, list, &block)
   context.start_ruboto_activity("$script_list") do
     setTitle "Pick a Script"
 
-    @list = list
-    @block = block
-
-    setup_content {list_view :list => @list}
+    setup_content {list_view :list => list}
   
     handle_item_click do |adapter_view, view, pos, item_id| 
-      @block.call(@list[pos])
+      block.call(list[pos])
       finish
     end
   end
@@ -236,7 +230,7 @@ def about context
 
 Author: Scott Moyer
 
-Descriptions: Script Market allows you to find and install scripts from various locations. Two locations are provided by default:
+Description: Script Market allows you to find and install scripts from various locations. Two locations are provided by default:
 
 1) Assets: The assets/demo-scripts directory in Ruboto IRB application. These are scripts demonstrating how to use Ruboto.
 
@@ -244,9 +238,23 @@ Descriptions: Script Market allows you to find and install scripts from various 
 
 In addition to the default script sources, you can add your own. Right now there are two types:
 
-1) Github: Specifying the user name, project, branch, and directoy
+1) Github: Specifying the user name, project, branch, and directory
 
-2) Generic: Specifying site (no http://), list directory (any page that contains script names wrapped in some HTML tag) and script directory (use %s to represent the name of the script selected from the list)"
+2) Generic: Specifying site (no http://), list directory (any page that contains script names wrapped in some HTML tag) and script directory (use %s to represent the name of the script selected from the list)
+
+For example, the default Github scripts could also be obtained by specifying:
+
+User: hedius
+Project: ruboto-irb
+Branch: master
+Directory: assets/demo-scripts
+
+The same results could be obtained by creating a web source specifying:
+
+Site: github.com
+List path: headius/ruboto-irb/tree/master/assets/demo-scripts/?raw=true
+Get path: headius/ruboto-irb/raw/master/assets/demo-scripts/%s
+"
       end
     end
   end
