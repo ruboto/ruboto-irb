@@ -49,7 +49,11 @@ end
 class Activity
   attr_accessor :init_block
 
-  def start_ruboto_activity(remote_variable, &block)
+  def start_ruboto_dialog(remote_variable, &block)
+    start_ruboto_activity(remote_variable, true, &block)
+  end
+
+  def start_ruboto_activity(remote_variable, dialog=false, &block)
     @@init_block = block
 
     if @initialized or not self.is_a?(RubotoActivity)
@@ -59,7 +63,8 @@ class Activity
       b.putString("Initialize Script", "#{remote_variable}.initialize_activity")
 
       i = Intent.new
-      i.setClassName "org.jruby.ruboto.irb",  "org.jruby.ruboto.RubotoActivity"
+      i.setClassName "org.jruby.ruboto.irb", 
+                     "org.jruby.ruboto.Ruboto#{dialog ? 'Dialog' : 'Activity'}"
       i.putExtra("RubotoActivity Config", b)
 
       self.startActivity i
@@ -262,3 +267,4 @@ class RubotoActivity
   create_view_factory DatePicker
   create_view_factory Chronometer
 end
+  
