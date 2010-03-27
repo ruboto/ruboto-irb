@@ -267,10 +267,6 @@ public class RubotoActivity extends Activity
     	}
     }
     
-    public ArrayAdapter<String> arrayAdapterForList(String[] items) {
-    	return new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
-    }
-    
 	/* 
 	 *  Editor Clicks and Actions
 	 */
