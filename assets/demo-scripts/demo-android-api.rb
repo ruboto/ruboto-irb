@@ -1,10 +1,23 @@
+#######################################################
+#
+# demo-android-api.rb (by Scott Moyer)
+# 
+# Attempt to use Ruboto to implement as many of the 
+# standard Android API Demos as possible.
+#
+#######################################################
+
 require "/sdcard/jruby/ruboto.rb"
 confirm_ruboto_version(2)
 
 include_class "android.os.SystemClock"
+include_class "android.view.Window"
 include_class "android.view.Gravity"
 include_class "android.content.Context"
 include_class "android.util.AttributeSet"
+include_class "android.graphics.drawable.GradientDrawable"
+include_class "android.graphics.Color"
+
 
 class RubotoActivity
   @@lists = {
@@ -42,7 +55,7 @@ class RubotoActivity
 
   def self.resolve_click(context, title)
     if @@lists[title]
-      RubotoActivity.launch_list context, "$sl_#{title.downcase.gsub(' ', '_')}", "Api Dems", title
+      RubotoActivity.launch_list context, "$sl_#{title.downcase.gsub(' ', '_')}", "Api Demos", title
     else
       case title
       when "Custom Dialog": custom_dialog(context)
@@ -57,10 +70,15 @@ class RubotoActivity
     end
   end
 
-  def self.launch_list(context, var, title, list_id)
+  def self.launch_list(context, var, title, list_id, extra_text=nil)
     context.start_ruboto_activity var do
       setTitle title
-      setup_content {list_view :list => @@lists[list_id]}
+      setup_content do
+        linear_layout :orientation => LinearLayout::VERTICAL do
+          text_view(:text => extra_text) if extra_text
+          list_view :list => @@lists[list_id]
+        end
+      end
       handle_item_click do |adapter_view, view, pos, item_id| 
         RubotoActivity.resolve_click self, view.getText
       end
@@ -78,9 +96,24 @@ class RubotoActivity
   end
 
   def self.custom_dialog(context)
-    context.start_ruboto_activity "$custom_dialog" do
+    context.start_ruboto_dialog "$custom_dialog" do
+      setTitle "App/Activity/Custom Dialog"
+
       setup_content do
-        text_view :text => "This is a test"
+        cd = GradientDrawable.new
+        cd.setColor(Color.argb(240,96,0,0))
+        cd.setStroke(3, Color.argb(255,255,128,128))
+        cd.setCornerRadius(3)
+        getWindow.setLayout(ViewGroup::LayoutParams::FILL_PARENT,
+                            ViewGroup::LayoutParams::WRAP_CONTENT)
+        getWindow.setBackgroundDrawable(cd)
+        @lv = linear_layout :orientation => LinearLayout::VERTICAL do
+          text_view :text => "Example of how you can use a custom Theme.Dialog theme to make an activity that looks like a customized dialog, here with an ugly frame.", 
+            :text_size => 14,
+            :gravity => Gravity::CENTER_HORIZONTAL
+        end
+        @lv.setPadding(10,0,10,10)
+        @lv
       end
     end
   end
@@ -211,4 +244,5 @@ class RubotoActivity
   end
 end
 
-RubotoActivity.launch_list $activity, "$main_list", "Api Dems", :main
+RubotoActivity.launch_list $activity, "$main_list", "Api Demos", :main,
+  "This is a Ruboto demo that attempts to duplicate the standard Android API Demo using Ruboto. It is in the early stages (more samples will be completed in the future)."
