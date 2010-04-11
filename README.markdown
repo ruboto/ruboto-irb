@@ -13,7 +13,7 @@ For example,
      $ cp local.properties.EXAMPLE local.properties
      $ vi local.properties
 
-  Modify the "dx" tool for the target platform to support 1024M of memory. Edit SDK_PATH/platforms/android-1.x/tools/dx, uncomment javaopts and set it to javaOpts="-Xmx1024M" (you may need a higher value than 1024 on some systems).
+  Modify the "dx" tool for the target platform to support 1024M of memory. Edit SDK_PATH/platforms/android-1.x/tools/dx, uncomment javaopts and set it to javaOpts="-Xmx1024M" (you may need a higher value than 1024 on some systems). This is only needed for API SDK Version 4, more recent SDKs default to 1GB.
 
      $ ant debug     # build package
      $ ant install   # build and install package
