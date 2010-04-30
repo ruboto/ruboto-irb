@@ -36,6 +36,7 @@ import android.widget.Toast;
 
 public class IRB extends Activity implements OnItemClickListener {
     public static final String TAG = "Ruboto-IRB";
+    public static final String SDCARD_SCRIPTS_DIR = "/sdcard/jruby";
     
     private TabHost tabs;
     private final Handler handler = new Handler();
@@ -88,7 +89,7 @@ public class IRB extends Activity implements OnItemClickListener {
         tabs.setup();
                 
         irbSetUp();
-        checkSDCard();
+        configScriptsDir();
         editorSetUp();
         scriptsListSetUp();
         setUpJRuby();
@@ -213,7 +214,7 @@ public class IRB extends Activity implements OnItemClickListener {
         menu.add(0, NEW_MENU, 0, R.string.Menu_new);
         menu.add(0, HISTORY_MENU, 0, R.string.Menu_history);
         menu.add(0, RESCAN_MENU, 0, R.string.Menu_rescan);
-        if (Script.isSDCardAvailable()) menu.add(0, RELOAD_DEMOS, 0, "Reload Demos");
+        menu.add(0, RELOAD_DEMOS, 0, "Reload Demos");
         return true;
     }
 
@@ -239,7 +240,7 @@ public class IRB extends Activity implements OnItemClickListener {
                 return true;
             case RELOAD_DEMOS:
                 Toast.makeText(this, 
-                		recopyDemoScripts(DEMO_SCRIPTS, Script.SCRIPTS_DIR_FILE), 
+                		recopyDemoScripts(DEMO_SCRIPTS, Script.getDirFile()), 
                 		Toast.LENGTH_SHORT).show();
                 scanScripts();
                 tabs.setCurrentTab(SCRIPTS_TAB);
@@ -292,7 +293,7 @@ public class IRB extends Activity implements OnItemClickListener {
             adapter.notifyDataSetChanged();
         }
         catch (SecurityException se) {
-            Toast.makeText(this, "Could not create " + Script.SCRIPTS_DIR, Toast.LENGTH_SHORT);
+            Toast.makeText(this, "Could not create " + Script.getDir(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -407,23 +408,14 @@ public class IRB extends Activity implements OnItemClickListener {
         }
     }
 
-    private void checkSDCard() {
-        if (!Script.isSDCardAvailable()) {
-            appendToIRB("No SD card found. Loading/Saving disabled.\n");
-        } else {            
-            if (!Script.SCRIPTS_DIR_FILE.exists()) {
-                // on first install init directory + copy sample scripts
-                copyDemoScripts(DEMO_SCRIPTS, Script.SCRIPTS_DIR_FILE);                
-            }
+    private void configScriptsDir() {
+        if (Script.configDir(SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts")) {
+            // on first install init directory + copy sample scripts
+            copyDemoScripts(DEMO_SCRIPTS, Script.getDirFile());                
         }
     }
         
     private void copyDemoScripts(String from, File to) {                        
-        if (!to.mkdirs()) {
-            Log.e(TAG, "error creating script directory " + to);
-            return;
-        }                                    
-                
         try {
             byte[] buffer = new byte[8192];        
             for (String f : getAssets().list(from)) {
