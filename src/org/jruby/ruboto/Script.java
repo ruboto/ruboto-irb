@@ -10,10 +10,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import android.os.Environment;
 import org.jruby.Ruby;
 import org.jruby.RubyInstanceConfig;
 import org.jruby.exceptions.RaiseException;
@@ -23,12 +21,14 @@ import org.jruby.runtime.DynamicScope;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.scope.ManyVarsDynamicScope;
 
+import android.os.Environment;
+
 public class Script {
-    public static final String SCRIPTS_DIR = "/sdcard/jruby";
     public static final String UNTITLED_RB = "untitled.rb";
 
-    public static final File SCRIPTS_DIR_FILE = new File(SCRIPTS_DIR);
-
+    public static String scriptsDir = null;
+    public static File scriptsDirFile = null;
+  
     private static final int STATE_EMPTY = 1;
     private static final int STATE_ON_DISK = 2;
     private static final int STATE_IN_MEMORY = 3;
@@ -98,42 +98,61 @@ public class Script {
     }
 
     /*************************************************************************************************
+    *
+    * Static Methods: Scripts Directory
+    */
+    
+    public static void setDir(String dir) {
+    	scriptsDir = dir;
+    	scriptsDirFile = new File(dir);
+    }
+    
+    public static String getDir() {
+    	return scriptsDir;
+    }
+
+    public static File getDirFile() {
+    	return scriptsDirFile;
+    }
+
+    public static Boolean configDir(String sdcard, String noSdcard) {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+        	setDir(sdcard);
+        } else {
+        	setDir(noSdcard);
+        }
+
+        /* Create directory if it doesn't exist */
+        if (!scriptsDirFile.exists()) {
+            // TODO check return code
+            scriptsDirFile.mkdir();
+            return true;
+        }
+
+        return false;
+    }
+    
+    /*************************************************************************************************
      *
      * Static Methods: Scripts List
      */
-
-    public static boolean isSDCardAvailable() {
-        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
-    }
 
     public static List<String> list() throws SecurityException {
         return Script.list(new ArrayList<String>());
     }
 
     public static List<String> list(List<String> list) throws SecurityException {
-        if (!isSDCardAvailable()) {
-            return Collections.emptyList();
-        }
-
-        File scriptsDir = new File(SCRIPTS_DIR);
-
-        /* Create directory if it doesn't exist */
-        if (!scriptsDir.exists()) {
-            // TODO check return code
-            scriptsDir.mkdir();
-        }
-
         list.clear();
-        String[] tmpList = scriptsDir.list(RUBY_FILES);
+        String[] tmpList = scriptsDirFile.list(RUBY_FILES);
         Arrays.sort(tmpList, 0, tmpList.length, String.CASE_INSENSITIVE_ORDER);
         list.addAll(Arrays.asList(tmpList));
         return list;
     }
 
     /*************************************************************************************************
-     *
-     * Constructors
-     */
+    *
+    * Constructors
+    */
 
     public Script(String name) {
         this(name, null);
@@ -166,7 +185,7 @@ public class Script {
     }
 
     public File getFile() {
-        return new File(SCRIPTS_DIR, name);
+        return new File(getDir(), name);
     }
 
     public Script setName(String name) {
