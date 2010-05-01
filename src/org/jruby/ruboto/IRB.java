@@ -170,6 +170,7 @@ public class IRB extends Activity implements OnItemClickListener {
         public void run() {
             Script.defineGlobalVariable("$activity", IRB.this);
             irbOutput.append("Done\n>>");
+            autoLoadScript();
         }
     };
 
@@ -178,6 +179,14 @@ public class IRB extends Activity implements OnItemClickListener {
         currentIrbOutput.append(string);
     }
 
+    /* Loads the script specified in the Intent (if supplied) */
+    public void autoLoadScript() {
+		if (getIntent().getData() != null) {
+			Script script = Script.fromURL(getIntent().getData().toString());
+			if (script != null) editScript(script, true);
+		}
+    }
+    
     /*********************************************************************************************
      *
      * Saving and recalling state
