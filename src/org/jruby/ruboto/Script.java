@@ -22,6 +22,9 @@ import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.scope.ManyVarsDynamicScope;
 
 import android.os.Environment;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Script {
     public static final String UNTITLED_RB = "untitled.rb";
@@ -173,6 +176,20 @@ public class Script {
         } else {
             // TODO: Exception
         }
+    }
+
+    /* Create a Script from a URL */
+    public static Script fromURL(String url) {
+    	try {
+            String [] temp = url.split("/");
+        	DefaultHttpClient client = new DefaultHttpClient();
+        	HttpGet get = new HttpGet(url);
+        	BasicResponseHandler handler = new BasicResponseHandler();
+        	return new Script(temp[temp.length -1], client.execute(get, handler));
+    	}
+    	catch (Throwable t) {
+    		return null;
+    	}
     }
 
     /*************************************************************************************************
