@@ -10,7 +10,12 @@
 require "/sdcard/jruby/ruboto.rb"
 confirm_ruboto_version(2)
 
-require "net/http"
+# Use Java classes until we compile Ruby
+#require "net/http"
+include_class "org.apache.http.client.methods.HttpGet"
+include_class "org.apache.http.impl.client.BasicResponseHandler"
+include_class "org.apache.http.impl.client.DefaultHttpClient"
+
 
 include_class "android.content.res.AssetManager"
 include_class "android.content.Context"
@@ -261,9 +266,11 @@ Get path: headius/ruboto-irb/raw/master/assets/demo-scripts/%s
 end
 
 def get_remote_page url
-  url.match /http:\/\/([^\/]*)(.*)/
-  r = Net::HTTP.get_response($1, $2)
-  r.code == "200" ? r.body : ""
+# Use Java classes until we compile Ruby
+#  url.match /http:\/\/([^\/]*)(.*)/
+#  r = Net::HTTP.get_response($1, $2)
+#  r.code == "200" ? r.body : ""
+  DefaultHttpClient.new.execute(HttpGet.new(url), BasicResponseHandler.new)
 end
 
 def save_script name, contents
