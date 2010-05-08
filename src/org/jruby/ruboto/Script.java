@@ -29,8 +29,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 public class Script {
     public static final String UNTITLED_RB = "untitled.rb";
 
-    public static String scriptsDir = null;
-    public static File scriptsDirFile = null;
+    private static String scriptsDir = null;
+    private static File scriptsDirFile = null;
   
     private static final int STATE_EMPTY = 1;
     private static final int STATE_ON_DISK = 2;
@@ -66,6 +66,7 @@ public class Script {
             config.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
 
             config.setLoader(Script.class.getClassLoader());
+            if (scriptsDir != null) config.setCurrentDirectory(scriptsDir);
 
             config.setOutput(out);
             config.setError(out);
@@ -76,6 +77,7 @@ public class Script {
             ThreadContext context = ruby.getCurrentContext();
             DynamicScope currentScope = context.getCurrentScope();
             scope = new ManyVarsDynamicScope(new EvalStaticScope(currentScope.getStaticScope()), currentScope);
+            
             initialized = true;
         }
 
@@ -108,6 +110,7 @@ public class Script {
     public static void setDir(String dir) {
     	scriptsDir = dir;
     	scriptsDirFile = new File(dir);
+        if (ruby != null) ruby.setCurrentDirectory(scriptsDir);
     }
     
     public static String getDir() {
