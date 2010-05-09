@@ -7,17 +7,21 @@
 #
 #######################################################
 
-require "/sdcard/jruby/ruboto.rb"
-confirm_ruboto_version(2)
+require "ruboto.rb"
+confirm_ruboto_version(3)
 
-include_class "android.os.SystemClock"
-include_class "android.view.Window"
-include_class "android.view.Gravity"
-include_class "android.content.Context"
-include_class "android.util.AttributeSet"
-include_class "android.graphics.drawable.GradientDrawable"
-include_class "android.graphics.Color"
+ruboto_import_widgets :LinearLayout, :TextView, 
+  :Chronometer, :DatePicker, :TimePicker, :EditText, :ToggleButton
 
+java_import "android.os.SystemClock"
+java_import "android.view.Window"
+java_import "android.view.Gravity"
+java_import "android.content.Context"
+java_import "android.util.AttributeSet"
+java_import "android.graphics.drawable.GradientDrawable"
+java_import "android.graphics.Color"
+java_import "android.app.TimePickerDialog"
+java_import "android.app.DatePickerDialog"
 
 class RubotoActivity
   @@lists = {
