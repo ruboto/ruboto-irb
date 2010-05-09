@@ -7,20 +7,20 @@
 #
 #######################################################
 
-require "/sdcard/jruby/ruboto.rb"
-confirm_ruboto_version(2)
+require "ruboto.rb"
+confirm_ruboto_version(3)
+
+ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText
 
 # Use Java classes until we compile Ruby
 #require "net/http"
-include_class "org.apache.http.client.methods.HttpGet"
-include_class "org.apache.http.impl.client.BasicResponseHandler"
-include_class "org.apache.http.impl.client.DefaultHttpClient"
+java_import "org.apache.http.client.methods.HttpGet"
+java_import "org.apache.http.impl.client.BasicResponseHandler"
+java_import "org.apache.http.impl.client.DefaultHttpClient"
 
-
-include_class "android.content.res.AssetManager"
-include_class "android.content.Context"
-
-SCRIPT_DIR = "/sdcard/jruby/"
+java_import "android.content.res.AssetManager"
+java_import "android.content.Context"
+java_import "org.jruby.ruboto.Script"
 
 $activity.start_ruboto_activity("$source_picker") do
   setTitle "Script Market - Select a source"
@@ -274,6 +274,6 @@ def get_remote_page url
 end
 
 def save_script name, contents
-  File.open("#{SCRIPT_DIR}#{name}","w") {|f| f.write contents} unless p == ""
+  File.open("#{Script.getDir}/#{name}","w") {|f| f.write contents} unless p == ""
   p != ""
 end
