@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -30,12 +31,13 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TabHost;
-import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.TabHost.OnTabChangeListener;
 
 public class IRB extends Activity implements OnItemClickListener, OnTabChangeListener {
     public static final String TAG = "Ruboto-IRB";
@@ -68,8 +70,9 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     private static final int RUN_MENU = 2;
     private static final int NEW_MENU = 3;
     private static final int HISTORY_MENU = 4;
-    private static final int RESCAN_MENU = 5;
-    private static final int RELOAD_DEMOS = 6;
+    private static final int ABOUT_MENU = 5;
+    private static final int RESCAN_MENU = 6;
+    private static final int RELOAD_DEMOS = 7;
 
     /* Context menu option identifiers for script list */
     private static final int EDIT_MENU = 10;
@@ -234,12 +237,13 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, SAVE_MENU, 0, R.string.Menu_save);
-        menu.add(0, RUN_MENU, 0, R.string.Menu_run);
-        menu.add(0, NEW_MENU, 0, R.string.Menu_new);
-        menu.add(0, HISTORY_MENU, 0, R.string.Menu_history);
+        menu.add(0, SAVE_MENU, 0, R.string.Menu_save).setIcon(android.R.drawable.ic_menu_save);
+        menu.add(0, RUN_MENU, 0, R.string.Menu_run).setIcon(R.drawable.ic_menu_play);
+        menu.add(0, NEW_MENU, 0, R.string.Menu_new).setIcon(android.R.drawable.ic_menu_add);
+        menu.add(0, HISTORY_MENU, 0, R.string.Menu_history).setIcon(android.R.drawable.ic_menu_recent_history);
+        menu.add(0, ABOUT_MENU, 0, R.string.Menu_about).setIcon(android.R.drawable.ic_menu_info_details);
         menu.add(0, RESCAN_MENU, 0, R.string.Menu_rescan);
-        menu.add(0, RELOAD_DEMOS, 0, "Reload Demos");
+        menu.add(0, RELOAD_DEMOS, 0, R.string.Menu_reload);
         return true;
     }
 
@@ -258,6 +262,9 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
                 return true;
             case HISTORY_MENU:
                 editScript(new Script(Script.UNTITLED_RB, irbInput.getHistoryString()), true);
+                return true;
+            case ABOUT_MENU:
+            	aboutDialog();
                 return true;
             case RESCAN_MENU:
                 scanScripts();
@@ -390,26 +397,46 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     }
 
     /************************************************************************************
-     *
-     * Context menu for scripts list.
-     * Options: Edit, Execute, Delete
-     */
+    *
+    * Creates a dialog to confirm script deletion
+    */
     private void comfirmDelete(final String fname) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Delete " + fname + "?")
-                .setCancelable(false)
-                .setPositiveButton(R.string.Delete_confirm, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        deleteScript(fname);
-                    }
-                })
-                .setNegativeButton(R.string.Delete_cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        builder.create().show();
-    }
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage("Delete " + fname + "?")
+             .setCancelable(false)
+             .setPositiveButton(R.string.Delete_confirm, new DialogInterface.OnClickListener() {
+                 public void onClick(DialogInterface dialog, int id) {
+                   deleteScript(fname);
+                 }
+               })
+              .setNegativeButton(R.string.Delete_cancel, new DialogInterface.OnClickListener() {
+                 public void onClick(DialogInterface dialog, int id) {
+                   dialog.cancel();
+                 }
+               });
+       builder.create().show();
+   }
+
+   /************************************************************************************
+   *
+   * About Dialog
+   */
+   private void aboutDialog() {
+	 ScrollView sv = new ScrollView(this);
+     TextView tv = new TextView(this);
+	 tv.setPadding(5, 5, 5, 5);
+	 tv.setText(R.string.About_text);
+	 Linkify.addLinks(tv, Linkify.ALL);
+     sv.addView(tv);
+
+     AlertDialog.Builder builder = new AlertDialog.Builder(this);
+     builder.setTitle(getString(R.string.app_name) + " v " + getString(R.string.version_name))
+            .setView(sv)
+            .setPositiveButton(R.string.About_dismiss, new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int id) {}
+            });
+      builder.create().show();
+   	}
 
     /*********************************************************************************************
      *
