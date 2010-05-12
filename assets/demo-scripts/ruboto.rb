@@ -228,7 +228,11 @@ class View
     end
 
     params.each do |k, v|
-      self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", v)
+      if v.is_a?(Array)
+        self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", *v)
+      else
+        self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", v)
+      end
     end
   end
 end
