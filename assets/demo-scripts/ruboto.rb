@@ -91,8 +91,13 @@ class RubotoActivity
     self
   end
   
+  def handle_create &block
+    @create_block = block
+  end
+
   def on_create(bundle)
     setContentView(instance_eval &@content_view_block) if @content_view_block
+    instance_eval {@create_block.call} if @create_block
   end
   
   def setup_content &block
