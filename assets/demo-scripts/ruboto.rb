@@ -138,6 +138,7 @@ class RubotoActivity
   create_callback :key, [:view, :key_code, :event]
   create_callback :editor_action, [:view, :action_id, :event]
   create_callback :click, [:view]
+  create_callback :draw, [:view, :canvas]
   create_callback :time_changed, [:view, :hour, :minute]
   create_callback :date_changed, [:view, :year, :month, :day]
   create_callback :time_set, [:view, :hour, :minute]
