@@ -22,10 +22,13 @@ java_import "android.content.Context"
 java_import "android.util.AttributeSet"
 java_import "android.graphics.drawable.GradientDrawable"
 java_import "android.graphics.Color"
+java_import "android.graphics.Paint"
+java_import "android.graphics.RectF"
 java_import "android.app.TimePickerDialog"
 java_import "android.app.DatePickerDialog"
 java_import "android.graphics.Typeface"
 java_import "android.content.res.ColorStateList"
+java_import "org.jruby.ruboto.RubotoView"
 
 module Ruboto
   java_import "org.jruby.ruboto.irb.R"
@@ -35,22 +38,24 @@ end
 class RubotoActivity
   @@lists = {
 #    :main      => %w(App Content Graphics Media OS Text Views),
-    :main       => %w(App OS Views),
+    :main       => %w(App Graphics OS Views),
 #    "App"       => ["Activity", "Alarm", "Dialog" "Intents", 
 #                     "Launcher Shortcuts", "Menus", "Notification", 
 #                     "Preferences", "Search", "Service", "Voice Recognition"],
     "App"       => ["Activity"],
-    "Activity"  => ["Custom Dialog", "Custom Title", "Forwarding", "Hello World", "Persistent State", "Save & Restore State"],
+    "Activity"  => ["Custom Dialog", "Custom Title", "Forwarding", "Hello World", 
+                    "Persistent State", "Save & Restore State"],
     "Content"   => %w(Assests Resources),
-    "Graphics"  => ["AlphaBitmap", "AnimatedDrawables", "Arcs", "BitmapDecode", 
-                     "BitmapMesh", "BitmapPixles", "CameraPreview", "Clipping", 
-                     "ColorMatrix", "Compass", "Density", "Drawable", 
-                     "FingerPaint", "Layers", "MeasureText", "OpenGL ES",
-                     "PathEffects", "PathFillTypes", "Patterns", "Pictures",
-                     "Points", "PolyToPoly", "PurgeableBitmap", "Regions",
-                     "RoundRects", "ScaleToFit", "SensorTest", 
-                     "SurfaceView Overlay", "Sweep", "Text Align", "Touch Paint", 
-                     "Typefaces", "UnicodeChart", "Verticies", "Xfermodes"],
+    "Graphics"  => ["Arcs"],
+#    "Graphics"  => ["AlphaBitmap", "AnimatedDrawables", "Arcs", "BitmapDecode", 
+#                     "BitmapMesh", "BitmapPixles", "CameraPreview", "Clipping", 
+#                     "ColorMatrix", "Compass", "Density", "Drawable", 
+#                     "FingerPaint", "Layers", "MeasureText", "OpenGL ES",
+#                     "PathEffects", "PathFillTypes", "Patterns", "Pictures",
+#                     "Points", "PolyToPoly", "PurgeableBitmap", "Regions",
+#                     "RoundRects", "ScaleToFit", "SensorTest", 
+#                     "SurfaceView Overlay", "Sweep", "Text Align", "Touch Paint", 
+#                     "Typefaces", "UnicodeChart", "Verticies", "Xfermodes"],
     "Media"     => nil,
     "OS"        => ["Morse Code"],
     "Text"      => nil,
@@ -77,6 +82,7 @@ class RubotoActivity
       when "Hello World"           : hello_world(context)
       when "Persistent State"      : persistent_state(context)
       when "Save & Restore State"  : save_and_restore_state(context)
+      when "Arcs"                  : arcs(context)
       when "Morse Code"            : morse_code(context)
       when "Buttons"               : buttons(context)
       when "Chronometer"           : chronometer_demo(context)
@@ -297,6 +303,92 @@ class RubotoActivity
                          :padding => [0,4,0,4]
           et.getLayoutParams.weight = 1.0
         end
+      end
+    end
+  end
+
+  #######################################################
+  #
+  # Graphics
+  #
+
+  #
+  # Arcs
+  #
+
+  def self.arcs(context)
+    context.start_ruboto_activity "$arcs" do
+      setTitle "Graphics/Arcs"
+
+      setup_content do
+        @sweep_inc = 2
+        @start_inc = 15
+        @mStart = 0.0
+        @mSweep = 0.0
+        @mBigIndex = 0
+
+        @mPaints = []
+        @mUseCenters = []
+        @mOvals = []
+    
+        @mPaints[0] = Paint.new
+        @mPaints[0].setAntiAlias(true)
+        @mPaints[0].setStyle(Paint::Style::FILL)
+        @mPaints[0].setColor(0x88FF0000)
+        @mUseCenters[0] = false
+            
+        @mPaints[1] = Paint.new(@mPaints[0])
+        @mPaints[1].setColor(0x8800FF00)
+        @mUseCenters[1] = true
+           
+        @mPaints[2] = Paint.new(@mPaints[0])
+        @mPaints[2].setStyle(Paint::Style::STROKE)
+        @mPaints[2].setStrokeWidth(4)
+        @mPaints[2].setColor(0x880000FF)
+        @mUseCenters[2] = false
+
+        @mPaints[3] = Paint.new(@mPaints[2])
+        @mPaints[3].setColor(0x88888888)
+        @mUseCenters[3] = true
+            
+        @mBigOval  = RectF.new( 40,  10, 280, 250)
+        @mOvals[0] = RectF.new( 10, 270,  70, 330)
+        @mOvals[1] = RectF.new( 90, 270, 150, 330)
+        @mOvals[2] = RectF.new(170, 270, 230, 330)
+        @mOvals[3] = RectF.new(250, 270, 310, 330)
+            
+        @mFramePaint = Paint.new
+        @mFramePaint.setAntiAlias(true)
+        @mFramePaint.setStyle(Paint::Style::STROKE)
+        @mFramePaint.setStrokeWidth(0)
+
+        RubotoView.new(self)
+      end
+
+      def draw(canvas, oval, useCenters, paints, drawBig)
+        if drawBig
+          canvas.drawRect(@mBigOval, @mFramePaint)
+          canvas.drawArc(@mBigOval, @mStart, @mSweep, useCenters, paints)
+        end
+
+        canvas.drawRect(oval, @mFramePaint)
+        canvas.drawArc(oval, @mStart, @mSweep, useCenters, paints)
+      end
+
+      handle_draw do |view, canvas|
+        canvas.drawColor(Color::WHITE)
+
+        0.upto(3) {|i| draw(canvas, @mOvals[i], @mUseCenters[i], @mPaints[i], @mBigIndex == i)}
+            
+        @mSweep += @sweep_inc
+        if (@mSweep > 360) 
+          @mSweep -= 360
+          @mStart += @start_inc
+          @mStart -= 360 if @mStart >= 360 
+          @mBigIndex = (@mBigIndex + 1) % @mOvals.length
+        end
+
+        view.invalidate
       end
     end
   end
