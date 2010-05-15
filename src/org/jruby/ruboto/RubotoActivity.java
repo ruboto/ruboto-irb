@@ -8,6 +8,7 @@ import android.app.ProgressDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Intent;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.ContextMenu;
@@ -19,7 +20,6 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -64,7 +64,9 @@ public class RubotoActivity extends Activity
 	public static final int CB_DATE_SET					= 19;
 	public static final int CB_DATE_CHANGED				= 20;
 	
-	public static final int CB_LAST 					= 20;
+	public static final int CB_DRAW						= 21;
+
+	public static final int CB_LAST 					= 22;
 	
 	private boolean[] callbackOptions = new boolean [CB_LAST];
 	private String remoteVariable = "";
@@ -299,6 +301,18 @@ public class RubotoActivity extends Activity
 		if (callbackOptions[CB_CLICK]) {
 	        Script.defineGlobalVariable("$view", v);
 			Script.execute(remoteVariable + "on_click($view)");
+		}
+    }
+
+	/* 
+	 *  Draw
+	 */
+    
+    public void onDraw (RubotoView v, Canvas c) {
+		if (callbackOptions[CB_DRAW]) {
+	        Script.defineGlobalVariable("$view", v);
+	        Script.defineGlobalVariable("$canvas", c);
+			Script.execute(remoteVariable + "on_draw($view, $canvas)");
 		}
     }
 
