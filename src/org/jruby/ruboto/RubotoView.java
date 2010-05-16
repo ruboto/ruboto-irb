@@ -6,8 +6,6 @@ import android.util.AttributeSet;
 import android.view.View;
 
 public class RubotoView extends View {
-	private boolean requestedCallback = true;
-	
 	public RubotoView(Context context) {
 		super(context);
 	}
@@ -20,13 +18,13 @@ public class RubotoView extends View {
 		super(context, attrs, defStyle);
 	}
 	
-	void setCallback(boolean flag) {
-		requestedCallback = flag;
-	}
-
     @Override 
     protected void onDraw(Canvas canvas) {
-    	if (requestedCallback) ((RubotoActivity) getContext()).onDraw(this, canvas);
+    	((RubotoActivity) getContext()).onDraw(this, canvas);
     }
 	
+    @Override 
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    	((RubotoActivity) getContext()).onSizeChanged(this, w, h, oldw, oldh);
+    }
 }
