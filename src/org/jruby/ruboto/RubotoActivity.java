@@ -9,6 +9,9 @@ import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Intent;
 import android.graphics.Canvas;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.ContextMenu;
@@ -37,7 +40,8 @@ public class RubotoActivity extends Activity
 		OnDateChangedListener,
 		OnDateSetListener,
 		OnTimeChangedListener,
-		OnTimeSetListener {
+		OnTimeSetListener,
+		SensorEventListener {
 	
 	public static final int CB_START 					= 0;
 	public static final int CB_RESTART 					= 1;
@@ -65,8 +69,11 @@ public class RubotoActivity extends Activity
 	public static final int CB_DATE_CHANGED				= 20;
 	
 	public static final int CB_DRAW						= 21;
+	public static final int CB_SIZE_CHANGED 			= 22;
 
-	public static final int CB_LAST 					= 22;
+	public static final int CB_SENSOR_CHANGED			= 23;
+
+	public static final int CB_LAST 					= 24;
 	
 	private boolean[] callbackOptions = new boolean [CB_LAST];
 	private String remoteVariable = "";
@@ -305,7 +312,7 @@ public class RubotoActivity extends Activity
     }
 
 	/* 
-	 *  Draw
+	 *  RubotoView
 	 */
     
     public void onDraw (RubotoView v, Canvas c) {
@@ -313,6 +320,13 @@ public class RubotoActivity extends Activity
 	        Script.defineGlobalVariable("$view", v);
 	        Script.defineGlobalVariable("$canvas", c);
 			Script.execute(remoteVariable + "on_draw($view, $canvas)");
+		}
+    }
+
+    public void onSizeChanged (RubotoView v, int w, int h, int oldw, int oldh) {
+		if (callbackOptions[CB_SIZE_CHANGED]) {
+	        Script.defineGlobalVariable("$view", v);
+			Script.execute(remoteVariable + "on_size_changed($view," + w + "," + h + "," + oldw + "," + oldh + ")");
 		}
     }
 
@@ -364,6 +378,21 @@ public class RubotoActivity extends Activity
 		if (callbackOptions[CB_TIME_SET]) {
 	        Script.defineGlobalVariable("$view", view);
 			Script.execute(remoteVariable + "on_time_set($view, " + hourOfDay + ", " + minute + ")");
+		}
+    }
+
+    /* 
+	 *  SensorEventListener
+	 */
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+      // Nothing for now	
+    }
+
+    public void onSensorChanged(SensorEvent event) {
+		if (callbackOptions[CB_SENSOR_CHANGED]) {
+	        Script.defineGlobalVariable("$event", event);
+			Script.execute(remoteVariable + "on_sensor_changed($event)");
 		}
     }
 }
