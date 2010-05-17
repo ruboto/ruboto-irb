@@ -548,7 +548,7 @@ class RubotoActivity
       handle_sensor_changed do |event|
         if @bitmap
           if (event.sensor.getType == Sensor::TYPE_ORIENTATION)
-            @orientation_values = event.values
+            @orientation_values = [event.values[0], event.values[1], event.values[2]]
           else
             j = (event.sensor.getType == Sensor::TYPE_MAGNETIC_FIELD) ? 1 : 0
             0.upto(2) do |i|
