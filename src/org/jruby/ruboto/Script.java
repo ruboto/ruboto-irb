@@ -68,9 +68,11 @@ public class Script {
             config.setLoader(Script.class.getClassLoader());
             if (scriptsDir != null) config.setCurrentDirectory(scriptsDir);
 
-            config.setOutput(out);
-            config.setError(out);
-
+            if (out != null) {
+            	config.setOutput(out);
+            	config.setError(out);
+            }
+            
             /* Set up Ruby environment */
             ruby = Ruby.newInstance(config);
 
