@@ -7,6 +7,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog.OnTimeSetListener;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.hardware.Sensor;
@@ -28,6 +29,8 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.DatePicker.OnDateChangedListener;
+import android.widget.TabHost.OnTabChangeListener;
+import android.widget.TabHost.TabContentFactory;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.TimePicker.OnTimeChangedListener;
 
@@ -41,7 +44,10 @@ public class RubotoActivity extends Activity
 		OnDateSetListener,
 		OnTimeChangedListener,
 		OnTimeSetListener,
-		SensorEventListener {
+		SensorEventListener,
+		TabContentFactory,
+		OnTabChangeListener,
+		android.content.DialogInterface.OnClickListener {
 	
 	public static final int CB_START 					= 0;
 	public static final int CB_RESTART 					= 1;
@@ -62,18 +68,22 @@ public class RubotoActivity extends Activity
 	
 	public static final int CB_CREATE_DIALOG			= 15;
 	public static final int CB_PREPARE_DIALOG			= 16;
+	public static final int CB_DIALOG_CLICK				= 17;
 	
-	public static final int CB_TIME_SET					= 17;
-	public static final int CB_TIME_CHANGED				= 18;
-	public static final int CB_DATE_SET					= 19;
-	public static final int CB_DATE_CHANGED				= 20;
+	public static final int CB_TIME_SET					= 18;
+	public static final int CB_TIME_CHANGED				= 19;
+	public static final int CB_DATE_SET					= 20;
+	public static final int CB_DATE_CHANGED				= 21;
 	
-	public static final int CB_DRAW						= 21;
-	public static final int CB_SIZE_CHANGED 			= 22;
+	public static final int CB_DRAW						= 22;
+	public static final int CB_SIZE_CHANGED 			= 23;
 
-	public static final int CB_SENSOR_CHANGED			= 23;
+	public static final int CB_SENSOR_CHANGED			= 24;
+	
+	public static final int CB_CREATE_TAB_CONTENT		= 25;
+	public static final int CB_TAB_CHANGED				= 26;
 
-	public static final int CB_LAST 					= 24;
+	public static final int CB_LAST 					= 27;
 	
 	private boolean[] callbackOptions = new boolean [CB_LAST];
 	private String remoteVariable = "";
@@ -122,6 +132,7 @@ public class RubotoActivity extends Activity
 			/* Launched from a shortcut */
 		    Thread t = new Thread() {
 				public void run(){
+		            Script.configDir(IRB.SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts");
 					Script.setUpJRuby(null);
 				    loadingHandler.post(loadingComplete);
 				}
@@ -349,6 +360,13 @@ public class RubotoActivity extends Activity
 		}    	
     }
 
+    public void onClick(DialogInterface dialog, int which) {
+		if (callbackOptions[CB_DIALOG_CLICK]) {
+	        Script.defineGlobalVariable("$dialog", dialog);
+			Script.execute(remoteVariable + "on_dialog_click($dialog, " + which + ")");
+		}    	
+    }
+
 	/* 
 	 *  Date and Time Change
 	 */
@@ -393,6 +411,24 @@ public class RubotoActivity extends Activity
 		if (callbackOptions[CB_SENSOR_CHANGED]) {
 	        Script.defineGlobalVariable("$event", event);
 			Script.execute(remoteVariable + "on_sensor_changed($event)");
+		}
+    }
+
+    /* 
+	 *  TabHost.TabContentFactory and OnTabChangeListener
+	 */
+
+    public View createTabContent(String tab) {
+		if (callbackOptions[CB_CREATE_TAB_CONTENT]) {
+			Script.execute(remoteVariable + "on_create_tab_content(\"" + tab + "\")");
+			return (View)scriptReturnObject;
+		}
+		return null;
+    }
+    
+    public void onTabChanged (String tab) {
+		if (callbackOptions[CB_TAB_CHANGED]) {
+			Script.execute(remoteVariable + "on_tab_changed(\"" + tab + "\")");
 		}
     }
 }
