@@ -29,6 +29,12 @@ java_import "java.util.Arrays"
 java_import "java.util.ArrayList"
 java_import "android.R"
 
+module Ruboto
+  java_import "org.jruby.ruboto.irb.R"
+  Id = JavaUtilities.get_proxy_class("org.jruby.ruboto.irb.R$id")
+end
+AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
+
 #############################################################################
 #
 # Activity
@@ -146,14 +152,18 @@ class RubotoActivity
   create_callback :date_set, [:view, :year, :month, :day]
   create_callback :create_dialog, [:dialog_id]
   create_callback :prepare_dialog, [:dialog_id, :dialog]
+  create_callback :dialog_click, [:dialog, :which]
   create_callback :sensor_changed, [:event]
+  create_callback :create_tab_content, [:tab]
+  create_callback :tab_changed, [:tab]
 
   #
   # Option Menus
   #
 
-  def add_menu title, &block
+  def add_menu title, icon=nil, &block
     mi = @menu.add(title)
+    mi.setIcon(icon) if icon
     mi.class.class_eval {attr_accessor :on_click}
     mi.on_click = block
   end
@@ -264,6 +274,7 @@ class ListView
     @adapter_list.clear();
     @adapter_list.addAll(list)
     @adapter.notifyDataSetChanged
+    invalidate
   end
 end
 
