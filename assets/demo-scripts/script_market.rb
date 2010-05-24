@@ -7,15 +7,20 @@
 #
 #######################################################
 
-require "/sdcard/jruby/ruboto.rb"
-confirm_ruboto_version(2)
+require "ruboto.rb"
+confirm_ruboto_version(3)
 
-require "net/http"
+ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText
 
-include_class "android.content.res.AssetManager"
-include_class "android.content.Context"
+# Use Java classes until we compile Ruby
+#require "net/http"
+java_import "org.apache.http.client.methods.HttpGet"
+java_import "org.apache.http.impl.client.BasicResponseHandler"
+java_import "org.apache.http.impl.client.DefaultHttpClient"
 
-SCRIPT_DIR = "/sdcard/jruby/"
+java_import "android.content.res.AssetManager"
+java_import "android.content.Context"
+java_import "org.jruby.ruboto.Script"
 
 $activity.start_ruboto_activity("$source_picker") do
   setTitle "Script Market - Select a source"
@@ -261,12 +266,14 @@ Get path: headius/ruboto-irb/raw/master/assets/demo-scripts/%s
 end
 
 def get_remote_page url
-  url.match /http:\/\/([^\/]*)(.*)/
-  r = Net::HTTP.get_response($1, $2)
-  r.code == "200" ? r.body : ""
+# Use Java classes until we compile Ruby
+#  url.match /http:\/\/([^\/]*)(.*)/
+#  r = Net::HTTP.get_response($1, $2)
+#  r.code == "200" ? r.body : ""
+  DefaultHttpClient.new.execute(HttpGet.new(url), BasicResponseHandler.new)
 end
 
 def save_script name, contents
-  File.open("#{SCRIPT_DIR}#{name}","w") {|f| f.write contents} unless p == ""
+  File.open("#{Script.getDir}/#{name}","w") {|f| f.write contents} unless p == ""
   p != ""
 end

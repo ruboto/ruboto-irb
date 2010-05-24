@@ -6,46 +6,40 @@
 #
 #######################################################
 
-$RUBOTO_VERSION = 2
+$RUBOTO_VERSION = 3
 
 def confirm_ruboto_version(required_version, exact=true)
   raise "requires $RUBOTO_VERSION=#{required_version} or greater, current version #{$RUBOTO_VERSION}" if $RUBOTO_VERSION < required_version and not exact
   raise "requires $RUBOTO_VERSION=#{required_version}, current version #{$RUBOTO_VERSION}" if $RUBOTO_VERSION != required_version and exact
 end
 
-include Java
-include_class "org.jruby.ruboto.RubotoActivity"
-include_class "android.app.Activity"
-include_class "android.content.Intent"
-include_class "android.os.Bundle"
-include_class "android.view.View"
-include_class "android.view.ViewGroup"
-include_class "android.widget.Toast"
-include_class "android.widget.ListView"
-include_class "android.widget.Button"
-include_class "android.widget.ToggleButton"
-include_class "android.widget.LinearLayout"
-include_class "android.widget.EditText"
-include_class "android.widget.TextView"
-include_class "android.widget.TimePicker"
-include_class "android.widget.DatePicker"
-include_class "android.app.TimePickerDialog"
-include_class "android.app.DatePickerDialog"
-include_class "android.widget.Chronometer"
-include_class "android.widget.TableLayout"
-include_class "android.widget.TableRow"
-include_class "android.widget.ArrayAdapter"
-include_class "android.widget.ScrollView"
-include_class "java.util.Arrays"
-include_class "java.util.ArrayList"
+require 'java'
+java_import "org.jruby.ruboto.RubotoActivity"
+java_import "android.app.Activity"
+java_import "android.content.Intent"
+java_import "android.os.Bundle"
 
-include_class "android.R"
+java_import "android.view.View"
+java_import "android.view.ViewGroup"
 
-class R
-  Layout = JavaUtilities.get_proxy_class('android.R$layout')
-  Style = JavaUtilities.get_proxy_class('android.R$style')
+java_import "android.widget.Toast"
+
+java_import "android.widget.ArrayAdapter"
+java_import "java.util.Arrays"
+java_import "java.util.ArrayList"
+java_import "android.R"
+
+module Ruboto
+  java_import "org.jruby.ruboto.irb.R"
+  Id = JavaUtilities.get_proxy_class("org.jruby.ruboto.irb.R$id")
 end
+AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
 
+#############################################################################
+#
+# Activity
+#
+  
 class Activity
   attr_accessor :init_block
 
@@ -87,56 +81,11 @@ class Activity
   end
 end
 
-class View
-  @@convert_params = {
-     :wrap_content => ViewGroup::LayoutParams::WRAP_CONTENT,
-     :fill_parent  => ViewGroup::LayoutParams::FILL_PARENT,
-  }
-
-  def configure(context, params = {})
-    if width = params.delete(:width)
-      getLayoutParams.width = @@convert_params[width] or width
-    end
-
-    if height = params.delete(:height)
-      getLayoutParams.height = @@convert_params[height] or height
-    end
-
-    params.each do |k, v|
-      self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", v)
-    end
-  end
-end
-
-class ListView
-  attr_reader :adapter, :adapter_list
-
-  def configure(context, params = {})
-    if params.has_key? :list
-      @adapter_list = ArrayList.new
-      @adapter_list.addAll(params[:list])
-      @adapter = ArrayAdapter.new(context, R::Layout::simple_list_item_1, @adapter_list)
-      setAdapter @adapter
-      params.delete :list
-    end
-    setOnItemClickListener(context)
-    super(context, params)
-  end
-
-  def reload_list(list)
-    @adapter_list.clear();
-    @adapter_list.addAll(list)
-    @adapter.notifyDataSetChanged
-  end
-end
-
-class Button
-  def configure(context, params = {})
-    setOnClickListener(context)
-    super(context, params)
-  end
-end
-
+#############################################################################
+#
+# RubotoActivity
+#
+  
 class RubotoActivity
   #
   # Initialize
@@ -148,8 +97,13 @@ class RubotoActivity
     self
   end
   
+  def handle_create &block
+    @create_block = block
+  end
+
   def on_create(bundle)
     setContentView(instance_eval &@content_view_block) if @content_view_block
+    instance_eval {@create_block.call} if @create_block
   end
   
   def setup_content &block
@@ -190,19 +144,26 @@ class RubotoActivity
   create_callback :key, [:view, :key_code, :event]
   create_callback :editor_action, [:view, :action_id, :event]
   create_callback :click, [:view]
+  create_callback :draw, [:view, :canvas]
+  create_callback :size_changed, [:view, :w, :h, :oldw, :oldh]
   create_callback :time_changed, [:view, :hour, :minute]
   create_callback :date_changed, [:view, :year, :month, :day]
   create_callback :time_set, [:view, :hour, :minute]
   create_callback :date_set, [:view, :year, :month, :day]
   create_callback :create_dialog, [:dialog_id]
   create_callback :prepare_dialog, [:dialog_id, :dialog]
+  create_callback :dialog_click, [:dialog, :which]
+  create_callback :sensor_changed, [:event]
+  create_callback :create_tab_content, [:tab]
+  create_callback :tab_changed, [:tab]
 
   #
   # Option Menus
   #
 
-  def add_menu title, &block
+  def add_menu title, icon=nil, &block
     mi = @menu.add(title)
+    mi.setIcon(icon) if icon
     mi.class.class_eval {attr_accessor :on_click}
     mi.on_click = block
   end
@@ -226,45 +187,100 @@ class RubotoActivity
   end
 
   #
-  # View Generation
+  # For Views
   #
 
   @view_parent = nil
 
-  def self.create_view_factory(view_class)
-    class_name = view_class.name.split("::")[-1]
-    class_eval "
-       def #{(class_name.gsub(/([A-Z])/) {'_' + $1.downcase})[1..-1]}(params={})
-          rv = #{class_name}.new self
-          @view_parent.addView(rv) if @view_parent
-          rv.configure self, params
-          if block_given?
-            old_view_parent, @view_parent = @view_parent, rv
-            yield 
-            @view_parent = old_view_parent
-          end
-          rv
-       end
-     "
+end
+
+#############################################################################
+#
+# RubotoActivity View Generation
+#
+
+def ruboto_import_widgets(*widgets)
+  widgets.each{|i| ruboto_import_widget i}
+end
+
+def ruboto_import_widget(class_name)
+  view_class = java_import "android.widget.#{class_name}"
+  return unless view_class
+
+  RubotoActivity.class_eval "
+     def #{(class_name.to_s.gsub(/([A-Z])/) {'_' + $1.downcase})[1..-1]}(params={})
+        rv = #{class_name}.new self
+        @view_parent.addView(rv) if @view_parent
+        rv.configure self, params
+        if block_given?
+          old_view_parent, @view_parent = @view_parent, rv
+          yield 
+          @view_parent = old_view_parent
+        end
+        rv
+     end
+   "
+end
+
+# Need to load these two to extend classes
+ruboto_import_widgets :ListView, :Button
+
+#############################################################################
+#
+# Extend Common View Classes
+#
+  
+class View
+  @@convert_params = {
+     :wrap_content => ViewGroup::LayoutParams::WRAP_CONTENT,
+     :fill_parent  => ViewGroup::LayoutParams::FILL_PARENT,
+  }
+
+  def configure(context, params = {})
+    if width = params.delete(:width)
+      getLayoutParams.width = @@convert_params[width] or width
+    end
+
+    if height = params.delete(:height)
+      getLayoutParams.height = @@convert_params[height] or height
+    end
+
+    params.each do |k, v|
+      if v.is_a?(Array)
+        self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", *v)
+      else
+        self.send("set#{k.to_s.gsub(/(^|_)([a-z])/) {$2.upcase}}", v)
+      end
+    end
+  end
+end
+
+class ListView
+  attr_reader :adapter, :adapter_list
+
+  def configure(context, params = {})
+    if params.has_key? :list
+      @adapter_list = ArrayList.new
+      @adapter_list.addAll(params[:list])
+      @adapter = ArrayAdapter.new(context, R::layout::simple_list_item_1, @adapter_list)
+      setAdapter @adapter
+      params.delete :list
+    end
+    setOnItemClickListener(context)
+    super(context, params)
   end
 
-  create_view_factory TextView
-  create_view_factory EditText
-  create_view_factory Button
-  create_view_factory ToggleButton
-  create_view_factory ListView
-  create_view_factory LinearLayout
-#  create_view_factory CheckBox
-#  create_view_factory RadioGroup
-#  create_view_factory RadioButton
-  create_view_factory TableLayout
-  create_view_factory TableRow
-  create_view_factory ScrollView
-#  create_view_factory Spinner
-#  create_view_factory AutoCompleteTextView
-#  create_view_factory GridView
-  create_view_factory TimePicker
-  create_view_factory DatePicker
-  create_view_factory Chronometer
+  def reload_list(list)
+    @adapter_list.clear();
+    @adapter_list.addAll(list)
+    @adapter.notifyDataSetChanged
+    invalidate
+  end
 end
-  
+
+class Button
+  def configure(context, params = {})
+    setOnClickListener(context)
+    super(context, params)
+  end
+end

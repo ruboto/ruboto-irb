@@ -10,10 +10,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import android.os.Environment;
 import org.jruby.Ruby;
 import org.jruby.RubyInstanceConfig;
 import org.jruby.exceptions.RaiseException;
@@ -23,12 +21,17 @@ import org.jruby.runtime.DynamicScope;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.scope.ManyVarsDynamicScope;
 
+import android.os.Environment;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 public class Script {
-    public static final String SCRIPTS_DIR = "/sdcard/jruby";
     public static final String UNTITLED_RB = "untitled.rb";
 
-    public static final File SCRIPTS_DIR_FILE = new File(SCRIPTS_DIR);
-
+    private static String scriptsDir = null;
+    private static File scriptsDirFile = null;
+  
     private static final int STATE_EMPTY = 1;
     private static final int STATE_ON_DISK = 2;
     private static final int STATE_IN_MEMORY = 3;
@@ -63,16 +66,20 @@ public class Script {
             config.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
 
             config.setLoader(Script.class.getClassLoader());
+            if (scriptsDir != null) config.setCurrentDirectory(scriptsDir);
 
-            config.setOutput(out);
-            config.setError(out);
-
+            if (out != null) {
+            	config.setOutput(out);
+            	config.setError(out);
+            }
+            
             /* Set up Ruby environment */
             ruby = Ruby.newInstance(config);
 
             ThreadContext context = ruby.getCurrentContext();
             DynamicScope currentScope = context.getCurrentScope();
             scope = new ManyVarsDynamicScope(new EvalStaticScope(currentScope.getStaticScope()), currentScope);
+            
             initialized = true;
         }
 
@@ -98,42 +105,62 @@ public class Script {
     }
 
     /*************************************************************************************************
+    *
+    * Static Methods: Scripts Directory
+    */
+    
+    public static void setDir(String dir) {
+    	scriptsDir = dir;
+    	scriptsDirFile = new File(dir);
+        if (ruby != null) ruby.setCurrentDirectory(scriptsDir);
+    }
+    
+    public static String getDir() {
+    	return scriptsDir;
+    }
+
+    public static File getDirFile() {
+    	return scriptsDirFile;
+    }
+
+    public static Boolean configDir(String sdcard, String noSdcard) {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+        	setDir(sdcard);
+        } else {
+        	setDir(noSdcard);
+        }
+
+        /* Create directory if it doesn't exist */
+        if (!scriptsDirFile.exists()) {
+            // TODO check return code
+            scriptsDirFile.mkdir();
+            return true;
+        }
+
+        return false;
+    }
+    
+    /*************************************************************************************************
      *
      * Static Methods: Scripts List
      */
-
-    public static boolean isSDCardAvailable() {
-        return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
-    }
 
     public static List<String> list() throws SecurityException {
         return Script.list(new ArrayList<String>());
     }
 
     public static List<String> list(List<String> list) throws SecurityException {
-        if (!isSDCardAvailable()) {
-            return Collections.emptyList();
-        }
-
-        File scriptsDir = new File(SCRIPTS_DIR);
-
-        /* Create directory if it doesn't exist */
-        if (!scriptsDir.exists()) {
-            // TODO check return code
-            scriptsDir.mkdir();
-        }
-
         list.clear();
-        String[] tmpList = scriptsDir.list(RUBY_FILES);
+        String[] tmpList = scriptsDirFile.list(RUBY_FILES);
         Arrays.sort(tmpList, 0, tmpList.length, String.CASE_INSENSITIVE_ORDER);
         list.addAll(Arrays.asList(tmpList));
         return list;
     }
 
     /*************************************************************************************************
-     *
-     * Constructors
-     */
+    *
+    * Constructors
+    */
 
     public Script(String name) {
         this(name, null);
@@ -156,6 +183,20 @@ public class Script {
         }
     }
 
+    /* Create a Script from a URL */
+    public static Script fromURL(String url) {
+    	try {
+            String [] temp = url.split("/");
+        	DefaultHttpClient client = new DefaultHttpClient();
+        	HttpGet get = new HttpGet(url);
+        	BasicResponseHandler handler = new BasicResponseHandler();
+        	return new Script(temp[temp.length -1], client.execute(get, handler));
+    	}
+    	catch (Throwable t) {
+    		return null;
+    	}
+    }
+
     /*************************************************************************************************
      *
      * Attribute Access
@@ -166,7 +207,7 @@ public class Script {
     }
 
     public File getFile() {
-        return new File(SCRIPTS_DIR, name);
+        return new File(getDir(), name);
     }
 
     public Script setName(String name) {

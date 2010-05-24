@@ -24,6 +24,8 @@ public class ShortcutBuilder extends Activity implements OnItemClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Script.configDir(IRB.SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts");
+        
         ListView scriptsList = new ListView(this);
         setContentView(scriptsList);
         setTitle("Select a Ruboto Script");

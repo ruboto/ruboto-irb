@@ -1,41 +1,47 @@
 package org.jruby.ruboto;
 
-import org.jruby.ruboto.irb.R;
-
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
 
+import org.jruby.ruboto.irb.R;
+
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.TabHost.OnTabChangeListener;
 
-public class IRB extends Activity implements OnItemClickListener {
+public class IRB extends Activity implements OnItemClickListener, OnTabChangeListener {
     public static final String TAG = "Ruboto-IRB";
+    public static final String SDCARD_SCRIPTS_DIR = "/sdcard/jruby";
     
     private TabHost tabs;
     private final Handler handler = new Handler();
@@ -64,8 +70,9 @@ public class IRB extends Activity implements OnItemClickListener {
     private static final int RUN_MENU = 2;
     private static final int NEW_MENU = 3;
     private static final int HISTORY_MENU = 4;
-    private static final int RESCAN_MENU = 5;
-    private static final int RELOAD_DEMOS = 6;
+    private static final int ABOUT_MENU = 5;
+    private static final int RESCAN_MENU = 6;
+    private static final int RELOAD_DEMOS = 7;
 
     /* Context menu option identifiers for script list */
     private static final int EDIT_MENU = 10;
@@ -85,17 +92,18 @@ public class IRB extends Activity implements OnItemClickListener {
         setContentView(R.layout.main);
 
         tabs = (TabHost) findViewById(R.id.tabhost);
+        tabs.setOnTabChangedListener(this);
         tabs.setup();
                 
         irbSetUp();
-        checkSDCard();
+        configScriptsDir();
         editorSetUp();
         scriptsListSetUp();
         setUpJRuby();
     }
 
     private void irbSetUp() {
-        tabs.addTab(tabs.newTabSpec("tag1")
+        tabs.addTab(tabs.newTabSpec("irb")
                 .setContent(R.id.tab1)
                 .setIndicator(getString(R.string.IRB_Tab)));
 
@@ -116,7 +124,7 @@ public class IRB extends Activity implements OnItemClickListener {
     }
 
     private void editorSetUp() {
-        tabs.addTab(tabs.newTabSpec("tag2")
+        tabs.addTab(tabs.newTabSpec("editor")
                 .setContent(R.id.tab2)
                 .setIndicator(getString(R.string.Editor_Tab)));
 
@@ -126,7 +134,7 @@ public class IRB extends Activity implements OnItemClickListener {
     }
 
     private void scriptsListSetUp() {
-        tabs.addTab(tabs.newTabSpec("tag3")
+        tabs.addTab(tabs.newTabSpec("scripts")
                 .setContent(R.id.tab3)
                 .setIndicator(getString(R.string.Scripts_Tab)));
 
@@ -169,6 +177,7 @@ public class IRB extends Activity implements OnItemClickListener {
         public void run() {
             Script.defineGlobalVariable("$activity", IRB.this);
             irbOutput.append("Done\n>>");
+            autoLoadScript();
         }
     };
 
@@ -177,6 +186,14 @@ public class IRB extends Activity implements OnItemClickListener {
         currentIrbOutput.append(string);
     }
 
+    /* Loads the script specified in the Intent (if supplied) */
+    public void autoLoadScript() {
+		if (getIntent().getData() != null) {
+			Script script = Script.fromURL(getIntent().getData().toString());
+			if (script != null) editScript(script, true);
+		}
+    }
+    
     /*********************************************************************************************
      *
      * Saving and recalling state
@@ -198,6 +215,18 @@ public class IRB extends Activity implements OnItemClickListener {
         irbInput.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState.containsKey("tab")) tabs.setCurrentTab(savedInstanceState.getInt("tab"));
     }
+    
+    /*********************************************************************************************
+    *
+    * TabHost Listener
+    */
+
+    public void onTabChanged (String tabId) {
+    	if (tabId.equals("scripts") ) {
+            ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+            	.hideSoftInputFromWindow(tabs.getWindowToken(), 0);
+    	}
+    }
 
     /*********************************************************************************************
      *
@@ -208,12 +237,13 @@ public class IRB extends Activity implements OnItemClickListener {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, SAVE_MENU, 0, R.string.Menu_save);
-        menu.add(0, RUN_MENU, 0, R.string.Menu_run);
-        menu.add(0, NEW_MENU, 0, R.string.Menu_new);
-        menu.add(0, HISTORY_MENU, 0, R.string.Menu_history);
+        menu.add(0, SAVE_MENU, 0, R.string.Menu_save).setIcon(android.R.drawable.ic_menu_save);
+        menu.add(0, RUN_MENU, 0, R.string.Menu_run).setIcon(R.drawable.ic_menu_play);
+        menu.add(0, NEW_MENU, 0, R.string.Menu_new).setIcon(android.R.drawable.ic_menu_add);
+        menu.add(0, HISTORY_MENU, 0, R.string.Menu_history).setIcon(android.R.drawable.ic_menu_recent_history);
+        menu.add(0, ABOUT_MENU, 0, R.string.Menu_about).setIcon(android.R.drawable.ic_menu_info_details);
         menu.add(0, RESCAN_MENU, 0, R.string.Menu_rescan);
-        if (Script.isSDCardAvailable()) menu.add(0, RELOAD_DEMOS, 0, "Reload Demos");
+        menu.add(0, RELOAD_DEMOS, 0, R.string.Menu_reload);
         return true;
     }
 
@@ -233,13 +263,16 @@ public class IRB extends Activity implements OnItemClickListener {
             case HISTORY_MENU:
                 editScript(new Script(Script.UNTITLED_RB, irbInput.getHistoryString()), true);
                 return true;
+            case ABOUT_MENU:
+            	aboutDialog();
+                return true;
             case RESCAN_MENU:
                 scanScripts();
                 tabs.setCurrentTab(SCRIPTS_TAB);
                 return true;
             case RELOAD_DEMOS:
                 Toast.makeText(this, 
-                		recopyDemoScripts(DEMO_SCRIPTS, Script.SCRIPTS_DIR_FILE), 
+                		recopyDemoScripts(DEMO_SCRIPTS, Script.getDirFile()), 
                 		Toast.LENGTH_SHORT).show();
                 scanScripts();
                 tabs.setCurrentTab(SCRIPTS_TAB);
@@ -292,7 +325,7 @@ public class IRB extends Activity implements OnItemClickListener {
             adapter.notifyDataSetChanged();
         }
         catch (SecurityException se) {
-            Toast.makeText(this, "Could not create " + Script.SCRIPTS_DIR, Toast.LENGTH_SHORT);
+            Toast.makeText(this, "Could not create " + Script.getDir(), Toast.LENGTH_SHORT);
         }
     }
 
@@ -364,26 +397,46 @@ public class IRB extends Activity implements OnItemClickListener {
     }
 
     /************************************************************************************
-     *
-     * Context menu for scripts list.
-     * Options: Edit, Execute, Delete
-     */
+    *
+    * Creates a dialog to confirm script deletion
+    */
     private void comfirmDelete(final String fname) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Delete " + fname + "?")
-                .setCancelable(false)
-                .setPositiveButton(R.string.Delete_confirm, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        deleteScript(fname);
-                    }
-                })
-                .setNegativeButton(R.string.Delete_cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        builder.create().show();
-    }
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage("Delete " + fname + "?")
+             .setCancelable(false)
+             .setPositiveButton(R.string.Delete_confirm, new DialogInterface.OnClickListener() {
+                 public void onClick(DialogInterface dialog, int id) {
+                   deleteScript(fname);
+                 }
+               })
+              .setNegativeButton(R.string.Delete_cancel, new DialogInterface.OnClickListener() {
+                 public void onClick(DialogInterface dialog, int id) {
+                   dialog.cancel();
+                 }
+               });
+       builder.create().show();
+   }
+
+   /************************************************************************************
+   *
+   * About Dialog
+   */
+   private void aboutDialog() {
+	 ScrollView sv = new ScrollView(this);
+     TextView tv = new TextView(this);
+	 tv.setPadding(5, 5, 5, 5);
+	 tv.setText(R.string.About_text);
+	 Linkify.addLinks(tv, Linkify.ALL);
+     sv.addView(tv);
+
+     AlertDialog.Builder builder = new AlertDialog.Builder(this);
+     builder.setTitle(getString(R.string.app_name) + " v " + getString(R.string.version_name))
+            .setView(sv)
+            .setPositiveButton(R.string.About_dismiss, new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int id) {}
+            });
+      builder.create().show();
+   	}
 
     /*********************************************************************************************
      *
@@ -407,23 +460,14 @@ public class IRB extends Activity implements OnItemClickListener {
         }
     }
 
-    private void checkSDCard() {
-        if (!Script.isSDCardAvailable()) {
-            appendToIRB("No SD card found. Loading/Saving disabled.\n");
-        } else {            
-            if (!Script.SCRIPTS_DIR_FILE.exists()) {
-                // on first install init directory + copy sample scripts
-                copyDemoScripts(DEMO_SCRIPTS, Script.SCRIPTS_DIR_FILE);                
-            }
+    private void configScriptsDir() {
+        if (Script.configDir(SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts")) {
+            // on first install init directory + copy sample scripts
+            copyDemoScripts(DEMO_SCRIPTS, Script.getDirFile());                
         }
     }
         
     private void copyDemoScripts(String from, File to) {                        
-        if (!to.mkdirs()) {
-            Log.e(TAG, "error creating script directory " + to);
-            return;
-        }                                    
-                
         try {
             byte[] buffer = new byte[8192];        
             for (String f : getAssets().list(from)) {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Ruboto IRB</string>
+    <string name="version_name">0.2</string>
 
     <string name="IRB_Tab">IRB</string>
     <string name="Editor_Tab">Editor</string>
@@ -13,10 +14,15 @@
     <string name="Menu_save">Save</string>
     <string name="Menu_new">New</string>
     <string name="Menu_history">Edit history</string>
+    <string name="Menu_about">About</string>
     <string name="Menu_edit">Edit</string>
     <string name="Menu_delete">Delete</string>
-    <string name="Menu_rescan">Reload scripts</string>
+    <string name="Menu_rescan">Reload scripts list</string>
+    <string name="Menu_reload">Reload demos from assets</string>
 
+    <string name="About_dismiss">Ok</string>
     <string name="Delete_confirm">Yes</string>
     <string name="Delete_cancel">No</string>
+    
+    <string name="About_text">Ruboto IRB is a UI for scripting Android using the Ruby language through JRuby.\n\nSource code:\nhttp://github.com/headius/ruboto-irb\n\nJoin us or give feedback:\nhttp://groups.google.com/group/ruboto\n\nDevelopers:\nCharlie Nutter\nJan Berkel\nPascal Chatterjee (jruby-for-android project)\nScott Moyer\n\nJRuby Project:\nhttp://jruby.org\n\nIcon:\nRuby Visual Identity Team\nhttp://rubyidentity.org\nCC ShareAlike 2.5</string>
 </resources>
