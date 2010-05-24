@@ -8,5 +8,6 @@
 # For customization when using a Version Control System, please read the
 # header note.
 sdk-location=/home/james/data/vendor/android-sdk
+sdk.dir=/home/james/data/vendor/android-sdk
 
 # Of course, the dev tools you choose might not be auto-generating this file, so edit accordingly!
