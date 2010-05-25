@@ -18,6 +18,7 @@ java_import "android.text.util.Linkify"
 java_import "android.app.AlertDialog"
 java_import "android.content.DialogInterface"
 java_import "android.content.Context"
+java_import "android.text.method.ScrollingMovementMethod"
 
 ruboto_import_widgets :TabHost, :LinearLayout, :FrameLayout, :TabWidget, 
   :Button, :EditText, :TextView, :ListView, :ScrollView
@@ -45,11 +46,10 @@ $activity.start_ruboto_activity("$ruboto_irb") do
           linear_layout(:id => 55555, :height => :fill_parent,
                         :orientation => LinearLayout::VERTICAL) do
             @irb_edit = edit_text :lines => 1, :on_key_listener => self
-            scroll_view(:height => :fill_parent) do
-              @irb_text = text_view :text => "#{explanation_text}\n\n>> ", :height => :fill_parent, 
+            @irb_text = text_view :text => "#{explanation_text}\n\n>> ", :height => :fill_parent, 
                             :gravity => (Gravity::BOTTOM | Gravity::CLIP_VERTICAL), 
-                            :text_color => 0xffffffff
-            end
+                            :text_color => 0xffffffff, 
+                            :movement_method => ScrollingMovementMethod.new;
           end
           linear_layout(:id => 55556, :orientation => LinearLayout::VERTICAL) do
             @edit_name   = edit_text :text => "untitled.rb"
@@ -106,18 +106,15 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     end
 
     add_menu("About", R::drawable::ic_menu_info_details) do
-      self.start_ruboto_dialog("$about") do
-        setTitle "About Ruboto IRB v0.2"
-
-        setup_content do
-          scroll_view do
-            tv = text_view :vertical_scroll_bar_enabled => true, 
-                             :padding => [10, 10, 10, 10], :text_color => 0xffffffff,
-                             :text => about_text
-            Linkify.addLinks(tv, Linkify::ALL)
-          end
-        end
-      end
+      AlertDialog::Builder.new(self).
+        setTitle("About Ruboto IRB v0.2").
+        setView(scroll_view do
+                  tv = text_view :padding => [5,5,5,5], :text => about_text
+                  Linkify.addLinks(tv, Linkify::ALL)
+                end).
+        setPositiveButton("Ok", self).
+        create.
+        show
     end
 
     add_menu("Reload scripts list") do 
@@ -181,7 +178,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
       end
       @confirm_delete = nil
     end
-   end
+  end
 
   #
   # Tab change
@@ -245,7 +242,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   #
 
   def self.load_script_list
-    @scripts_list = Dir.glob("*.rb")
+    @scripts_list = Dir.glob("*.rb").sort
     @scripts.reload_list(@scripts_list)
   end
 
@@ -263,7 +260,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
       @irb_text.append(display || source)
       rv = $main_binding.eval(source)
       $stdout, new_out = old_out, $stdout 
-      @irb_text.append "#{new_out.string}\n=> #{rv.inspect}\n>> "
+      @irb_text.append "\n#{new_out.string}=> #{rv.inspect}\n>> "
     rescue => e
       $stdout = old_out
       @irb_text.append "\n#{e.to_s}\n#{e.backtrace.join("\n")}\n>> "
@@ -286,9 +283,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
 
 1) We're not currently copying the demo scripts if the scripts directory doesn't exist. The main reason for this is because the very fact that you're running this demo means that the scripts directory exists.
 
-2) You'll see some differences in how the IRB output displays and scroll. This will be smoothed out over time.
-
-3) There is a bug that you can trigger by doing a \"require 'date'\". It causes a StackOverflow exception to be caught on the Java side. Most requires seem to work, but this one (actually another script that date requires) causes the exception. I haven't tracked it down yet."
+2) There is a bug that you can trigger by doing a \"require 'date'\". It causes a StackOverflow exception to be caught on the Java side. Most requires seem to work, but this one (actually another script that date requires) causes the exception. I haven't tracked it down yet."
   end
 
   def self.about_text
