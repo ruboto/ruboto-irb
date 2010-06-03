@@ -46,8 +46,8 @@ $activity.start_ruboto_activity("$source_picker") do
       pick_asset
     when @list[1] 
       pick_remote_script "github.com", 
-        "headius/ruboto-irb/tree/master/assets/demo-scripts/?raw=true",
-        "headius/ruboto-irb/raw/master/assets/demo-scripts/%s"
+        "ruboto/ruboto-irb/tree/master/assets/demo-scripts/?raw=true",
+        "ruboto/ruboto-irb/raw/master/assets/demo-scripts/%s"
     else
       data = @option_data[@list[pos]]
       if data[0] == "github"
@@ -159,7 +159,7 @@ def edit_github_source context, name="", user="", project="", branch="", dir=""
         end
         table_row do
           text_view :text => "User:"
-          @user = edit_text :text => user, :hint => "e.g., headius"
+          @user = edit_text :text => user, :hint => "e.g., ruboto"
         end
         table_row do
           text_view :text => "Project:"
