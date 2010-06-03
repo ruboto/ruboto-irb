@@ -1,4 +1,7 @@
 bin
 gen
+tmp
 nbproject/private
 local.properties
+generated_libs
+.rvmrc
