@@ -606,7 +606,7 @@ class RubotoActivity
       setup_content do
         linear_layout :orientation => LinearLayout::VERTICAL do
           button :text => "Normal", :width => :wrap_content
-          button :text => "Small", :width => :wrap_content, :passing => [8,0,8,0]
+          button :text => "Small", :width => :wrap_content, :padding => [8,0,8,0]
           toggle_button :width => :wrap_content
         end
       end
@@ -631,10 +631,10 @@ class RubotoActivity
 
       handle_create_dialog do |dialog_id|
         if dialog_id == 1
-          setScriptReturnObject TimePickerDialog.new(self, self, 
+          setScriptReturnObject TimePickerDialog.new(self, self,
             @time.hour, @time.min, false)
         else
-          setScriptReturnObject DatePickerDialog.new(self, self, 
+          setScriptReturnObject DatePickerDialog.new(self, self,
             @time.year, @time.month-1, @time.day)
         end
       end
