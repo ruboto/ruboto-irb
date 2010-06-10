@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.jruby.ruboto.irb"
+      package="org.ruboto"
       android:versionCode="2"
       android:versionName="@string/version_name">
       
@@ -29,7 +29,7 @@
         </activity>
         <activity android:name="org.jruby.ruboto.RubotoActivity">
 			<intent-filter>
-			  <action android:name="org.jruby.ruboto.irb.intent.action.LAUNCH_SCRIPT" />
+			  <action android:name="org.ruboto.intent.action.LAUNCH_SCRIPT" />
 			  <category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
         </activity>
