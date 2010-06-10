@@ -103,6 +103,10 @@ public class Script {
     public static void defineGlobalVariable(String name, Object object) {
         ruby.getGlobalVariables().set(name, JavaUtil.convertJavaToRuby(ruby, object));
     }
+    
+    public static Ruby getRuby() {
+    	return ruby;
+    }
 
     /*************************************************************************************************
     *
