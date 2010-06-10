@@ -9,7 +9,7 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(3)
+confirm_ruboto_version(4)
 
 java_import "android.view.WindowManager"
 java_import "android.view.Gravity"
@@ -134,6 +134,8 @@ $activity.start_ruboto_activity("$ruboto_irb") do
         toast_result save(s, contents.join), "#{s} copied", "#{s} copy failed"
       end
     end
+
+    true
   end
 
   #
@@ -161,6 +163,8 @@ $activity.start_ruboto_activity("$ruboto_irb") do
               create.
               show
     end
+
+    true
   end
 
   #
@@ -290,7 +294,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
 "Ruboto IRB is a UI for scripting Android using the Ruby language through JRuby.
 
 Source code:
-http://github.com/headius/ruboto-irb
+http://github.com/ruboto/ruboto-irb
 
 Join us or give feedback:
 http://groups.google.com/group/ruboto

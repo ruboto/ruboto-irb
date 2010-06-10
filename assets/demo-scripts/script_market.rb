@@ -8,9 +8,9 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(3)
+confirm_ruboto_version(4)
 
-ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText
+ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText, :ScrollView
 
 # Use Java classes until we compile Ruby
 #require "net/http"
@@ -38,6 +38,7 @@ $activity.start_ruboto_activity("$source_picker") do
     add_menu("About") {about self}
     add_menu("Add Github Source") {edit_github_source self}
     add_menu("Add Web Source") {edit_web_source self}
+    true
   end
 
   handle_item_click do |adapter_view, view, pos, item_id|
@@ -70,6 +71,8 @@ $activity.start_ruboto_activity("$source_picker") do
     add_context_menu("Delete") do |pos| 
       pos < 2 ? toast("Can't delete default entries") : delete_source(@list[pos])
     end
+
+    true
   end
 
   def self.pick_asset
@@ -184,6 +187,7 @@ def edit_github_source context, name="", user="", project="", branch="", dir=""
           @project.getText.toString, @branch.getText.toString, @dir.getText.toString)
         finish
       end
+      true
     end
   end
 end
@@ -221,6 +225,7 @@ def edit_web_source context, name="", site="", list_path="", get_path=""
           @list_path.getText.toString, @get_path.getText.toString)
         finish
       end
+      true
     end
   end
 end
@@ -231,7 +236,7 @@ def about context
 
     setup_content do
       scroll_view do
-        text_view :vertical_scroll_bar_enabled => true, :text => "Version: 1.0
+        text_view :vertical_scroll_bar_enabled => true, :text => "Version: 1.1
 
 Author: Scott Moyer
 
@@ -249,7 +254,7 @@ In addition to the default script sources, you can add your own. Right now there
 
 For example, the default Github scripts could also be obtained by specifying:
 
-User: hedius
+User: ruboto
 Project: ruboto-irb
 Branch: master
 Directory: assets/demo-scripts
@@ -257,8 +262,8 @@ Directory: assets/demo-scripts
 The same results could be obtained by creating a web source specifying:
 
 Site: github.com
-List path: headius/ruboto-irb/tree/master/assets/demo-scripts/?raw=true
-Get path: headius/ruboto-irb/raw/master/assets/demo-scripts/%s
+List path: ruboto/ruboto-irb/tree/master/assets/demo-scripts/?raw=true
+Get path: ruboto/ruboto-irb/raw/master/assets/demo-scripts/%s
 "
       end
     end

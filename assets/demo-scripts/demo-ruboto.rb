@@ -8,7 +8,7 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(3)
+confirm_ruboto_version(4)
 
 #
 # ruboto_import_widgets imports the UI widgets needed
@@ -58,6 +58,7 @@ $activity.start_ruboto_activity "$ruboto_demo" do
     add_menu("Hello, World") {my_click "Hello, World"}
     add_menu("Hello, Ruboto") {my_click "Hello, Ruboto"}
     add_menu("Exit") {finish}
+    true
   end
 
   #

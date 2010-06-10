@@ -6,7 +6,7 @@
 #
 #######################################################
 
-$RUBOTO_VERSION = 3
+$RUBOTO_VERSION = 4
 
 def confirm_ruboto_version(required_version, exact=true)
   raise "requires $RUBOTO_VERSION=#{required_version} or greater, current version #{$RUBOTO_VERSION}" if $RUBOTO_VERSION < required_version and not exact
@@ -107,6 +107,7 @@ class RubotoActivity
   end
   
   def setup_content &block
+    @view_parent = nil
     @content_view_block = block
   end
 
@@ -114,48 +115,20 @@ class RubotoActivity
   # Setup Callbacks
   #
 
-  def self.create_callback(callback, parameters=[], additional_code="")
-    class_eval "
-      def handle_#{callback} &block
-        requestCallback RubotoActivity::CB_#{callback.to_s.upcase}
-        @#{callback}_block = block
-      end
-    
-      def on_#{callback}(#{parameters.join(',')})
-        #{additional_code}
-        instance_eval {@#{callback}_block.call(#{parameters.join(',')})} if @#{callback}_block
-      end
-    "
-  end
+  def method_missing(name, *args, &block)
+    if name.to_s =~ /^handle_(.*)/ and (const = RubotoActivity.const_get("CB_#{$1.upcase}"))
+        requestCallback const
+        @eigenclass ||= class << self; self; end
+        @eigenclass.send(:define_method, "on_#{$1}", &block)
+    else
+      super     
+    end
+  end 
 
-  create_callback :start
-  create_callback :resume
-  create_callback :restart
-  create_callback :pause
-  create_callback :stop
-  create_callback :destroy
-  create_callback :activity_result, [:intent]
-
-  create_callback :save_instance_state, [:bundle]
-  create_callback :restore_instance_state, [:bundle]
-  create_callback :create_options_menu, [:menu], "@menu, @context_menu = menu, nil"
-  create_callback :create_context_menu, [:menu, :view, :menu_info], "@menu, @context_menu = nil, menu"
-  create_callback :item_click, [:adapter_view, :view, :pos, :item_id]
-  create_callback :key, [:view, :key_code, :event]
-  create_callback :editor_action, [:view, :action_id, :event]
-  create_callback :click, [:view]
-  create_callback :draw, [:view, :canvas]
-  create_callback :size_changed, [:view, :w, :h, :oldw, :oldh]
-  create_callback :time_changed, [:view, :hour, :minute]
-  create_callback :date_changed, [:view, :year, :month, :day]
-  create_callback :time_set, [:view, :hour, :minute]
-  create_callback :date_set, [:view, :year, :month, :day]
-  create_callback :create_dialog, [:dialog_id]
-  create_callback :prepare_dialog, [:dialog_id, :dialog]
-  create_callback :dialog_click, [:dialog, :which]
-  create_callback :sensor_changed, [:event]
-  create_callback :create_tab_content, [:tab]
-  create_callback :tab_changed, [:tab]
+  def respond_to?(name)
+    return true if name.to_s =~ /^handle_(.*)/ and RubotoActivity.const_get("CB_#{$1.upcase}")
+    super
+  end 
 
   #
   # Option Menus
@@ -168,8 +141,19 @@ class RubotoActivity
     mi.on_click = block
   end
  
+  def handle_create_options_menu &block
+    requestCallback RubotoActivity::CB_CREATE_OPTIONS_MENU
+    @create_options_menu_block = block
+  end
+
+  def on_create_options_menu(*args)
+    @menu, @context_menu = args[0], nil
+    instance_eval {@create_options_menu_block.call(*args)} if @create_options_menu_block
+  end
+
   def on_menu_item_selected(num,menu_item)
-    instance_eval &(menu_item.on_click) if @menu
+    (instance_eval &(menu_item.on_click); return true) if @menu
+    false
   end
 
   #
@@ -182,16 +166,20 @@ class RubotoActivity
     mi.on_click = block
   end
  
-  def on_context_item_selected(menu_item)
-    (instance_eval {menu_item.on_click.call(menu_item.getMenuInfo.position)}) if menu_item.on_click
+  def handle_create_context_menu &block
+    requestCallback RubotoActivity::CB_CREATE_CONTEXT_MENU
+    @create_context_menu_block = block
   end
 
-  #
-  # For Views
-  #
+  def on_create_context_menu(*args)
+    @menu, @context_menu = nil, args[0]
+    instance_eval {@create_context_menu_block.call(*args)} if @create_context_menu_block
+  end
 
-  @view_parent = nil
-
+  def on_context_item_selected(menu_item)
+    (instance_eval {menu_item.on_click.call(menu_item.getMenuInfo.position)}; return true) if menu_item.on_click
+    false
+  end
 end
 
 #############################################################################
