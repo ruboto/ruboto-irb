@@ -601,7 +601,7 @@ class RubotoActivity
       setup_content do
         linear_layout :orientation => LinearLayout::VERTICAL do
           button :text => "Normal", :width => :wrap_content
-          button :text => "Small", :width => :wrap_content, :passing => [8,0,8,0]
+          button :text => "Small", :width => :wrap_content, :padding => [8,0,8,0]
           toggle_button :width => :wrap_content
         end
       end
