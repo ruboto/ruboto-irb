@@ -30,8 +30,8 @@ java_import "java.util.ArrayList"
 java_import "android.R"
 
 module Ruboto
-  java_import "org.jruby.ruboto.irb.R"
-  Id = JavaUtilities.get_proxy_class("org.jruby.ruboto.irb.R$id")
+  java_import "org.ruboto.R"
+  Id = JavaUtilities.get_proxy_class("org.ruboto.R$id")
 end
 AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
 
@@ -57,7 +57,7 @@ class Activity
       b.putString("Initialize Script", "#{remote_variable}.initialize_activity")
 
       i = Intent.new
-      i.setClassName "org.jruby.ruboto.irb", 
+      i.setClassName "org.ruboto", 
                      "org.jruby.ruboto.Ruboto#{dialog ? 'Dialog' : 'Activity'}"
       i.putExtra("RubotoActivity Config", b)
 
