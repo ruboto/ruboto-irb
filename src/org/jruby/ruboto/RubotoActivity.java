@@ -1,95 +1,73 @@
 package org.jruby.ruboto;
 
 import java.io.IOException;
-
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.app.DatePickerDialog.OnDateSetListener;
-import android.app.TimePickerDialog.OnTimeSetListener;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.graphics.Canvas;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.os.Bundle;
 import android.os.Handler;
-import android.view.ContextMenu;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.View.OnClickListener;
-import android.view.View.OnKeyListener;
-import android.widget.AdapterView;
-import android.widget.DatePicker;
-import android.widget.TextView;
-import android.widget.TimePicker;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.DatePicker.OnDateChangedListener;
-import android.widget.TabHost.OnTabChangeListener;
-import android.widget.TabHost.TabContentFactory;
-import android.widget.TextView.OnEditorActionListener;
-import android.widget.TimePicker.OnTimeChangedListener;
+import android.os.Bundle;
+
+import org.jruby.Ruby;
+import org.jruby.javasupport.util.RuntimeHelpers;
+import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.javasupport.JavaUtil;
+import org.jruby.exceptions.RaiseException;
 
 public class RubotoActivity extends Activity 
-	implements 
-		OnItemClickListener, 
-		OnKeyListener,
-		OnEditorActionListener,
-		OnClickListener,
-		OnDateChangedListener,
-		OnDateSetListener,
-		OnTimeChangedListener,
-		OnTimeSetListener,
-		SensorEventListener,
-		TabContentFactory,
-		OnTabChangeListener,
-		android.content.DialogInterface.OnClickListener {
-	
-	public static final int CB_START 					= 0;
-	public static final int CB_RESTART 					= 1;
-	public static final int CB_RESUME 	      			= 2;
-	public static final int CB_PAUSE 	                = 3;
-	public static final int CB_STOP 	                = 4;
-	public static final int CB_DESTROY                  = 5;
-	public static final int CB_SAVE_INSTANCE_STATE	    = 6;
-	public static final int CB_RESTORE_INSTANCE_STATE	= 7;
-	public static final int CB_ACTIVITY_RESULT 			= 8;
-	
-	public static final int CB_ITEM_CLICK 				= 9;
-	public static final int CB_CREATE_OPTIONS_MENU 		= 10;
-	public static final int CB_CREATE_CONTEXT_MENU 		= 11;
-	public static final int CB_KEY 						= 12;
-	public static final int CB_EDITOR_ACTION 			= 13;
-	public static final int CB_CLICK 					= 14;
-	
-	public static final int CB_CREATE_DIALOG			= 15;
-	public static final int CB_PREPARE_DIALOG			= 16;
-	public static final int CB_DIALOG_CLICK				= 17;
-	
-	public static final int CB_TIME_SET					= 18;
-	public static final int CB_TIME_CHANGED				= 19;
-	public static final int CB_DATE_SET					= 20;
-	public static final int CB_DATE_CHANGED				= 21;
-	
-	public static final int CB_DRAW						= 22;
-	public static final int CB_SIZE_CHANGED 			= 23;
-
-	public static final int CB_SENSOR_CHANGED			= 24;
-	
-	public static final int CB_CREATE_TAB_CONTENT		= 25;
-	public static final int CB_TAB_CHANGED				= 26;
-
-	public static final int CB_LAST 					= 27;
+    implements
+        android.widget.TimePicker.OnTimeChangedListener,
+        android.hardware.SensorEventListener,
+        android.widget.AdapterView.OnItemClickListener,
+        android.widget.TabHost.OnTabChangeListener,
+        android.view.View.OnKeyListener,
+        Runnable,
+        android.view.View.OnClickListener,
+        android.app.DatePickerDialog.OnDateSetListener,
+        android.content.DialogInterface.OnClickListener,
+        android.widget.TextView.OnEditorActionListener,
+        android.widget.TabHost.TabContentFactory,
+        android.app.TimePickerDialog.OnTimeSetListener,
+        android.widget.DatePicker.OnDateChangedListener
+{
+    public static final int CB_TIME_CHANGED = 0;
+    public static final int CB_ACCURACY_CHANGED = 1;
+    public static final int CB_ITEM_CLICK = 2;
+    public static final int CB_TAB_CHANGED = 3;
+    public static final int CB_SENSOR_CHANGED = 4;
+    public static final int CB_PAUSE = 5;
+    public static final int CB_KEY = 6;
+    public static final int CB_RUN = 7;
+    public static final int CB_PREPARE_DIALOG = 8;
+    public static final int CB_RESTART = 9;
+    public static final int CB_DESTROY = 10;
+    public static final int CB_CLICK = 11;
+    public static final int CB_DATE_SET = 12;
+    public static final int CB_DIALOG_CLICK = 13;
+    public static final int CB_ACTIVITY_RESULT = 14;
+    public static final int CB_EDITOR_ACTION = 15;
+    public static final int CB_MENU_ITEM_SELECTED = 16;
+    public static final int CB_CONTEXT_ITEM_SELECTED = 17;
+    public static final int CB_CREATE_CONTEXT_MENU = 18;
+    public static final int CB_CREATE_TAB_CONTENT = 19;
+    public static final int CB_TIME_SET = 20;
+    public static final int CB_STOP = 21;
+    public static final int CB_RESUME = 22;
+    public static final int CB_SIZE_CHANGED = 23;
+    public static final int CB_DRAW = 24;
+    public static final int CB_DATE_CHANGED = 25;
+    public static final int CB_RESTORE_INSTANCE_STATE = 26;
+    public static final int CB_SAVE_INSTANCE_STATE = 27;
+    public static final int CB_CREATE_DIALOG = 28;
+    public static final int CB_START = 29;
+    public static final int CB_CREATE_OPTIONS_MENU = 30;
+	public static final int CB_LAST = 31;
 	
 	private boolean[] callbackOptions = new boolean [CB_LAST];
+    
 	private String remoteVariable = "";
 	private ProgressDialog loadingDialog; 
     private final Handler loadingHandler = new Handler();
-    private Object scriptReturnObject = null;
+    private IRubyObject __this__;
+    private Ruby __ruby__;
 
 	public RubotoActivity setRemoteVariable(String var) {
 		remoteVariable = ((var == null) ? "" : (var + "."));
@@ -98,12 +76,7 @@ public class RubotoActivity extends Activity
 	
 	/**********************************************************************************
 	 *  
-	 *  Callbacks
-	 *  
-	 */
-
-	/* 
-	 *  Management
+	 *  Callback management
 	 */
 	
 	public void requestCallback(int id) {
@@ -114,13 +87,8 @@ public class RubotoActivity extends Activity
 		callbackOptions[id] = false;
 	}
 	
-    /* Used by a script to pass an object back to back an object */
-	public void setScriptReturnObject(Object object) {
-    	scriptReturnObject = object;
-    }
-    
 	/* 
-	 *  Activity Lifecycle
+	 *  Activity Lifecycle: onCreate
 	 */
 	
 	@Override
@@ -153,282 +121,405 @@ public class RubotoActivity extends Activity
 		        Script.defineGlobalVariable("$activity", this);
 			}
 
+		    __ruby__ = Script.getRuby();
+		    __this__ = JavaUtil.convertJavaToRuby(__ruby__, this);
 			Script.defineGlobalVariable("$bundle", savedState);
 			Script.execute(remoteVariable + "on_create($bundle)");
+//            RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create", JavaUtil.convertJavaToRuby(__ruby__, savedState));
 		}
 	}
 	
     protected final Runnable loadingComplete = new Runnable(){
         public void run(){
             loadingDialog.dismiss();
+		    __ruby__ = Script.getRuby();
+		    __this__ = JavaUtil.convertJavaToRuby(__ruby__, this);
 			Script script = new Script(getIntent().getExtras().getString("org.jruby.ruboto.irb.extra.SCRIPT_NAME"));
 	        Script.defineGlobalVariable("$activity", RubotoActivity.this);
 			try {script.execute();}
 			catch (IOException e) {finish();}
         }
     };
-	
-	@Override
-	public void onStart() {
-		if (callbackOptions[CB_START]) Script.execute(remoteVariable + "on_start()");
-		super.onStart();
-	}
-	
-	@Override
-	public void onResume() {
-		if (callbackOptions[CB_RESUME]) Script.execute(remoteVariable + "on_resume()");
-		super.onResume();
-	}
-	
-	@Override
-	public void onRestart() {
-		if (callbackOptions[CB_RESTART]) Script.execute(remoteVariable + "on_restart()");
-		super.onRestart();
-	}
-	
-	@Override
-	public void onPause() {
-		if (callbackOptions[CB_PAUSE]) Script.execute(remoteVariable + "on_pause()");
-		super.onPause();
-	}
-	
-	@Override
-	public void onStop() {
-		if (callbackOptions[CB_STOP]) Script.execute(remoteVariable + "on_stop()");
-		super.onStop();
-	}
-	
-	@Override
-	public void onDestroy() {
-		if (callbackOptions[CB_DESTROY]) Script.execute(remoteVariable + "on_destroy()");
-		super.onDestroy();
-	}
-	
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-		if (callbackOptions[CB_SAVE_INSTANCE_STATE]) {
-	        Script.defineGlobalVariable("$bundle", savedInstanceState);
-			Script.execute(remoteVariable + "on_save_instance_state($bundle)");
-		}
-    }
 
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-		if (callbackOptions[CB_RESTORE_INSTANCE_STATE]) {
-	        Script.defineGlobalVariable("$bundle", savedInstanceState);
-			Script.execute(remoteVariable + "on_restore_instance_state($bundle)");
-		}
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (callbackOptions[CB_ACTIVITY_RESULT]) {
-	        Script.defineGlobalVariable("$intent", data);
-			Script.execute(remoteVariable + "on_activity_result(" + requestCode + ", " + resultCode + ", $intent)");
-		}
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-	
-	/* 
-	 *  Option Menus
+	/*********************************************************************************
+	 *
+	 * Ruby Generated Callback Methods
 	 */
 	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
-	        Script.defineGlobalVariable("$menu", menu);
-			Script.execute(remoteVariable + "on_create_options_menu($menu)");
-		}
-		return super.onCreateOptionsMenu(menu);
-	}
 
-    @Override
-    public boolean onMenuItemSelected(int featureId, MenuItem item) {
-		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
-	        Script.defineGlobalVariable("$menu_item", item);
-			Script.execute(remoteVariable + "on_menu_item_selected(" + featureId + ", $menu_item)");
-		}
-    	return super.onMenuItemSelected(featureId, item);
-    }
-
-	/*
-	 *  Context Menus
-	 */
-	
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-    	if (callbackOptions[CB_CREATE_CONTEXT_MENU]) {
-	        Script.defineGlobalVariable("$menu", menu);
-	        Script.defineGlobalVariable("$view", v);
-	        Script.defineGlobalVariable("$menu_info", menuInfo);
-			Script.execute(remoteVariable + "on_create_context_menu($menu, $view, $menu_info)");
-    	}
-    }
-    
-    public boolean onContextItemSelected(MenuItem item) {
-    	if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
-	        Script.defineGlobalVariable("$menu_item", item);
-			Script.execute(remoteVariable + "on_context_item_selected($menu_item)");
-	    	return true;
-    	}
-    	return false;
-    }
-    
-	/* 
-	 *  Item Click
-	 */
-	
-    public void onItemClick(AdapterView<?> av, View v, int pos, long id) {
-    	if (callbackOptions[CB_ITEM_CLICK]) {
-	        Script.defineGlobalVariable("$adapter_view", av);
-	        Script.defineGlobalVariable("$view", v);
-			Script.execute(remoteVariable + "on_item_click($adapter_view, $view," + pos + ", " + id + ")");
-    	}
-    }
-    
-	/* 
-	 *  Editor Clicks and Actions
-	 */
-    
-    public boolean onKey (View v, int keyCode, KeyEvent event) {
-    	if (callbackOptions[CB_KEY]) {
-	        Script.defineGlobalVariable("$view", v);
-	        Script.defineGlobalVariable("$event", event);
-			String rv = Script.execute(remoteVariable + "on_key($view," + keyCode + ", $event)");
-			return (rv != null) && rv.equals("true");
-    	}
-    	return false;
-    }
-    
-	public boolean onEditorAction(TextView arg0, int actionId, KeyEvent event) {
-		if (callbackOptions[CB_EDITOR_ACTION]) {
-	        Script.defineGlobalVariable("$view", arg0);
-	        Script.defineGlobalVariable("$event", event);
-			String rv = Script.execute(remoteVariable + "on_editor_action($view," + actionId + ", $event)");
-			return (rv != null) && rv.equals("true");
-		}
-		return false;
-	}
-
-	/* 
-	 *  Click
-	 */
-    
-    public void onClick (View v) {
-		if (callbackOptions[CB_CLICK]) {
-	        Script.defineGlobalVariable("$view", v);
-			Script.execute(remoteVariable + "on_click($view)");
-		}
-    }
-
-	/* 
-	 *  RubotoView
-	 */
-    
-    public void onDraw (RubotoView v, Canvas c) {
-		if (callbackOptions[CB_DRAW]) {
-	        Script.defineGlobalVariable("$view", v);
-	        Script.defineGlobalVariable("$canvas", c);
-			Script.execute(remoteVariable + "on_draw($view, $canvas)");
-		}
-    }
-
-    public void onSizeChanged (RubotoView v, int w, int h, int oldw, int oldh) {
-		if (callbackOptions[CB_SIZE_CHANGED]) {
-	        Script.defineGlobalVariable("$view", v);
-			Script.execute(remoteVariable + "on_size_changed($view," + w + "," + h + "," + oldw + "," + oldh + ")");
-		}
-    }
-
-	/* 
-	 *  Dialogs
-	 */
-
-    public Dialog onCreateDialog(int id) {
-		if (callbackOptions[CB_CREATE_DIALOG]) {
-			Script.execute(remoteVariable + "on_create_dialog(" + id + ")");
-			return (Dialog)scriptReturnObject;
-		}
-		return null;
-    }
-
-    public void onPrepareDialog(int id, Dialog dialog) {
-		if (callbackOptions[CB_CREATE_DIALOG]) {
-	        Script.defineGlobalVariable("$prepare", dialog);
-			Script.execute(remoteVariable + "on_prepare_dialog(" + id + ", $dialog)");
-		}    	
-    }
-
-    public void onClick(DialogInterface dialog, int which) {
-		if (callbackOptions[CB_DIALOG_CLICK]) {
-	        Script.defineGlobalVariable("$dialog", dialog);
-			Script.execute(remoteVariable + "on_dialog_click($dialog, " + which + ")");
-		}    	
-    }
-
-	/* 
-	 *  Date and Time Change
-	 */
-
-    public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-		if (callbackOptions[CB_DATE_CHANGED]) {
-	        Script.defineGlobalVariable("$view", view);
-			Script.execute(remoteVariable + "on_date_changed($view, " + year + ", " + monthOfYear + ", " + dayOfMonth + ")");
-		}
-    }
-
-    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-		if (callbackOptions[CB_DATE_SET]) {
-	        Script.defineGlobalVariable("$view", view);
-			Script.execute(remoteVariable + "on_date_set($view, " + year + ", " + monthOfYear + ", " + dayOfMonth + ")");
-		}
-    }
-
-    public void onTimeChanged(TimePicker view, int hourOfDay, int minute) {
+	public void onTimeChanged(android.widget.TimePicker arg0, int arg1, int arg2) {
+		
 		if (callbackOptions[CB_TIME_CHANGED]) {
-	        Script.defineGlobalVariable("$view", view);
-			Script.execute(remoteVariable + "on_time_changed($view, " + hourOfDay + ", " + minute + ")");
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_time_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
 		}
-    }
+        
+	}
 
-    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-		if (callbackOptions[CB_TIME_SET]) {
-	        Script.defineGlobalVariable("$view", view);
-			Script.execute(remoteVariable + "on_time_set($view, " + hourOfDay + ", " + minute + ")");
+	public void onAccuracyChanged(android.hardware.Sensor arg0, int arg1) {
+		
+		if (callbackOptions[CB_ACCURACY_CHANGED]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_accuracy_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
 		}
-    }
+        
+	}
 
-    /* 
-	 *  SensorEventListener
-	 */
-
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-      // Nothing for now	
-    }
-
-    public void onSensorChanged(SensorEvent event) {
-		if (callbackOptions[CB_SENSOR_CHANGED]) {
-	        Script.defineGlobalVariable("$event", event);
-			Script.execute(remoteVariable + "on_sensor_changed($event)");
+	public void onItemClick(android.widget.AdapterView<?> arg0, android.view.View arg1, int arg2, long arg3) {
+		
+		if (callbackOptions[CB_ITEM_CLICK]) {
+            try {
+            	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3)};
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_item_click", args).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
 		}
-    }
+        
+	}
 
-    /* 
-	 *  TabHost.TabContentFactory and OnTabChangeListener
-	 */
-
-    public View createTabContent(String tab) {
-		if (callbackOptions[CB_CREATE_TAB_CONTENT]) {
-			Script.execute(remoteVariable + "on_create_tab_content(\"" + tab + "\")");
-			return (View)scriptReturnObject;
-		}
-		return null;
-    }
-    
-    public void onTabChanged (String tab) {
+	public void onTabChanged(String arg0) {
+		
 		if (callbackOptions[CB_TAB_CHANGED]) {
-			Script.execute(remoteVariable + "on_tab_changed(\"" + tab + "\")");
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_tab_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
 		}
-    }
+        
+	}
+
+	public void onSensorChanged(android.hardware.SensorEvent arg0) {
+		
+		if (callbackOptions[CB_SENSOR_CHANGED]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_sensor_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onPause() {
+		super.onPause();
+		if (callbackOptions[CB_PAUSE]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_pause").toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public boolean onKey(android.view.View arg0, int arg1, android.view.KeyEvent arg2) {
+		
+		if (callbackOptions[CB_KEY]) {
+            try {
+            	return (Boolean)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_key", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(boolean.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        return false;
+	}
+
+	public void run() {
+		
+		if (callbackOptions[CB_RUN]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "run").toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onPrepareDialog(int arg0, android.app.Dialog arg1) {
+		super.onPrepareDialog(arg0, arg1);
+		if (callbackOptions[CB_PREPARE_DIALOG]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_prepare_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onRestart() {
+		super.onRestart();
+		if (callbackOptions[CB_RESTART]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_restart").toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onDestroy() {
+		super.onDestroy();
+		if (callbackOptions[CB_DESTROY]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_destroy").toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onClick(android.view.View arg0) {
+		
+		if (callbackOptions[CB_CLICK]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_click", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onDateSet(android.widget.DatePicker arg0, int arg1, int arg2, int arg3) {
+		
+		if (callbackOptions[CB_DATE_SET]) {
+            try {
+            	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3)};
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_date_set", args).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onClick(android.content.DialogInterface arg0, int arg1) {
+		
+		if (callbackOptions[CB_DIALOG_CLICK]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_dialog_click", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onActivityResult(int arg0, int arg1, android.content.Intent arg2) {
+		super.onActivityResult(arg0, arg1, arg2);
+		if (callbackOptions[CB_ACTIVITY_RESULT]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_activity_result", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public boolean onEditorAction(android.widget.TextView arg0, int arg1, android.view.KeyEvent arg2) {
+		
+		if (callbackOptions[CB_EDITOR_ACTION]) {
+            try {
+            	return (Boolean)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_editor_action", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(boolean.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        return false;
+	}
+
+	public boolean onMenuItemSelected(int arg0, android.view.MenuItem arg1) {
+		super.onMenuItemSelected(arg0, arg1);
+		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
+            try {
+            	return (Boolean)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_menu_item_selected", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(boolean.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        return false;
+	}
+
+	public boolean onContextItemSelected(android.view.MenuItem arg0) {
+		super.onContextItemSelected(arg0);
+		if (callbackOptions[CB_CREATE_CONTEXT_MENU]) {
+            try {
+            	return (Boolean)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_context_item_selected", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(boolean.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        return false;
+	}
+
+	public void onCreateContextMenu(android.view.ContextMenu arg0, android.view.View arg1, android.view.ContextMenu.ContextMenuInfo arg2) {
+		super.onCreateContextMenu(arg0, arg1, arg2);
+		if (callbackOptions[CB_CREATE_CONTEXT_MENU]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create_context_menu", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public android.view.View createTabContent(String arg0) {
+		
+		if (callbackOptions[CB_CREATE_TAB_CONTENT]) {
+            try {
+            	return (android.view.View)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "create_tab_content", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(android.view.View.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        return null;
+	}
+
+	public void onTimeSet(android.widget.TimePicker arg0, int arg1, int arg2) {
+		
+		if (callbackOptions[CB_TIME_SET]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_time_set", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onStop() {
+		super.onStop();
+		if (callbackOptions[CB_STOP]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_stop").toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onResume() {
+		super.onResume();
+		if (callbackOptions[CB_RESUME]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_resume").toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onSizeChanged(RubotoView arg0, int arg1, int arg2, int arg3, int arg4) {
+		
+		if (callbackOptions[CB_SIZE_CHANGED]) {
+            try {
+            	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3), JavaUtil.convertJavaToRuby(__ruby__, arg4)};
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_size_changed", args).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onDraw(RubotoView arg0, android.graphics.Canvas arg1) {
+		
+		if (callbackOptions[CB_DRAW]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_draw", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onDateChanged(android.widget.DatePicker arg0, int arg1, int arg2, int arg3) {
+		
+		if (callbackOptions[CB_DATE_CHANGED]) {
+            try {
+            	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3)};
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_date_changed", args).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onRestoreInstanceState(android.os.Bundle arg0) {
+		super.onRestoreInstanceState(arg0);
+		if (callbackOptions[CB_RESTORE_INSTANCE_STATE]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_restore_instance_state", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public void onSaveInstanceState(android.os.Bundle arg0) {
+		super.onSaveInstanceState(arg0);
+		if (callbackOptions[CB_SAVE_INSTANCE_STATE]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_save_instance_state", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public android.app.Dialog onCreateDialog(int arg0) {
+		super.onCreateDialog(arg0);
+		if (callbackOptions[CB_CREATE_DIALOG]) {
+            try {
+            	return (android.app.Dialog)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(android.app.Dialog.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        return null;
+	}
+
+	public void onStart() {
+		super.onStart();
+		if (callbackOptions[CB_START]) {
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_start").toJava(void.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        
+	}
+
+	public boolean onCreateOptionsMenu(android.view.Menu arg0) {
+		super.onCreateOptionsMenu(arg0);
+		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
+            try {
+            	return (Boolean)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create_options_menu", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(boolean.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+            }
+		}
+        return false;
+	}
 }
