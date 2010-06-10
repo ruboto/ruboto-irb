@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.jruby.ruboto.irb.R;
+import org.ruboto.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;

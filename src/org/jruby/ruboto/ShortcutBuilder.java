@@ -2,7 +2,7 @@ package org.jruby.ruboto;
 
 import java.util.List;
 
-import org.jruby.ruboto.irb.R;
+import org.ruboto.R;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -42,9 +42,9 @@ public class ShortcutBuilder extends Activity implements OnItemClickListener {
 
     public void onItemClick(AdapterView<?> av, View v, int pos, long id) {
 		Intent sc_intent = new Intent();
-		sc_intent.setAction("org.jruby.ruboto.irb.intent.action.LAUNCH_SCRIPT");
+		sc_intent.setAction("org.ruboto.intent.action.LAUNCH_SCRIPT");
 		sc_intent.addCategory("android.intent.category.DEFAULT");
-		sc_intent.putExtra("org.jruby.ruboto.irb.extra.SCRIPT_NAME", scripts.get(pos));
+		sc_intent.putExtra("org.ruboto.extra.SCRIPT_NAME", scripts.get(pos));
 
 		Intent intent = new Intent();
 		intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, sc_intent);
