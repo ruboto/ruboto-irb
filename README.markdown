@@ -19,7 +19,7 @@ For example,
      $ ant install   # build and install package
      $ adb -[e|d] install -r bin/IRB-debug.apk # manual install (emulator, device)
 
-There are also some prebuilt packages available: [github.com/headius/ruboto-irb/downloads](http://github.com/headius/ruboto-irb/downloads).
+There are also some prebuilt packages available: [github.com/ruboto/ruboto-irb/downloads](http://github.com/ruboto/ruboto-irb/downloads).
 
 You can also check out the [JRuby on Android](http://groups.google.com/group/ruboto) Google group for more information.
 
