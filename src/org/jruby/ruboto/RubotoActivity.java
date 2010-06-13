@@ -1,3 +1,4 @@
+
 package org.jruby.ruboto;
 
 import java.io.IOException;
@@ -44,22 +45,20 @@ public class RubotoActivity extends Activity
     public static final int CB_DIALOG_CLICK = 13;
     public static final int CB_ACTIVITY_RESULT = 14;
     public static final int CB_EDITOR_ACTION = 15;
-    public static final int CB_MENU_ITEM_SELECTED = 16;
-    public static final int CB_CONTEXT_ITEM_SELECTED = 17;
-    public static final int CB_CREATE_CONTEXT_MENU = 18;
-    public static final int CB_CREATE_TAB_CONTENT = 19;
-    public static final int CB_TIME_SET = 20;
-    public static final int CB_STOP = 21;
-    public static final int CB_RESUME = 22;
-    public static final int CB_SIZE_CHANGED = 23;
-    public static final int CB_DRAW = 24;
-    public static final int CB_DATE_CHANGED = 25;
-    public static final int CB_RESTORE_INSTANCE_STATE = 26;
-    public static final int CB_SAVE_INSTANCE_STATE = 27;
-    public static final int CB_CREATE_DIALOG = 28;
-    public static final int CB_START = 29;
-    public static final int CB_CREATE_OPTIONS_MENU = 30;
-	public static final int CB_LAST = 31;
+    public static final int CB_CREATE_OPTIONS_MENU = 16;
+    public static final int CB_CREATE_CONTEXT_MENU = 17;
+    public static final int CB_CREATE_TAB_CONTENT = 18;
+    public static final int CB_TIME_SET = 19;
+    public static final int CB_STOP = 20;
+    public static final int CB_RESUME = 21;
+    public static final int CB_SIZE_CHANGED = 22;
+    public static final int CB_DRAW = 23;
+    public static final int CB_DATE_CHANGED = 24;
+    public static final int CB_RESTORE_INSTANCE_STATE = 25;
+    public static final int CB_SAVE_INSTANCE_STATE = 26;
+    public static final int CB_CREATE_DIALOG = 27;
+    public static final int CB_START = 28;
+	public static final int CB_LAST = 29;
 	
 	private boolean[] callbackOptions = new boolean [CB_LAST];
     
@@ -146,80 +145,73 @@ public class RubotoActivity extends Activity
 	 * Ruby Generated Callback Methods
 	 */
 	
-
 	public void onTimeChanged(android.widget.TimePicker arg0, int arg1, int arg2) {
 		
 		if (callbackOptions[CB_TIME_CHANGED]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_time_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_time_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onAccuracyChanged(android.hardware.Sensor arg0, int arg1) {
 		
 		if (callbackOptions[CB_ACCURACY_CHANGED]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_accuracy_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_accuracy_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onItemClick(android.widget.AdapterView<?> arg0, android.view.View arg1, int arg2, long arg3) {
 		
 		if (callbackOptions[CB_ITEM_CLICK]) {
             try {
             	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3)};
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_item_click", args).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_item_click", args);
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onTabChanged(String arg0) {
 		
 		if (callbackOptions[CB_TAB_CHANGED]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_tab_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_tab_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onSensorChanged(android.hardware.SensorEvent arg0) {
 		
 		if (callbackOptions[CB_SENSOR_CHANGED]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_sensor_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_sensor_changed", JavaUtil.convertJavaToRuby(__ruby__, arg0));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onPause() {
 		super.onPause();
 		if (callbackOptions[CB_PAUSE]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_pause").toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_pause");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public boolean onKey(android.view.View arg0, int arg1, android.view.KeyEvent arg2) {
 		
 		if (callbackOptions[CB_KEY]) {
@@ -231,104 +223,95 @@ public class RubotoActivity extends Activity
 		}
         return false;
 	}
-
 	public void run() {
 		
 		if (callbackOptions[CB_RUN]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "run").toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "run");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onPrepareDialog(int arg0, android.app.Dialog arg1) {
 		super.onPrepareDialog(arg0, arg1);
 		if (callbackOptions[CB_PREPARE_DIALOG]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_prepare_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_prepare_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onRestart() {
 		super.onRestart();
 		if (callbackOptions[CB_RESTART]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_restart").toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_restart");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onDestroy() {
 		super.onDestroy();
 		if (callbackOptions[CB_DESTROY]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_destroy").toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_destroy");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onClick(android.view.View arg0) {
 		
 		if (callbackOptions[CB_CLICK]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_click", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_click", JavaUtil.convertJavaToRuby(__ruby__, arg0));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onDateSet(android.widget.DatePicker arg0, int arg1, int arg2, int arg3) {
 		
 		if (callbackOptions[CB_DATE_SET]) {
             try {
             	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3)};
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_date_set", args).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_date_set", args);
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onClick(android.content.DialogInterface arg0, int arg1) {
 		
 		if (callbackOptions[CB_DIALOG_CLICK]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_dialog_click", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_dialog_click", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onActivityResult(int arg0, int arg1, android.content.Intent arg2) {
 		super.onActivityResult(arg0, arg1, arg2);
 		if (callbackOptions[CB_ACTIVITY_RESULT]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_activity_result", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_activity_result", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public boolean onEditorAction(android.widget.TextView arg0, int arg1, android.view.KeyEvent arg2) {
 		
 		if (callbackOptions[CB_EDITOR_ACTION]) {
@@ -340,7 +323,6 @@ public class RubotoActivity extends Activity
 		}
         return false;
 	}
-
 	public boolean onMenuItemSelected(int arg0, android.view.MenuItem arg1) {
 		super.onMenuItemSelected(arg0, arg1);
 		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
@@ -352,7 +334,6 @@ public class RubotoActivity extends Activity
 		}
         return false;
 	}
-
 	public boolean onContextItemSelected(android.view.MenuItem arg0) {
 		super.onContextItemSelected(arg0);
 		if (callbackOptions[CB_CREATE_CONTEXT_MENU]) {
@@ -364,19 +345,17 @@ public class RubotoActivity extends Activity
 		}
         return false;
 	}
-
 	public void onCreateContextMenu(android.view.ContextMenu arg0, android.view.View arg1, android.view.ContextMenu.ContextMenuInfo arg2) {
 		super.onCreateContextMenu(arg0, arg1, arg2);
 		if (callbackOptions[CB_CREATE_CONTEXT_MENU]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create_context_menu", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create_context_menu", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public android.view.View createTabContent(String arg0) {
 		
 		if (callbackOptions[CB_CREATE_TAB_CONTENT]) {
@@ -388,105 +367,96 @@ public class RubotoActivity extends Activity
 		}
         return null;
 	}
-
 	public void onTimeSet(android.widget.TimePicker arg0, int arg1, int arg2) {
 		
 		if (callbackOptions[CB_TIME_SET]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_time_set", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_time_set", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onStop() {
 		super.onStop();
 		if (callbackOptions[CB_STOP]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_stop").toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_stop");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onResume() {
 		super.onResume();
 		if (callbackOptions[CB_RESUME]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_resume").toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_resume");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onSizeChanged(RubotoView arg0, int arg1, int arg2, int arg3, int arg4) {
 		
 		if (callbackOptions[CB_SIZE_CHANGED]) {
             try {
             	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3), JavaUtil.convertJavaToRuby(__ruby__, arg4)};
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_size_changed", args).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_size_changed", args);
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onDraw(RubotoView arg0, android.graphics.Canvas arg1) {
 		
 		if (callbackOptions[CB_DRAW]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_draw", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_draw", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onDateChanged(android.widget.DatePicker arg0, int arg1, int arg2, int arg3) {
 		
 		if (callbackOptions[CB_DATE_CHANGED]) {
             try {
             	IRubyObject[] args = {JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2), JavaUtil.convertJavaToRuby(__ruby__, arg3)};
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_date_changed", args).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_date_changed", args);
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onRestoreInstanceState(android.os.Bundle arg0) {
 		super.onRestoreInstanceState(arg0);
 		if (callbackOptions[CB_RESTORE_INSTANCE_STATE]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_restore_instance_state", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_restore_instance_state", JavaUtil.convertJavaToRuby(__ruby__, arg0));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public void onSaveInstanceState(android.os.Bundle arg0) {
 		super.onSaveInstanceState(arg0);
 		if (callbackOptions[CB_SAVE_INSTANCE_STATE]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_save_instance_state", JavaUtil.convertJavaToRuby(__ruby__, arg0)).toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_save_instance_state", JavaUtil.convertJavaToRuby(__ruby__, arg0));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public android.app.Dialog onCreateDialog(int arg0) {
 		super.onCreateDialog(arg0);
 		if (callbackOptions[CB_CREATE_DIALOG]) {
@@ -498,19 +468,17 @@ public class RubotoActivity extends Activity
 		}
         return null;
 	}
-
 	public void onStart() {
 		super.onStart();
 		if (callbackOptions[CB_START]) {
             try {
-            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_start").toJava(void.class);
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_start");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
             }
 		}
         
 	}
-
 	public boolean onCreateOptionsMenu(android.view.Menu arg0) {
 		super.onCreateOptionsMenu(arg0);
 		if (callbackOptions[CB_CREATE_OPTIONS_MENU]) {
