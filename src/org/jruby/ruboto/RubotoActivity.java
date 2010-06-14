@@ -1,3 +1,9 @@
+/**********************************************************************************************
+*
+* RubotoActivity.java is generated from RubotoActivity.erb. Any changes needed in should be 
+* made within the erb template or they will be lost.
+*
+*/
 
 package org.jruby.ruboto;
 
