@@ -33,7 +33,6 @@ java_import "android.app.TimePickerDialog"
 java_import "android.app.DatePickerDialog"
 java_import "android.graphics.Typeface"
 java_import "android.content.res.ColorStateList"
-java_import "org.jruby.ruboto.RubotoView"
 
 class RubotoActivity
   @@lists = {

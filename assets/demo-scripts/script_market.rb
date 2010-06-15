@@ -20,7 +20,7 @@ java_import "org.apache.http.impl.client.DefaultHttpClient"
 
 java_import "android.content.res.AssetManager"
 java_import "android.content.Context"
-java_import "org.jruby.ruboto.Script"
+java_import "org.ruboto.embedded.Script"
 
 $activity.start_ruboto_activity("$source_picker") do
   setTitle "Script Market - Select a source"

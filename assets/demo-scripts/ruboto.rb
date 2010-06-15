@@ -14,7 +14,11 @@ def confirm_ruboto_version(required_version, exact=true)
 end
 
 require 'java'
-java_import "org.jruby.ruboto.RubotoActivity"
+
+java_import "org.ruboto.embedded.RubotoActivity"
+java_import "org.ruboto.embedded.RubotoDialog"
+java_import "org.ruboto.embedded.RubotoView"
+
 java_import "android.app.Activity"
 java_import "android.content.Intent"
 java_import "android.os.Bundle"
@@ -30,8 +34,8 @@ java_import "java.util.ArrayList"
 java_import "android.R"
 
 module Ruboto
-  java_import "org.ruboto.R"
-  Id = JavaUtilities.get_proxy_class("org.ruboto.R$id")
+  java_import "org.ruboto.irb.R"
+  Id = JavaUtilities.get_proxy_class("org.ruboto.irb.R$id")
 end
 AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
 
@@ -57,8 +61,8 @@ class Activity
       b.putString("Initialize Script", "#{remote_variable}.initialize_activity")
 
       i = Intent.new
-      i.setClassName "org.ruboto", 
-                     "org.jruby.ruboto.Ruboto#{dialog ? 'Dialog' : 'Activity'}"
+      i.setClassName "org.ruboto.irb", 
+                     "org.ruboto.embedded.Ruboto#{dialog ? 'Dialog' : 'Activity'}"
       i.putExtra("RubotoActivity Config", b)
 
       self.startActivity i
