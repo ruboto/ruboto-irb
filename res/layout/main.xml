@@ -20,7 +20,7 @@
 	    		android:layout_width="fill_parent"
 	    		android:layout_height="fill_parent"
 		    	>
-				<view class="org.jruby.ruboto.HistoryEditText"
+				<view class="org.ruboto.irb.HistoryEditText"
 					android:id="@+id/irb_edittext"
 					android:layout_width="fill_parent"
 					android:layout_height="wrap_content"
