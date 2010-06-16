@@ -1,3 +1,11 @@
+== 0.2 06/16/10
+
+   * RubotoActivity for creating UI and getting callbacks
+   * New demo scripts
+   * Shortcuts
+   * New package name
+   * JRuby 1.5.1
+
 == 0.1 03/01/10
 
    * First official release to Android Marketplace
