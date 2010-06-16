@@ -21,6 +21,8 @@ For example,
 
 There are also some prebuilt packages available: [github.com/ruboto/ruboto-irb/downloads](http://github.com/ruboto/ruboto-irb/downloads).
 
+NOTE: To install it to an emulator image, you need to have the emulator running. 
+
 You can also check out the [JRuby on Android](http://groups.google.com/group/ruboto) Google group for more information.
 
 That's it! Have fun!
