@@ -154,7 +154,7 @@ public class RubotoActivity extends Activity
 		super.onCreate(savedState);
 		
 		if (getIntent().getAction() != null  && 
-				getIntent().getAction().equals("org.ruboto.embedded.intent.action.LAUNCH_SCRIPT")) {
+				getIntent().getAction().equals("org.ruboto.intent.action.LAUNCH_SCRIPT")) {
 			/* Launched from a shortcut */
 		    Thread t = new Thread() {
 				public void run(){
@@ -192,7 +192,7 @@ public class RubotoActivity extends Activity
             loadingDialog.dismiss();
 		    __ruby__ = Script.getRuby();
 		    __this__ = JavaUtil.convertJavaToRuby(__ruby__, RubotoActivity.this);
-			Script script = new Script(getIntent().getExtras().getString("org.ruboto.embedded.extra.SCRIPT_NAME"));
+			Script script = new Script(getIntent().getExtras().getString("org.ruboto.extra.SCRIPT_NAME"));
 	        Script.defineGlobalVariable("$activity", RubotoActivity.this);
 			try {script.execute();}
 			catch (IOException e) {finish();}
