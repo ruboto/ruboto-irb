@@ -1,0 +1,246 @@
+%##############################################################################################
+%#
+%#   This code resolves any issues with the generated callbacks.
+%#   
+%#   1) Remove callbacks that are hard coded in this file: 
+%#
+%	 @callbacks["android.app.Activity"].delete("onCreate")
+%	 @callbacks["android.view.View$OnCreateContextMenuListener"].delete("onCreateContextMenu")
+%#
+%#   2) Remove callbacks that are causing a problem
+%#
+%	 @callbacks["android.app.Activity"].delete("onRetainNonConfigurationChildInstances")
+%#
+%#   3) Override the callback constant for a few key callbacks
+%#
+%	 @callbacks["android.app.Activity"]["onMenuItemSelected"]["constant"] = "CB_CREATE_OPTIONS_MENU"
+%	 @callbacks["android.app.Activity"]["onContextItemSelected"]["constant"] = "CB_CREATE_CONTEXT_MENU"
+%#
+%#   4) Create a unique name for callbacks that have duplicate names
+%#    
+%    @callbacks["android.content.DialogInterface$OnClickListener"]["onClick"]["ruby_method"] = "on_dialog_click"
+%    @callbacks["android.content.DialogInterface$OnClickListener"]["onClick"]["constant"] = "CB_DIALOG_CLICK"
+%    @callbacks["android.content.DialogInterface$OnKeyListener"]["onKey"]["ruby_method"] = "on_dialog_key"
+%    @callbacks["android.content.DialogInterface$OnKeyListener"]["onKey"]["constant"] = "CB_DIALOG_KEY"
+%    @callbacks["android.content.DialogInterface$OnMultiChoiceClickListener"]["onClick"]["ruby_method"] = "on_dialog_multi_choice_click"
+%    @callbacks["android.content.DialogInterface$OnMultiChoiceClickListener"]["onClick"]["constant"] = "CB_DIALOG_MULTI_CHOICE_CLICK"
+%#
+%#   5) Report any duplicate name callbacks not handled
+%#
+%    callbacks = {}
+%    @callbacks.each do |interface,i_info|
+%      i_info.each do |method,v|
+%        if callbacks[method] and not v["ruby_method"]
+%		   puts "#{method} in #{interface} and #{callbacks[method]}"
+%        else
+%          callbacks[v["ruby_method"] || method] = interface
+%        end
+%      end
+%    end
+%#
+%#   6) Create a few new special case callbacks
+%#
+%    @callbacks["none"] = {
+%		"onDraw" => {"args" => ["android.view.View", "android.graphics.Canvas"]}, 
+%		"onSizeChanged" => {"args" => ["RubotoView", "int", "int", "int", "int"]}
+%    }
+%#
+%##############################################################################################
+%#
+%#   This code takes the @callbacks hash (read out of the interfaces.yml file) and prepares
+%#   it for use in the code below.
+%#
+%    implements = []
+%    constants = []
+%    @callbacks.each do |interface,i_info|
+%      i_info.each do |method,v|
+%        v["interface"] = interface.gsub("$", ".")
+%        v["interface"] = "Activity" if v["interface"] == "android.app.Activity" 
+%        v["method"] = method
+%		 v["return_type"] = (v["return_type"] || "void").gsub("$", ".")
+%		 v["interface_method"] = v["interface_method"] || v["method"]
+%        v["ruby_method"] = v["ruby_method"] || v["method"].gsub(/[A-Z]/) {|i| "_#{i.downcase}"} 
+%
+%        implements << v["interface"] if v["interface"] != "Activity" and 
+%                                           v["interface"] != "none" and 
+%											not implements.include?(v["interface"])
+%
+%        unless v["constant"]
+%          constant = v["method"].gsub(/[A-Z]/) {|i| "_#{i}"}.upcase
+%          constant = constant[3..-1] if constant[0..2] == "ON_"
+%          v["constant"] = "CB_#{constant}"
+%        end
+%        constants << v["constant"] unless constants.include?(v["constant"])
+%
+%		 v["args"] = (v["args"] || [])
+%        v["args_with_types"], v["args_alone"] = [], []
+%        v["args"].each_with_index {|arg_type, i| v["args_with_types"] << "#{arg_type.gsub("$", ".")} arg#{i}"; v["args_alone"] << "arg#{i}"} 
+%        v["args_with_types"] = v["args_with_types"].join(", ")
+%      end
+%    end
+%##############################################################################################
+/**********************************************************************************************
+*
+* RubotoActivity.java is generated from RubotoActivity.erb. Any changes needed in should be 
+* made within the erb template or they will be lost.
+*
+*/
+
+package org.ruboto.embedded;
+
+import org.ruboto.irb.IRB;
+import java.io.IOException;
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.os.Handler;
+import android.os.Bundle;
+
+import org.jruby.Ruby;
+import org.jruby.javasupport.util.RuntimeHelpers;
+import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.javasupport.JavaUtil;
+import org.jruby.exceptions.RaiseException;
+
+public class RubotoActivity extends Activity 
+%##############################################################################################
+%#
+%#  Implement all interfaces
+%#
+    <%= "implements\n        #{implements.join(",\n        ")}" unless implements.empty? %>
+%##############################################################################################
+{
+%##############################################################################################
+%#
+%#  Create constants for all callbacks (may get rid of this means of requesting callbacks later)
+%#
+%    constants.each_with_index do |c, i|
+<%= "    public static final int #{c} = #{i};" %>
+%    end
+%##############################################################################################
+	public static final int CB_LAST = <%= constants.size %>;
+	
+	private boolean[] callbackOptions = new boolean [CB_LAST];
+    
+	private String remoteVariable = "";
+	private ProgressDialog loadingDialog; 
+    private final Handler loadingHandler = new Handler();
+    private IRubyObject __this__;
+    private Ruby __ruby__;
+
+	public RubotoActivity setRemoteVariable(String var) {
+		remoteVariable = ((var == null) ? "" : (var + "."));
+		return this;
+	}
+	
+	/**********************************************************************************
+	 *  
+	 *  Callback management
+	 */
+	
+	public void requestCallback(int id) {
+		callbackOptions[id] = true;
+	}
+	
+	public void removeCallback(int id) {
+		callbackOptions[id] = false;
+	}
+	
+	/* 
+	 *  Activity Lifecycle: onCreate
+	 */
+	
+	@Override
+	public void onCreate(Bundle savedState) {
+		super.onCreate(savedState);
+		
+		if (getIntent().getAction() != null  && 
+				getIntent().getAction().equals("org.ruboto.embedded.intent.action.LAUNCH_SCRIPT")) {
+			/* Launched from a shortcut */
+		    Thread t = new Thread() {
+				public void run(){
+		            Script.configDir(IRB.SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts");
+					Script.setUpJRuby(null);
+				    loadingHandler.post(loadingComplete);
+				}
+	        };
+	        t.start();
+			loadingDialog = ProgressDialog.show(this, "Launching Script", "Initializing Ruboto...", true, false);
+		} else {
+			Bundle configBundle = getIntent().getBundleExtra("RubotoActivity Config");
+			if (configBundle != null) {
+				setRemoteVariable(configBundle.getString("Remote Variable"));
+				if (configBundle.getBoolean("Define Remote Variable")) {
+			        Script.defineGlobalVariable(configBundle.getString("Remote Variable"), this);
+				}
+				if (configBundle.getString("Initialize Script") != null) {
+					Script.execute(configBundle.getString("Initialize Script"));
+				}
+			} else {
+		        Script.defineGlobalVariable("$activity", this);
+			}
+
+		    __ruby__ = Script.getRuby();
+		    __this__ = JavaUtil.convertJavaToRuby(__ruby__, this);
+			Script.defineGlobalVariable("$bundle", savedState);
+			Script.execute(remoteVariable + "on_create($bundle)");
+//            RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create", JavaUtil.convertJavaToRuby(__ruby__, savedState));
+		}
+	}
+	
+    protected final Runnable loadingComplete = new Runnable(){
+        public void run(){
+            loadingDialog.dismiss();
+		    __ruby__ = Script.getRuby();
+		    __this__ = JavaUtil.convertJavaToRuby(__ruby__, RubotoActivity.this);
+			Script script = new Script(getIntent().getExtras().getString("org.ruboto.embedded.extra.SCRIPT_NAME"));
+	        Script.defineGlobalVariable("$activity", RubotoActivity.this);
+			try {script.execute();}
+			catch (IOException e) {finish();}
+        }
+    };
+
+	/*********************************************************************************
+	 *
+	 * Ruby Generated Callback Methods
+	 */
+	
+%##############################################################################################
+%#
+%#  Create one Java callback methods
+%#
+%    @callbacks.each do |interface,i_info|
+	/*
+	 * <%= interface %>
+	 */
+
+%      i_info.each do |method,v|
+	public <%= "#{v["return_type"]} #{v["interface_method"]}(#{v["args_with_types"]})" %> {
+		if (callbackOptions[<%= v['constant']%>]) {
+			<%= "super.#{v["method"]}(#{v["args_alone"].join(", ")});" if v["interface"] == "Activity" %>
+            try {
+%             if v["args_alone"].size > 3
+            	IRubyObject[] args = {<%= v["args_alone"].map{|i| "JavaUtil.convertJavaToRuby(__ruby__, #{i})"}.join(", ") %>};
+            	<%= "return (#{v["return_type"].include?(".") ? v["return_type"] : v["return_type"].capitalize})" if v["return_type"] != "void" %>RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "<%=v["ruby_method"]%>", args)<%= ".toJava(#{v["return_type"]}.class)" if v["return_type"] != "void" %>;
+%             elsif v["args_alone"].size > 0 
+            	<%= "return (#{v["return_type"].include?(".") ? v["return_type"] : v["return_type"].capitalize})" if v["return_type"] != "void" %>RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "<%=v["ruby_method"]%>", <%= v["args_alone"].map{|i| "JavaUtil.convertJavaToRuby(__ruby__, #{i})"}.join(", ") %>)<%= ".toJava(#{v["return_type"]}.class)" if v["return_type"] != "void"%>;
+%             else 
+            	<%= "return (#{v["return_type"].include?(".") ? v["return_type"] : v["return_type"].capitalize})" if v["return_type"] != "void" %>RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "<%=v["ruby_method"]%>")<%= ".toJava(#{v["return_type"]}.class)" if v["return_type"] != "void"%>;
+%             end
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+		        <%= (v["return_type"] == "boolean" ? "return false;" : "return null;") unless v["return_type"] == "void" %>
+            }
+%     if v["interface"] == "Activity" 
+		} else {
+			<%= "return " unless v["return_type"] == "void" %><%= "super.#{v["method"]}(#{v["args_alone"].join(", ")});" %>
+%     elsif v["return_type"] != "void"
+		} else {
+	        return <%= v["return_type"] == "boolean" ? "false" : "null" %>;
+%     end
+		}
+	}
+	
+%      end
+%    end
+%##############################################################################################
+}
