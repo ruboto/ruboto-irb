@@ -623,7 +623,7 @@ class RubotoActivity
         showDialog(view.getText == "change the time" ? 1 : 0)
       end
 
-      handle_create_dialog do |dialog_id|
+      handle_create_dialog do |dialog_id, bundle|
         if dialog_id == 1
           TimePickerDialog.new(self, self, @time.hour, @time.min, false)
         else
