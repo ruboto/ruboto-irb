@@ -120,6 +120,7 @@ class RubotoActivity
   #
 
   def method_missing(name, *args, &block)
+    # make #handle_name_of_callback request that callback
     if name.to_s =~ /^handle_(.*)/ and (const = RubotoActivity.const_get("CB_#{$1.upcase}"))
         requestCallback const
         @eigenclass ||= class << self; self; end
