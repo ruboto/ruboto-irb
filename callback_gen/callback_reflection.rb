@@ -5,10 +5,10 @@
 result = {}
 @count = 0
 
-def hash_methods(klass, include_all=true)
+def hash_methods(klass, callbacks_only=false)
   rv = {}
   klass.getDeclaredMethods.each do |method|
-    if include_all or method.getName[0..1] == "on"
+    if !callbacks_only or method.getName[0..1] == "on"
       rv[method.getName] = {}
       rv[method.getName]["return_type"] = method.getReturnType.getName unless method.getReturnType.getName == "void" 
       rv[method.getName]["args"] = method.getParameterTypes.map{|i| i.getName} unless method.getParameterTypes.empty?
@@ -21,7 +21,7 @@ end
 %w(
   android.app.Activity
 ).each do |name|
-  h = hash_methods(java.lang.Class.forName(name), false)
+  h = hash_methods(java.lang.Class.forName(name), true)
   result[name] = h unless h.empty?
 end
 
