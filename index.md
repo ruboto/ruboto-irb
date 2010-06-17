@@ -10,6 +10,5 @@ Currently, we have an IRB app that also allows for scripts that interface with t
 
 To keep up with our progress or ask questions, join [the mailing list](http://groups.google.com/group/ruboto)
 
-<div id="robot-image">
 ![Robot](/ruboto.png)
-</div>
+
