@@ -1,6 +1,6 @@
 #Ruboto-IRB
 
-[http://ruboto.com](http://ruboto.com)
+[http://ruboto.org](http://ruboto.org)
 
 To get this working on Android, you'll need to do two things:
 
