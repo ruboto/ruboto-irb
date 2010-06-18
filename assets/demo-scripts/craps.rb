@@ -91,6 +91,18 @@ class Pass < Bet
   end
 end
 
+class Field < Bet
+  def play(roll, point)
+    return 1 if [3,4,9,10,11].include?(roll.sum)
+    return 2 if [2,12].include?(roll.sum)
+    -1
+  end
+
+  def name
+    "Field"
+  end
+end
+
 # the player's money
 money = 10000
 point = nil
