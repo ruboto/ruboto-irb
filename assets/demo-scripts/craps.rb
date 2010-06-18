@@ -103,32 +103,49 @@ class Field < Bet
   end
 end
 
+def bet(klass, amount)
+  if amount > $money
+    puts "you don't have that much money!"
+    nil
+  else
+    $money -= amount
+    klass.new(amount)
+  end
+end
+
 # the player's money
-money = 10000
+$money = 10000
 point = nil
-bets = []
+$bets = []
 AVAILABLE_BETS = subclasses_of Bet
 
 while true
   # place bets
-
-  bets << Pass.new(50)  if bets.empty?
+  $bets << bet(Pass, 50)  unless $bets.detect{|b| b.class == Pass}
+  $bets << bet(Field, 25)
+  $bets.compact!
 
   roll = Roll.new
   puts roll.dice.inspect
-  bets.each do |bet|
+
+  delete = []
+  $bets.each do |bet|
     result = bet.play(roll, point)
     if !result
       puts "your #{bet.name} bet is still on"
     elsif result < 0
       puts "you lost your #{bet.name} bet"
-      bets.delete bet
+      delete << bet
     else
       # they get their money back (1 * money) + the payout (result * money)
       puts "you won your #{bet.name} bet!"
-      money += bet.money * (1 + result)
+      $money += bet.money * (1 + result)
+      delete << bet
     end
   end
+  delete.each {|bet| $bets.delete bet }
+
+
   if point
     point = nil if point == roll.sum || roll.sum == 7
   else
@@ -136,7 +153,7 @@ while true
   end
   puts point ? "the point is #{point}" : "still on the come-out"
 
-  puts "money: #{money}"
+  puts "money: #{$money}"
   puts ''
   sleep(1)
 end
