@@ -84,9 +84,9 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     private static final int MAX_SCREEN = 10;
 
     /* Context menu option identifiers for script list */
-    private static final int EDIT_MENU = 10;
-    private static final int EXECUTE_MENU = 11;
-    private static final int DELETE_MENU = 12;
+    private static final int EDIT_MENU = 20;
+    private static final int EXECUTE_MENU = 21;
+    private static final int DELETE_MENU = 22;
 
     private static final String DEMO_SCRIPTS = "demo-scripts";
     
