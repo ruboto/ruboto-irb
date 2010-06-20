@@ -31,6 +31,7 @@ public class Script {
 
     private static String scriptsDir = null;
     private static File scriptsDirFile = null;
+    private static long scriptsDirModified = 0;
   
     private static final int STATE_EMPTY = 1;
     private static final int STATE_ON_DISK = 2;
@@ -148,12 +149,17 @@ public class Script {
      *
      * Static Methods: Scripts List
      */
+    
+    public static boolean scriptsDirChanged() {
+    	return scriptsDirModified != scriptsDirFile.lastModified();
+    }
 
     public static List<String> list() throws SecurityException {
         return Script.list(new ArrayList<String>());
     }
 
     public static List<String> list(List<String> list) throws SecurityException {
+    	scriptsDirModified = scriptsDirFile.lastModified();
         list.clear();
         String[] tmpList = scriptsDirFile.list(RUBY_FILES);
         Arrays.sort(tmpList, 0, tmpList.length, String.CASE_INSENSITIVE_ORDER);
