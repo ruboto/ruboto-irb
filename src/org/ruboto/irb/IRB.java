@@ -17,6 +17,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
@@ -26,6 +27,8 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -34,6 +37,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TabHost;
+import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -45,6 +49,7 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     public static final String SDCARD_SCRIPTS_DIR = "/sdcard/jruby";
     
     private TabHost tabs;
+    private TabWidget tabWidget;
     private final Handler handler = new Handler();
 
     /* IRB_Tab Elements */
@@ -74,6 +79,9 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     private static final int ABOUT_MENU = 5;
     private static final int RESCAN_MENU = 6;
     private static final int RELOAD_DEMOS = 7;
+    private static final int CLEAR_IRB = 8;
+    private static final int EDIT_IRB = 9;
+    private static final int MAX_SCREEN = 10;
 
     /* Context menu option identifiers for script list */
     private static final int EDIT_MENU = 10;
@@ -89,13 +97,21 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+    	super.onCreate(savedInstanceState);
+
+        SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+        if (prefs.getBoolean("HideTitle", false)) requestWindowFeature(Window.FEATURE_NO_TITLE);
+    	if (prefs.getBoolean("Fullscreen", false)) getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+    	setContentView(R.layout.main);
 
         tabs = (TabHost) findViewById(R.id.tabhost);
         tabs.setOnTabChangedListener(this);
         tabs.setup();
                 
+        tabWidget = (TabWidget) findViewById(android.R.id.tabs);
+    	tabWidget.setVisibility(prefs.getBoolean("HideTabs", false) ? View.GONE : View.VISIBLE);
+
         irbSetUp();
         configScriptsDir();
         editorSetUp();
@@ -135,7 +151,7 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     }
 
     private void scriptsListSetUp() {
-        tabs.addTab(tabs.newTabSpec("scripts")
+    	tabs.addTab(tabs.newTabSpec("scripts")
                 .setContent(R.id.tab3)
                 .setIndicator(getString(R.string.Scripts_Tab)));
 
@@ -226,6 +242,7 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
     	if (tabId.equals("scripts") ) {
             ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
             	.hideSoftInputFromWindow(tabs.getWindowToken(), 0);
+            if (Script.scriptsDirChanged()) scanScripts();
     	}
     }
 
@@ -245,12 +262,18 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
         menu.add(0, ABOUT_MENU, 0, R.string.Menu_about).setIcon(android.R.drawable.ic_menu_info_details);
         menu.add(0, RESCAN_MENU, 0, R.string.Menu_rescan);
         menu.add(0, RELOAD_DEMOS, 0, R.string.Menu_reload);
+        menu.add(0, CLEAR_IRB, 0, R.string.Menu_clear_irb);
+        menu.add(0, EDIT_IRB, 0, R.string.Menu_edit_irb);
+        menu.add(0, MAX_SCREEN, 0, R.string.Menu_max_screen);
         return true;
     }
 
     /* Called when a menu item clicked */
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        SharedPreferences prefs = null;
+        SharedPreferences.Editor prefsEditor = null;
+
         switch (item.getItemId()) {
             case SAVE_MENU:
                 saveEditorScript();
@@ -278,6 +301,33 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
                 scanScripts();
                 tabs.setCurrentTab(SCRIPTS_TAB);
                 return true;
+            case 8:
+            	irbOutput.setText(">> ");
+                tabs.setCurrentTab(IRB_TAB);
+                return true;
+            case 9:
+                editScript(new Script(Script.UNTITLED_RB, irbOutput.getText().toString()), true);
+                tabs.setCurrentTab(EDITOR_TAB);
+                return true;
+            case 10:
+                prefs = getPreferences(Context.MODE_PRIVATE);
+                prefsEditor = prefs.edit();
+
+                tabWidget.setVisibility(tabWidget.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+            	if (prefs.getBoolean("Fullscreen", false)) {
+            		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            	} else {
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            	}
+
+                prefsEditor.putBoolean("HideTabs", tabWidget.getVisibility() == View.GONE);
+                prefsEditor.putBoolean("Fullscreen", !prefs.getBoolean("Fullscreen", false));
+                prefsEditor.putBoolean("HideTitle", !prefs.getBoolean("HideTitle", false));
+                prefsEditor.commit();
+
+        		displayDialog("Title Visibility Change", "Reorient the screen for this to take effect.");
+
+        		return true;
         }
 
         return super.onMenuItemSelected(featureId, item);
@@ -420,23 +470,33 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
 
    /************************************************************************************
    *
-   * About Dialog
+   * Dialogs
    */
-   private void aboutDialog() {
-	 ScrollView sv = new ScrollView(this);
-     TextView tv = new TextView(this);
-	 tv.setPadding(5, 5, 5, 5);
-	 tv.setText(R.string.About_text);
-	 Linkify.addLinks(tv, Linkify.ALL);
-     sv.addView(tv);
+    
+    private void displayDialog(String title, Object messageOrView) {
 
-     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-     builder.setTitle(getString(R.string.app_name) + " v " + getString(R.string.version_name))
-            .setView(sv)
-            .setPositiveButton(R.string.About_dismiss, new DialogInterface.OnClickListener() {
-              public void onClick(DialogInterface dialog, int id) {}
-            });
-      builder.create().show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        if (messageOrView instanceof String) {
+        	builder.setMessage((String)messageOrView);
+        } else {
+            builder.setView((View)messageOrView);
+        }
+        builder.setPositiveButton(R.string.About_dismiss, new DialogInterface.OnClickListener() {
+        	public void onClick(DialogInterface dialog, int id) {}
+        });
+        builder.create().show();
+   	}
+
+    private void aboutDialog() {
+		ScrollView sv = new ScrollView(this);
+		TextView tv = new TextView(this);
+		tv.setPadding(5, 5, 5, 5);
+		tv.setText(R.string.About_text);
+		Linkify.addLinks(tv, Linkify.ALL);
+		sv.addView(tv);
+
+		displayDialog(getString(R.string.app_name) + " v " + getString(R.string.version_name), sv);
    	}
 
     /*********************************************************************************************
