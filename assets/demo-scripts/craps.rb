@@ -161,7 +161,7 @@ AVAILABLE_BETS = subclasses_of Bet
 ###############################################################################
 
 require 'ruboto'
-confirm_ruboto_version(3)
+confirm_ruboto_version(3, false)
 
 ruboto_import_widgets :TextView, :LinearLayout, :Button, :ListView, :EditText
 
