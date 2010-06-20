@@ -103,6 +103,28 @@ class Field < Bet
   end
 end
 
+class SnakeEyes < Bet
+  def play(roll, point)
+    return 30 if roll.dice[0] == roll.dice[1] && !roll.dice.detect {|n| n != 1}
+    -1
+  end
+
+  def name
+    "Snake Eyes"
+  end
+end
+
+class BoxCars < Bet
+  def play(roll, point)
+    return 30 if roll.dice[0] == roll.dice[1] && !roll.dice.detect {|n| n != 6}
+    -1
+  end
+
+  def name
+    "Snake Eyes"
+  end
+end
+
 def bet(klass, amount)
   if amount > $money
     puts "you don't have that much money!"
