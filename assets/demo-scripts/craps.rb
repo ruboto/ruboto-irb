@@ -8,7 +8,6 @@
 #
 ######################################################
 
-
 #subclasses_of stolen from ActiveSupport
 # File activesupport/lib/active_support/core_ext/object/extending.rb, line 29
 def subclasses_of(*superclasses) #:nodoc:
@@ -25,7 +24,7 @@ def subclasses_of(*superclasses) #:nodoc:
   end
   subclasses
 end
-# needs blank?
+# subclasses_of needs blank?
 # File activesupport/lib/active_support/core_ext/object/blank.rb, line 12
 class Object
   def blank?
@@ -34,7 +33,14 @@ class Object
 end
 
 
-
+####################################################################
+#
+# Craps
+# This section has the stuff driving the actual game.
+# In other words, you'd use this section even if it were a command
+# line game or a web-based game.
+#
+####################################################################
 
 # Slightly overkill, but this easily gives me random dice rolls
 # and lets me pass both the individual rolls but also a #sum method
@@ -103,11 +109,34 @@ class Field < Bet
   end
 end
 
+class SnakeEyes < Bet
+  def play(roll, point)
+    return 30 if roll.dice[0] == roll.dice[1] && !roll.dice.detect {|n| n != 1}
+    -1
+  end
+
+  def name
+    "Snake Eyes"
+  end
+end
+
+class BoxCars < Bet
+  def play(roll, point)
+    return 30 if roll.dice[0] == roll.dice[1] && !roll.dice.detect {|n| n != 6}
+    -1
+  end
+
+  def name
+    "Snake Eyes"
+  end
+end
+
 def bet(klass, amount)
   if amount > $money
-    puts "you don't have that much money!"
+    toast "you don't have that much money!"
     nil
   else
+    toast "bet placed"
     $money -= amount
     klass.new(amount)
   end
@@ -115,30 +144,105 @@ end
 
 # the player's money
 $money = 10000
-point = nil
+# the point. nil if we're on the come-out
+$point = nil
+# all of the bets on the table
 $bets = []
+# all of the types of bets one can place
 AVAILABLE_BETS = subclasses_of Bet
 
-while true
-  # place bets
-  $bets << bet(Pass, 50)  unless $bets.detect{|b| b.class == Pass}
-  $bets << bet(Field, 25)
+
+###############################################################################
+#
+# Ruboto part
+# This part is majorly concerned with integrating with Android APIs
+# for display purposes, but it does do a little bit of driving the game along.
+#
+###############################################################################
+
+require 'ruboto'
+confirm_ruboto_version(3, false)
+
+ruboto_import_widgets :TextView, :LinearLayout, :Button, :ListView, :EditText
+
+
+$activity.start_ruboto_activity "$craps" do
+  setTitle "Craps"
+  setup_content do
+    linear_layout :orientation => LinearLayout::VERTICAL do
+      linear_layout :orientation => LinearLayout::HORIZONTAL do
+        text_view :text => "You have $"
+        @money_view = text_view :text => "#{$money}"
+      end
+      @point_view = text_view :text => "Come-out"
+      linear_layout :orientation => LinearLayout::HORIZONTAL do
+        button :text => "Roll", :width => :wrap_content
+        @roll_view = text_view :text => ""
+      end
+      button :text => "Place a Bet", :width => :wrap_content
+    end
+  end
+
+  handle_click do |view|
+    case view.getText
+    when "Roll" : roll
+    when "Place a Bet"  : launch_bets
+    else toast "foo"
+    end
+  end
+end
+
+def launch_bets
+  self.start_ruboto_activity("$bet_list") do
+    setTitle "Place a Bet"
+    setup_content {list_view :list => AVAILABLE_BETS}
+    handle_item_click do |adapter_view, view, pos, item_id|
+      klass = AVAILABLE_BETS[pos]
+      $activity.start_ruboto_activity "$money_dialog" do
+        setTitle klass.to_s
+        setup_content do
+          linear_layout :orientation => LinearLayout::VERTICAL do
+            @bet_amount = edit_text
+            button :text => "Place Bet"
+          end
+        end
+
+        handle_click do |view|
+          if view.getText == "Place Bet"
+            amount = @bet_amount.getText.to_s.to_i
+            if amount > 0
+              $bets << bet(klass, amount)
+            else
+              toast "enter a valid integer greater than 0"
+            end
+          else
+            toast "something bad happened"
+          end
+        end
+      end
+    end
+  end
+end
+
+
+
+def roll
   $bets.compact!
 
   roll = Roll.new
-  puts roll.dice.inspect
+  @roll_view.setText roll.dice.inspect
 
   delete = []
   $bets.each do |bet|
-    result = bet.play(roll, point)
+    result = bet.play(roll, $point)
     if !result
-      puts "your #{bet.name} bet is still on"
+      toast "your #{bet.name} bet is still on"
     elsif result < 0
-      puts "you lost your #{bet.name} bet"
+      toast "you lost your #{bet.name} bet"
       delete << bet
     else
       # they get their money back (1 * money) + the payout (result * money)
-      puts "you won your #{bet.name} bet!"
+      toast "you won your #{bet.name} bet!"
       $money += bet.money * (1 + result)
       delete << bet
     end
@@ -146,14 +250,12 @@ while true
   delete.each {|bet| $bets.delete bet }
 
 
-  if point
-    point = nil if point == roll.sum || roll.sum == 7
+  if $point
+    $point = nil if $point == roll.sum || roll.sum == 7
   else
-    point = roll.sum if [4,5,6,8,9,10].include? roll.sum
+    $point = roll.sum if [4,5,6,8,9,10].include? roll.sum
   end
-  puts point ? "the point is #{point}" : "still on the come-out"
 
-  puts "money: #{$money}"
-  puts ''
-  sleep(1)
+  @money_view.setText $money.to_s
+  @point_view.setText $point ? "The point is #{$point}" : "Come-out"
 end
