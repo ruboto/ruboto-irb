@@ -7,26 +7,26 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Selection;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
 /*********************************************************************************************
  * 
- * EditText with history (key down, key up)
+ * AutoCompleteTextView as IRB history
  * @author Jan Berkel
+ * Modified from EditText to AutoCompleteTextView by Scott Moyer
  */
-public class HistoryEditText extends EditText implements
-	android.view.View.OnKeyListener,
+public class HistoryEditText extends AutoCompleteTextView implements
 	TextView.OnEditorActionListener
 { 
 	public interface LineListener {
 		void onNewLine(String s);
 	}     
 
-	private int cursor = -1;
 	private List<String> history = new ArrayList<String>();
+	private ArrayAdapter<String> adapter = null;
 	private LineListener listener;
 
 	public HistoryEditText(Context ctxt) {
@@ -37,26 +37,39 @@ public class HistoryEditText extends EditText implements
 	public HistoryEditText(Context ctxt,  android.util.AttributeSet attrs) {
 		super(ctxt, attrs);    
 		initListeners();
+		initAdapter();
+		this.setThreshold(0);
 	}
 
 	public HistoryEditText(Context ctxt,  android.util.AttributeSet attrs, int defStyle) {
 		super(ctxt, attrs, defStyle);
 		initListeners();
+		initAdapter();
+		this.setThreshold(0);
 	}
 
 	private void initListeners() {
-		setOnKeyListener(this);
 		setOnEditorActionListener(this);
 	}
 
-    public void onSaveInstanceState(Bundle savedInstanceState) {
+	private void initAdapter() {
+		adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, history);
+	    this.setAdapter(adapter);
+	}
+
+	public void onSaveInstanceState(Bundle savedInstanceState) {
     	savedInstanceState.putStringArrayList("history", (ArrayList<String>)history);
-    	savedInstanceState.putInt("cursor", cursor);
     }
     
     public void onRestoreInstanceState(Bundle savedInstanceState) {
     	if (savedInstanceState.containsKey("history")) history = savedInstanceState.getStringArrayList("history");
-    	if (savedInstanceState.containsKey("cursor")) cursor = savedInstanceState.getInt("cursor");
+    	initAdapter();
+    }
+    
+    @Override
+    public boolean performClick() {
+    	if (history.size() > 0) showDropDown();
+    	return super.performClick();
     }
     
     public String getHistoryString() {
@@ -71,9 +84,18 @@ public class HistoryEditText extends EditText implements
 	public boolean onEditorAction(TextView arg0, int actionId, KeyEvent event) {
 		if (actionId == EditorInfo.IME_NULL) {
 			String line = getText().toString();
-			if (line.length() == 0) return true;           
-			history.add(line);        
-			cursor = history.size();
+			if (line.length() == 0) return true;
+			
+			int i=0;
+			for(; i < history.size(); i++) {
+				if (history.get(i).equals(line)) {
+					history.remove(i);
+					adapter.remove(adapter.getItem(i));
+					break;
+				}
+			}
+			history.add(0, line);
+			adapter.insert(line, 0);
 
 			if (listener != null) {
 				listener.onNewLine(line);
@@ -87,27 +109,5 @@ public class HistoryEditText extends EditText implements
 
 	public void setCursorPosition(int pos) {
 		Selection.setSelection(getText(), pos);
-	}
-
-	public boolean onKey(View view, int keyCode, KeyEvent evt) {        
-		if (evt.getAction() == KeyEvent.ACTION_DOWN || evt.getAction() == KeyEvent.ACTION_MULTIPLE) {
-
-			if (cursor >= 0 && (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)) {                        
-				if (keyCode == KeyEvent.KEYCODE_DPAD_UP ) {
-					cursor -= 1;
-				} else {
-					cursor += 1;
-				}
-
-				if (cursor < 0)
-					cursor = 0;
-				else if (cursor >= history.size()) {
-					cursor = history.size() - 1;
-				}
-				setText(history.get(cursor));
-				return true;
-			} 
-		}
-		return false;
 	}
 }
