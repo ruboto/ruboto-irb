@@ -14,7 +14,7 @@ require 'erb'
 #
 #   This code resolves any issues with the generated callbacks.
 #   
-#   1) Remove callbacks that are hard coded in this file: 
+#   1) Remove callbacks that are hard coded in RubotoActivity.erb:
 #
 	 @callbacks["android.app.Activity"].delete("onCreate")
 	 @callbacks["android.view.View$OnCreateContextMenuListener"].delete("onCreateContextMenu")
@@ -59,7 +59,7 @@ require 'erb'
 #
 ##############################################################################################
 #
-#   This code takes the callbacks hash (read out of the interfaces.yml file) and prepares
+#   This code takes the callbacks hash (read out of the interfaces.txt file) and prepares
 #   it for use in the code below.
 #
     @implements = []
