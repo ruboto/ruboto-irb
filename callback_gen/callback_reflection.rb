@@ -1,6 +1,12 @@
 #
 # Run on a device and then copy interfaces.txt back to the callback_gen directory.
 #
+# The result is a hash.
+# The keys are names the names of the classes, sometimes followed by a
+# $ and then the name of the interface.
+# The keys are hashes themselves. These hashes have keys of the method
+# names and values of yet another hash, which gives the argument types
+# (and thus implicitly the number of args), the return type, etc.
 
 result = {}
 @count = 0
