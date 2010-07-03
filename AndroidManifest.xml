@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.ruboto.irb"
-      android:versionCode="2"
+      android:versionCode="3"
       android:versionName="@string/version_name"
       android:installLocation="preferExternal">
       
@@ -38,7 +38,7 @@
         </activity>
     </application>
     
-    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="8"/>
+    <uses-sdk android:minSdkVersion="5" android:targetSdkVersion="8"/>
 
 	<supports-screens
          android:largeScreens="true"
