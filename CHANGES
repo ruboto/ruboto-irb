@@ -1,3 +1,13 @@
+== 0.3 07/02/10
+
+   * More callbacks in RubotoActivity
+   * Toggle usable screen real estate
+   * Copy IRB output to editor
+   * Clear IRB output
+   * HistoryEditText uses auto complete
+   * Auto reload of scripts list
+   * Craps script demo
+
 == 0.2 06/16/10
 
    * RubotoActivity for creating UI and getting callbacks
