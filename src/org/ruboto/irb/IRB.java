@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.Writer;
 import java.util.List;
 
 import org.ruboto.embedded.Script;
+
+import org.jruby.embed.io.WriterOutputStream;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -175,12 +178,20 @@ public class IRB extends Activity implements OnItemClickListener, OnTabChangeLis
                 public void run() {
                     // try to avoid ANR's
                     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-                    Script.setUpJRuby(new PrintStream(new OutputStream() {
+                    Script.setUpJRuby(new PrintStream(new WriterOutputStream(new Writer() {
                         @Override
-                        public void write(int arg0) throws IOException {
-                            IRB.appendToIRB(Character.toString((char) arg0));
+                        public void write(char[] chars, int start, int length) throws IOException {
+                            IRB.appendToIRB(new String(chars, start, length));
                         }
-                    }));
+                        @Override
+                        public void flush() throws IOException {
+	                        // no buffer
+                        }
+                        @Override
+                        public void close() throws IOException {
+	                        // meaningless
+                        }
+                    })));
                     handler.post(notifyComplete);
                 }
             }.start();

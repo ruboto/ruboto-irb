@@ -20,6 +20,7 @@ import org.jruby.parser.EvalStaticScope;
 import org.jruby.runtime.DynamicScope;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.scope.ManyVarsDynamicScope;
+import org.jruby.util.KCode;
 
 import android.os.Environment;
 import org.apache.http.client.methods.HttpGet;
@@ -65,6 +66,7 @@ public class Script {
         if (ruby == null) {
             RubyInstanceConfig config = new RubyInstanceConfig();
             config.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
+            config.setKCode(KCode.UTF8);
 
             config.setLoader(Script.class.getClassLoader());
             if (scriptsDir != null) config.setCurrentDirectory(scriptsDir);
@@ -90,7 +92,7 @@ public class Script {
     public static String execute(String code) {
         if (!initialized) return null;
         try {
-            return ruby.evalScriptlet(code, scope).inspect().asJavaString();
+            return (String)ruby.evalScriptlet(code, scope).inspect().toJava(String.class);
         } catch (RaiseException re) {
             re.printStackTrace(ruby.getErrorStream());
             return null;
