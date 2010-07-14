@@ -7,18 +7,19 @@
 
 package org.ruboto.embedded;
 
-import org.ruboto.irb.IRB;
 import java.io.IOException;
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.os.Handler;
-import android.os.Bundle;
 
 import org.jruby.Ruby;
+import org.jruby.exceptions.RaiseException;
+import org.jruby.javasupport.JavaUtil;
 import org.jruby.javasupport.util.RuntimeHelpers;
 import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.javasupport.JavaUtil;
-import org.jruby.exceptions.RaiseException;
+import org.ruboto.irb.IRB;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.os.Bundle;
+import android.os.Handler;
 
 public class RubotoActivity extends Activity 
     implements
@@ -770,15 +771,12 @@ public class RubotoActivity extends Activity
 	
 	public void onDetachedFromWindow() {
 		if (callbackOptions[CB_DETACHED_FROM_WINDOW]) {
-			super.onDetachedFromWindow();
             try {
             	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_detached_from_window");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
 		        
             }
-		} else {
-			super.onDetachedFromWindow();
 		}
 	}
 	
@@ -978,18 +976,30 @@ public class RubotoActivity extends Activity
 		}
 	}
 	
+	public android.app.Dialog onCreateDialog(int arg0) {
+		if (callbackOptions[CB_CREATE_DIALOG]) {
+			super.onCreateDialog(arg0);
+            try {
+            	return (android.app.Dialog)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, null)).toJava(android.app.Dialog.class);
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+		        return null;
+            }
+		} else {
+			return super.onCreateDialog(arg0);
+		}
+	}
+	
 	public android.app.Dialog onCreateDialog(int arg0, android.os.Bundle arg1) {
 		if (callbackOptions[CB_CREATE_DIALOG]) {
-			super.onCreateDialog(arg0, arg1);
             try {
             	return (android.app.Dialog)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_create_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(android.app.Dialog.class);
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
 		        return null;
             }
-		} else {
-			return super.onCreateDialog(arg0, arg1);
 		}
+		return null;
 	}
 	
 	public boolean onKeyDown(int arg0, android.view.KeyEvent arg1) {
@@ -1090,17 +1100,28 @@ public class RubotoActivity extends Activity
 		}
 	}
 	
+	public void onPrepareDialog(int arg0, android.app.Dialog arg1) {
+		if (callbackOptions[CB_PREPARE_DIALOG]) {
+			super.onPrepareDialog(arg0, arg1);
+            try {
+            	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_prepare_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, null));
+            } catch (RaiseException re) {
+                re.printStackTrace(__ruby__.getErrorStream());
+		        
+            }
+		} else {
+			super.onPrepareDialog(arg0, arg1);
+		}
+	}
+	
 	public void onPrepareDialog(int arg0, android.app.Dialog arg1, android.os.Bundle arg2) {
 		if (callbackOptions[CB_PREPARE_DIALOG]) {
-			super.onPrepareDialog(arg0, arg1, arg2);
             try {
             	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_prepare_dialog", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1), JavaUtil.convertJavaToRuby(__ruby__, arg2));
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
 		        
             }
-		} else {
-			super.onPrepareDialog(arg0, arg1, arg2);
 		}
 	}
 	
@@ -1134,16 +1155,14 @@ public class RubotoActivity extends Activity
 	
 	public boolean onKeyLongPress(int arg0, android.view.KeyEvent arg1) {
 		if (callbackOptions[CB_KEY_LONG_PRESS]) {
-			super.onKeyLongPress(arg0, arg1);
             try {
             	return (Boolean)RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_key_long_press", JavaUtil.convertJavaToRuby(__ruby__, arg0), JavaUtil.convertJavaToRuby(__ruby__, arg1)).toJava(boolean.class);
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
 		        return false;
             }
-		} else {
-			return super.onKeyLongPress(arg0, arg1);
 		}
+		return false;
 	}
 	
 	public void onContextMenuClosed(android.view.Menu arg0) {
@@ -1190,15 +1209,12 @@ public class RubotoActivity extends Activity
 	
 	public void onAttachedToWindow() {
 		if (callbackOptions[CB_ATTACHED_TO_WINDOW]) {
-			super.onAttachedToWindow();
             try {
             	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_attached_to_window");
             } catch (RaiseException re) {
                 re.printStackTrace(__ruby__.getErrorStream());
 		        
             }
-		} else {
-			super.onAttachedToWindow();
 		}
 	}
 	
@@ -1274,7 +1290,6 @@ public class RubotoActivity extends Activity
 	
 	public void onBackPressed() {
 		if (callbackOptions[CB_BACK_PRESSED]) {
-			super.onBackPressed();
             try {
             	RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __this__, "on_back_pressed");
             } catch (RaiseException re) {
@@ -1282,7 +1297,7 @@ public class RubotoActivity extends Activity
 		        
             }
 		} else {
-			super.onBackPressed();
+			finish();
 		}
 	}
 	
