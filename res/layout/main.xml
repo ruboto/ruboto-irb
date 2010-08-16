@@ -52,29 +52,14 @@ s			</LinearLayout>
 	    			android:layout_weight="1"
 	    			android:fillViewport="true"
 		    	>
-			    	<RelativeLayout
-						android:layout_width="fill_parent"
-		    			android:layout_height="fill_parent"
-			    	>
-						<view class="org.ruboto.irb.SourceEditText"
-							android:id="@+id/source_editor"
-							android:layout_width="fill_parent"
-							android:layout_height="fill_parent"
-							android:hint="@string/Enter_source"
-							android:gravity="top"
-							android:scrollHorizontally="true"
-						/>
-						<TextView 
-							android:id="@+id/line_numbers"
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content"
-							android:textSize="12sp"
-							android:paddingLeft="6px"
-							android:background="#88ffffff"
-							android:layout_marginLeft="6px"
-							android:layout_marginTop="6px"
-						/>
-			    	</RelativeLayout>
+				<view class="org.ruboto.irb.LineNumberEditText"
+					android:id="@+id/source_editor"
+					android:layout_width="fill_parent"
+					android:layout_height="fill_parent"
+					android:hint="@string/Enter_source"
+					android:gravity="top"
+					android:scrollHorizontally="true"
+				/>
 				</ScrollView>
 			</LinearLayout>
 			<LinearLayout
