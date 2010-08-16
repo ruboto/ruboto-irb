@@ -61,7 +61,7 @@ import android.widget.Toast;
 	
 	    /* Edit_Tab Elements */
 	    private ScrollView scrollView;
-	    private SourceEditText sourceEditor;
+	    private LineNumberEditText sourceEditor;
 	    private TextView fnameTextView;
 	    private Script currentScript;
 	
@@ -151,12 +151,9 @@ import android.widget.Toast;
 	                .setIndicator(getString(R.string.Editor_Tab)));
 	
 	        scrollView = (ScrollView) findViewById(R.id.editor_scroll_view);
-	        sourceEditor = (SourceEditText) findViewById(R.id.source_editor);
-	        TextView lineNumbers = (TextView) findViewById(R.id.line_numbers);
+	        sourceEditor = (LineNumberEditText) findViewById(R.id.source_editor);
 	        fnameTextView = (TextView) findViewById(R.id.fname_textview);
-	        
-	        sourceEditor.setLineNumbersTextView(lineNumbers);
-	        
+        
 	        editScript(Script.UNTITLED_RB, false);
 	    }
 	    
