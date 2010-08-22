@@ -21,6 +21,13 @@ file jruby_ruboto_jar => generated_libs do
   ant.zip(:destfile=>jruby_ruboto_jar) do
     zipfileset(:src=>jruby_jar) do
       exclude(:name=>'jni/**')
+      exclude(:name=>'org/jruby/ant/**')
+      exclude(:name=>'org/jruby/compiler/ir/**')
+      exclude(:name=>'org/jruby/demo/**')
+      exclude(:name=>'org/jruby/embed/bsf/**')
+      exclude(:name=>'org/jruby/embed/jsr223/**')
+      exclude(:name=>'org/jruby/ext/ffi/**')
+      exclude(:name=>'org/jruby/javasupport/bsf/**')
     end
   end
 end
