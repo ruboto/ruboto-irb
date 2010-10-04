@@ -25,7 +25,7 @@ public class RubotoActivity extends Activity
     implements
         android.content.DialogInterface.OnCancelListener,
         android.widget.TabHost.TabContentFactory,
-        android.content.DialogInterface.OnShowListener,
+//        android.content.DialogInterface.OnShowListener,
         android.widget.TimePicker.OnTimeChangedListener,
         android.widget.AdapterView.OnItemLongClickListener,
         android.view.View.OnClickListener,
