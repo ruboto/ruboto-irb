@@ -90,7 +90,7 @@ public class HistoryEditText extends AutoCompleteTextView implements
 			for(; i < history.size(); i++) {
 				if (history.get(i).equals(line)) {
 					history.remove(i);
-					adapter.remove(adapter.getItem(i));
+					//  adapter.remove(adapter.getItem(i));
 					break;
 				}
 			}

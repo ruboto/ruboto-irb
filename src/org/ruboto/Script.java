@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jruby.Ruby;
+import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.RubyInstanceConfig;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.javasupport.JavaUtil;
@@ -29,12 +30,17 @@ import org.jruby.util.KCode;
 import android.os.Environment;
 import android.util.Log;
 import android.content.res.AssetManager;
+import android.os.Handler;
+
+import android.util.Log;
+
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Script {
     public static final String UNTITLED_RB = "untitled.rb";
+    public static final boolean MORE_STACK = true;
 
     private static String scriptsDir = null;
     private static File scriptsDirFile = null;
@@ -54,6 +60,7 @@ public class Script {
     private Integer state = null;
 
     public static final String TAG = "RUBOTO"; //for logging
+    private final static Handler handler = new Handler();
 
     /*************************************************************************************************
      *
@@ -97,14 +104,42 @@ public class Script {
         return ruby;
     }
 
-    public static String execute(String code) {
+    public static String execute(final String code) {
         if (!initialized) return null;
-        try {
-            return (String)ruby.evalScriptlet(code, scope).inspect().toJava(String.class);
-        } catch (RaiseException re) {
+        boolean moreStack = getGlobalVariable("$stack").isTrue();
+        Log.d("Script", "moreStack=" + moreStack);
+        if (moreStack) {
+          final String[] ret = new String[1];
+
+          try {
+              Thread t = new Thread(null, null, "executor", 16*1024) {
+                @Override public void run() {
+                  try {
+                    ret[0] = ruby.evalScriptlet(code, scope).inspect().toJava(String.class).toString();
+                  } catch (final RaiseException e) {
+                      handler.post(new Runnable() {
+                        public void run() {
+                           e.printStackTrace(ruby.getErrorStream());
+                        }
+                      });
+                  }
+                }
+              };
+              t.start();
+              t.join();
+
+              return ret[0];
+          } catch (InterruptedException e) {
+              return null;
+          }
+        } else {
+         try {
+            return ruby.evalScriptlet(code, scope).inspect().toJava(String.class).toString();
+          } catch (RaiseException re) {
             re.printStackTrace(ruby.getErrorStream());
             return null;
-        }
+          }
+       }
     }
 
     public static void defineGlobalConstant(String name, Object object) {
@@ -114,6 +149,11 @@ public class Script {
     public static void defineGlobalVariable(String name, Object object) {
         ruby.getGlobalVariables().set(name, JavaUtil.convertJavaToRuby(ruby, object));
     }
+
+    public static IRubyObject getGlobalVariable(String name) {
+        return ruby.getGlobalVariables().get(name);
+    }
+
     
     public static Ruby getRuby() {
     	return ruby;
