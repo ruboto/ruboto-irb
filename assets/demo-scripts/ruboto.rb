@@ -1,12 +1,15 @@
 #######################################################
 #
 # ruboto.rb (by Scott Moyer)
-# 
-# Wrapper for using RubotoActivity in Ruboto IRB
+#
+# - Wrapper for using RubotoActivity, RubotoService, and
+#     RubotoBroadcastReceiver. 
+# - Provides interface for generating UI elements. 
+# - Imports and configures callback classes.
 #
 #######################################################
 
-$RUBOTO_VERSION = 4
+$RUBOTO_VERSION = 6
 
 def confirm_ruboto_version(required_version, exact=true)
   raise "requires $RUBOTO_VERSION=#{required_version} or greater, current version #{$RUBOTO_VERSION}" if $RUBOTO_VERSION < required_version and not exact
@@ -15,9 +18,15 @@ end
 
 require 'java'
 
-java_import "org.ruboto.embedded.RubotoActivity"
-java_import "org.ruboto.embedded.RubotoDialog"
-java_import "org.ruboto.embedded.RubotoView"
+
+
+%w(Activity Dialog BroadcastReceiver Service).map do |klass|
+  java_import "org.ruboto.Ruboto#{klass}"
+end
+
+RUBOTO_CLASSES = [RubotoActivity, RubotoBroadcastReceiver, RubotoService]
+$init_methods = Hash.new 'create'
+$init_methods[RubotoBroadcastReceiver] = 'receive'
 
 java_import "android.app.Activity"
 java_import "android.content.Intent"
@@ -33,9 +42,16 @@ java_import "java.util.Arrays"
 java_import "java.util.ArrayList"
 java_import "android.R"
 
+java_import "android.util.Log"
+
 module Ruboto
   java_import "org.ruboto.irb.R"
-  Id = JavaUtilities.get_proxy_class("org.ruboto.irb.R$id")
+  begin
+    Id = JavaUtilities.get_proxy_class("org.ruboto.irb.R$id")
+  rescue NameError
+    Log.d "RUBOTO", "no R$id"
+  end
+
 end
 AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
 
@@ -43,15 +59,15 @@ AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
 #
 # Activity
 #
-  
+
 class Activity
   attr_accessor :init_block
 
   def start_ruboto_dialog(remote_variable, &block)
-    start_ruboto_activity(remote_variable, true, &block)
+    start_ruboto_activity(remote_variable, RubotoDialog, &block)
   end
 
-  def start_ruboto_activity(remote_variable, dialog=false, &block)
+  def start_ruboto_activity(remote_variable, klass=RubotoActivity, &block)
     @@init_block = block
 
     if @initialized or not self.is_a?(RubotoActivity)
@@ -61,8 +77,7 @@ class Activity
       b.putString("Initialize Script", "#{remote_variable}.initialize_activity")
 
       i = Intent.new
-      i.setClassName "org.ruboto.irb", 
-                     "org.ruboto.embedded.Ruboto#{dialog ? 'Dialog' : 'Activity'}"
+      i.setClass self, klass.java_class
       i.putExtra("RubotoActivity Config", b)
 
       self.startActivity i
@@ -76,10 +91,12 @@ class Activity
     self
   end
 
+  #plugin
   def toast(text, duration=5000)
     Toast.makeText(self, text, duration).show
   end
-  
+
+  #plugin
   def toast_result(result, success, failure, duration=5000)
     toast(result ? success : failure, duration)
   end
@@ -87,53 +104,62 @@ end
 
 #############################################################################
 #
+# Configure a class to work with handlers
+#
+
+def ruboto_allow_handlers(klass)
+  klass.class_eval do
+    def method_missing(name, *args, &block)
+      if name.to_s =~ /^handle_(.*)/ and (const = self.class.const_get("CB_#{$1.upcase}"))
+        setCallbackProc(const, block)
+        self
+      else
+        super
+      end
+    end
+
+    def respond_to?(name)
+      return true if name.to_s =~ /^handle_(.*)/ and self.class.const_get("CB_#{$1.upcase}")
+      super
+    end
+
+    def initialize_handlers(&block)
+      instance_eval &block
+      self
+    end
+  end
+  klass
+end
+
+#############################################################################
+#
 # RubotoActivity
 #
-  
+
 class RubotoActivity
   #
   # Initialize
   #
 
   def initialize_activity()
-    instance_eval &@@init_block 
+    instance_eval &@@init_block
     @initialized = true
     self
   end
-  
-  def handle_create &block
-    @create_block = block
+
+  def handle_finish_create &block
+    @finish_create_block = block
   end
 
-  def on_create(bundle)
-    setContentView(instance_eval &@content_view_block) if @content_view_block
-    instance_eval {@create_block.call} if @create_block
-  end
-  
   def setup_content &block
     @view_parent = nil
     @content_view_block = block
   end
 
-  #
-  # Setup Callbacks
-  #
-
-  def method_missing(name, *args, &block)
-    # make #handle_name_of_callback request that callback
-    if name.to_s =~ /^handle_(.*)/ and (const = RubotoActivity.const_get("CB_#{$1.upcase}"))
-        requestCallback const
-        @eigenclass ||= class << self; self; end
-        @eigenclass.send(:define_method, "on_#{$1}", &block)
-    else
-      super     
-    end
-  end 
-
-  def respond_to?(name)
-    return true if name.to_s =~ /^handle_(.*)/ and RubotoActivity.const_get("CB_#{$1.upcase}")
-    super
-  end 
+  def on_create(bundle)
+    setContentView(instance_eval &@content_view_block) if @content_view_block
+    instance_eval {@finish_create_block.call} if @finish_create_block
+  end
 
   #
   # Option Menus
@@ -144,21 +170,24 @@ class RubotoActivity
     mi.setIcon(icon) if icon
     mi.class.class_eval {attr_accessor :on_click}
     mi.on_click = block
+
+    # Seems to be needed or the block might get cleaned up
+    @all_menu_items = [] unless @all_menu_items
+    @all_menu_items << mi
   end
- 
+
   def handle_create_options_menu &block
-    requestCallback RubotoActivity::CB_CREATE_OPTIONS_MENU
-    @create_options_menu_block = block
-  end
+    p = Proc.new do |*args|
+      @menu, @context_menu = args[0], nil
+      instance_eval {block.call(*args)} if block
+    end
+    setCallbackProc(RubotoActivity::CB_CREATE_OPTIONS_MENU, p)
 
-  def on_create_options_menu(*args)
-    @menu, @context_menu = args[0], nil
-    instance_eval {@create_options_menu_block.call(*args)} if @create_options_menu_block
-  end
-
-  def on_menu_item_selected(num,menu_item)
-    (instance_eval &(menu_item.on_click); return true) if @menu
-    false
+    p = Proc.new do |num,menu_item|
+      (instance_eval &(menu_item.on_click); return true) if @menu
+      false
+    end
+    setCallbackProc(RubotoActivity::CB_MENU_ITEM_SELECTED, p)
   end
 
   #
@@ -169,21 +198,42 @@ class RubotoActivity
     mi = @context_menu.add(title)
     mi.class.class_eval {attr_accessor :on_click}
     mi.on_click = block
+
+    # Seems to be needed or the block might get cleaned up
+    @all_menu_items = [] unless @all_menu_items
+    @all_menu_items << mi
   end
- 
+
   def handle_create_context_menu &block
-    requestCallback RubotoActivity::CB_CREATE_CONTEXT_MENU
-    @create_context_menu_block = block
-  end
+    p = Proc.new do |*args|
+      @menu, @context_menu = nil, args[0]
+      instance_eval {block.call(*args)} if block
+    end
+    setCallbackProc(RubotoActivity::CB_CREATE_CONTEXT_MENU, p)
 
-  def on_create_context_menu(*args)
-    @menu, @context_menu = nil, args[0]
-    instance_eval {@create_context_menu_block.call(*args)} if @create_context_menu_block
+    p = Proc.new do |menu_item|
+      (instance_eval {menu_item.on_click.call(menu_item.getMenuInfo.position)}; return true) if menu_item.on_click
+      false
+    end
+    setCallbackProc(RubotoActivity::CB_CONTEXT_ITEM_SELECTED, p)
   end
+end
 
-  def on_context_item_selected(menu_item)
-    (instance_eval {menu_item.on_click.call(menu_item.getMenuInfo.position)}; return true) if menu_item.on_click
-    false
+RUBOTO_CLASSES.each do |klass|
+  # Setup ability to handle callbacks
+  ruboto_allow_handlers(klass)
+
+  klass.class_eval do
+    def when_launched(&block)
+      instance_exec *args, &block
+      on_create nil
+    end
+
+    eval %Q{
+      def handle_#{$init_methods[klass]}(&block)
+        when_launched &block
+      end
+    }
   end
 end
 
@@ -196,8 +246,8 @@ def ruboto_import_widgets(*widgets)
   widgets.each{|i| ruboto_import_widget i}
 end
 
-def ruboto_import_widget(class_name)
-  view_class = java_import "android.widget.#{class_name}"
+def ruboto_import_widget(class_name, package_name="android.widget")
+  view_class = java_import "#{package_name}.#{class_name}"
   return unless view_class
 
   RubotoActivity.class_eval "
@@ -207,7 +257,7 @@ def ruboto_import_widget(class_name)
         rv.configure self, params
         if block_given?
           old_view_parent, @view_parent = @view_parent, rv
-          yield 
+          yield
           @view_parent = old_view_parent
         end
         rv
@@ -215,14 +265,14 @@ def ruboto_import_widget(class_name)
    "
 end
 
-# Need to load these two to extend classes
-ruboto_import_widgets :ListView, :Button
-
 #############################################################################
 #
 # Extend Common View Classes
 #
-  
+
+# Need to load these two to extend classes
+ruboto_import_widgets :ListView, :Button
+
 class View
   @@convert_params = {
      :wrap_content => ViewGroup::LayoutParams::WRAP_CONTENT,
@@ -277,3 +327,50 @@ class Button
     super(context, params)
   end
 end
+
+#############################################################################
+#
+# Import a class and set it up for handlers
+#
+
+def ruboto_import(package_class)
+  klass = java_import package_class
+  return unless klass
+  ruboto_allow_handlers(klass)
+end
+
+#############################################################################
+#
+# Allows RubotoActivity to handle callbacks covering Class based handlers
+#
+
+def ruboto_register_handler(handler_class, unique_name, for_class, method_name)
+  klass_name = handler_class[/.+\.([A-Z].+)/,1]
+  klass = ruboto_import handler_class
+  return unless klass
+
+  RubotoActivity.class_eval "
+    attr_accessor :#{unique_name}_handler
+
+    def #{unique_name}_handler
+      @#{unique_name}_handler ||= #{klass_name}.new
+    end
+
+    def handle_#{unique_name}(&block)
+      #{unique_name}_handler.handle_#{unique_name} &block
+      self
+    end
+  "
+
+  for_class.class_eval "
+    alias_method :orig_#{method_name}, :#{method_name}
+    def #{method_name}(handler)
+      orig_#{method_name} handler.#{unique_name}_handler
+    end
+  "
+end
+
+ruboto_register_handler("org.ruboto.RubotoOnClickListener", "click", Button, "setOnClickListener")
+ruboto_register_handler("org.ruboto.RubotoOnItemClickListener", "item_click", ListView, "setOnItemClickListener")
+
+
