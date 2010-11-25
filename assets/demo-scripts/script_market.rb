@@ -8,7 +8,7 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(4)
+confirm_ruboto_version(6)
 
 ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText, :ScrollView
 
@@ -20,7 +20,29 @@ java_import "org.apache.http.impl.client.DefaultHttpClient"
 
 java_import "android.content.res.AssetManager"
 java_import "android.content.Context"
-java_import "org.ruboto.embedded.Script"
+java_import "android.os.Environment"
+
+if Environment.getExternalStorageState == Environment::MEDIA_MOUNTED
+  $SCRIPT_DIR = "/sdcard/jruby"
+else
+  $SCRIPT_DIR = $activity.getFilesDir.getAbsolutePath + "/scripts"
+end
+
+class Activity
+  def get_remote_page url
+    # Use Java classes until we compile Ruby
+    #  url.match /http:\/\/([^\/]*)(.*)/
+    #  r = Net::HTTP.get_response($1, $2)
+    #  r.code == "200" ? r.body : ""
+    DefaultHttpClient.new.execute(HttpGet.new(url), BasicResponseHandler.new)
+  end
+
+  def save_script name, contents
+    File.open("#{$SCRIPT_DIR}/#{name}","w") {|f| f.write contents}
+    true
+  end
+end
+
 
 $activity.start_ruboto_activity("$source_picker") do
   setTitle "Script Market - Select a source"
@@ -76,7 +98,7 @@ $activity.start_ruboto_activity("$source_picker") do
   end
 
   def self.pick_asset
-    launch_script_list(self, getAssets.list('demo-scripts').map(&:to_s)) do |s|
+    launch_script_list(getAssets.list('demo-scripts').map(&:to_s)) do |s|
       buf = getAssets.open("demo-scripts/#{s}", AssetManager::ACCESS_BUFFER)
       contents = []
       b = buf.read
@@ -85,9 +107,21 @@ $activity.start_ruboto_activity("$source_picker") do
     end
   end 
 
+  def self.launch_script_list(list, &block)
+    start_ruboto_activity("$script_list") do
+      setTitle "Pick a Script"
+
+      setup_content {list_view :list => list}
+  
+      handle_item_click do |adapter_view, view, pos, item_id| 
+        block.call(list[pos])
+        finish
+      end
+    end
+  end
+
   def self.pick_remote_script(site, list_path, get_path)
-    l = get_remote_page("http://#{site}/#{list_path}").scan(/>([^<]*.rb)<\//).flatten
-    launch_script_list(self, l) do |s|
+    launch_script_list(get_remote_page("http://#{site}/#{list_path}").scan(/>([^<]*.rb)<\//).flatten) do |s|
       self.toast_result(
         save_script(s, get_remote_page("http://#{site}/#{get_path}" % s)),
         "#{s} downloaded", "#{s} download failed")
@@ -135,108 +169,94 @@ $activity.start_ruboto_activity("$source_picker") do
     e.commit
     self.reload_list
   end
-end
 
-def launch_script_list(context, list, &block)
-  context.start_ruboto_activity("$script_list") do
-    setTitle "Pick a Script"
+  def self.edit_github_source(context, name="", user="", project="", branch="", dir="")
+    context.start_ruboto_activity("$edit_github_source") do
+      setTitle "Github Source"
 
-    setup_content {list_view :list => list}
-  
-    handle_item_click do |adapter_view, view, pos, item_id| 
-      block.call(list[pos])
-      finish
+      setup_content do
+        tl = table_layout do
+          table_row do
+            text_view :text => "Name:"
+            @name = edit_text :text => name, :hint => "displayed in list of sources"
+          end
+          table_row do
+            text_view :text => "User:"
+            @user = edit_text :text => user, :hint => "e.g., ruboto"
+          end
+          table_row do
+            text_view :text => "Project:"
+            @project = edit_text :text => project, :hint => "ruboto-irb"
+          end
+          table_row do
+            text_view :text => "Branch:"
+            @branch = edit_text :text => branch, :hint => "e.g., master"
+          end
+          table_row do
+            text_view :text => "Directory:"
+            @dir = edit_text :text => dir, :hint => "e.g., assets/demo-scripts"
+          end
+        end
+        tl.setColumnStretchable(1, true)
+        tl
+      end
+
+      handle_create_options_menu do |menu|
+        add_menu("Save") do
+          context.save_source("github", @name.getText.toString, @user.getText.toString, 
+            @project.getText.toString, @branch.getText.toString, @dir.getText.toString)
+          finish
+        end
+        true
+      end
     end
   end
-end
 
-def edit_github_source context, name="", user="", project="", branch="", dir="" 
-  context.start_ruboto_activity("$edit_github_source") do
-    setTitle "Github Source"
+  def self.edit_web_source(context, name="", site="", list_path="", get_path="")
+    context.start_ruboto_activity("$edit_web_source") do
+      setTitle "Generic Web Source"
 
-    setup_content do
-      tl = table_layout do
-        table_row do
-          text_view :text => "Name:"
-          @name = edit_text :text => name, :hint => "displayed in list of sources"
+      setup_content do
+        tl = table_layout do
+          table_row do
+            text_view :text => "Name:"
+            @name = edit_text :text => name, :hint => "displayed in list of sources"
+          end
+          table_row do
+            text_view :text => "Site:"
+            @site = edit_text :text => site, :hint => "domain name"
+          end
+          table_row do
+            text_view :text => "List path:"
+            @list_path = edit_text :text => list_path, :hint => "page for scripts list"
+          end
+          table_row do
+            text_view :text => "Script path:"
+            @get_path = edit_text :text => get_path, :hint => "page for script (%s=script)"
+          end
         end
-        table_row do
-          text_view :text => "User:"
-          @user = edit_text :text => user, :hint => "e.g., ruboto"
-        end
-        table_row do
-          text_view :text => "Project:"
-          @project = edit_text :text => project, :hint => "ruboto-irb"
-        end
-        table_row do
-          text_view :text => "Branch:"
-          @branch = edit_text :text => branch, :hint => "e.g., master"
-        end
-        table_row do
-          text_view :text => "Directory:"
-          @dir = edit_text :text => dir, :hint => "e.g., assets/demo-scripts"
-        end
+        tl.setColumnStretchable(1, true)
+        tl
       end
-      tl.setColumnStretchable(1, true)
-      tl
-    end
 
-    handle_create_options_menu do |menu|
-      add_menu("Save") do
-        context.save_source("github", @name.getText.toString, @user.getText.toString, 
-          @project.getText.toString, @branch.getText.toString, @dir.getText.toString)
-        finish
+      handle_create_options_menu do |menu|
+        add_menu("Save") do
+          context.save_source("web", @name.getText.toString, @site.getText.toString, 
+            @list_path.getText.toString, @get_path.getText.toString)
+          finish
+        end
+        true
       end
-      true
     end
   end
-end
 
-def edit_web_source context, name="", site="", list_path="", get_path=""
-  context.start_ruboto_activity("$edit_web_source") do
-    setTitle "Generic Web Source"
+  def self.about(context)
+    context.start_ruboto_activity("$edit_web_source") do
+      setTitle "About Script Market"
 
-    setup_content do
-      tl = table_layout do
-        table_row do
-          text_view :text => "Name:"
-          @name = edit_text :text => name, :hint => "displayed in list of sources"
-        end
-        table_row do
-          text_view :text => "Site:"
-          @site = edit_text :text => site, :hint => "domain name"
-        end
-        table_row do
-          text_view :text => "List path:"
-          @list_path = edit_text :text => list_path, :hint => "page for scripts list"
-        end
-        table_row do
-          text_view :text => "Script path:"
-          @get_path = edit_text :text => get_path, :hint => "page for script (%s=script)"
-        end
-      end
-      tl.setColumnStretchable(1, true)
-      tl
-    end
-
-    handle_create_options_menu do |menu|
-      add_menu("Save") do
-        context.save_source("web", @name.getText.toString, @site.getText.toString, 
-          @list_path.getText.toString, @get_path.getText.toString)
-        finish
-      end
-      true
-    end
-  end
-end
-
-def about context
-  context.start_ruboto_activity("$edit_web_source") do
-    setTitle "About Script Market"
-
-    setup_content do
-      scroll_view do
-        text_view :vertical_scroll_bar_enabled => true, :text => "Version: 1.1
+      setup_content do
+        scroll_view do
+          text_view :vertical_scroll_bar_enabled => true, :text => "Version: 1.1
 
 Author: Scott Moyer
 
@@ -265,20 +285,8 @@ Site: github.com
 List path: ruboto/ruboto-irb/tree/master/assets/demo-scripts/?raw=true
 Get path: ruboto/ruboto-irb/raw/master/assets/demo-scripts/%s
 "
+        end
       end
     end
   end
-end
-
-def get_remote_page url
-# Use Java classes until we compile Ruby
-#  url.match /http:\/\/([^\/]*)(.*)/
-#  r = Net::HTTP.get_response($1, $2)
-#  r.code == "200" ? r.body : ""
-  DefaultHttpClient.new.execute(HttpGet.new(url), BasicResponseHandler.new)
-end
-
-def save_script name, contents
-  File.open("#{Script.getDir}/#{name}","w") {|f| f.write contents} unless p == ""
-  p != ""
 end
