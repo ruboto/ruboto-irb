@@ -12,7 +12,7 @@ import java.io.Writer;
 import java.util.List;
 
 import org.jruby.embed.io.WriterOutputStream;
-import org.ruboto.embedded.Script;
+import org.ruboto.Script;
 
 import android.app.Activity;
 import android.app.AlertDialog;
