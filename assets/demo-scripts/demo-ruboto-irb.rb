@@ -9,7 +9,7 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(4)
+confirm_ruboto_version(6)
 
 java_import "android.view.WindowManager"
 java_import "android.view.Gravity"
@@ -171,7 +171,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   # Delete confirmation dialog buttons
   #
 
-  handle_dialog_click do |dialog, which|
+  handle_click do |dialog, which|
     if @confirm_delete and which == DialogInterface::BUTTON_POSITIVE
       begin 
         File.delete @confirm_delete
