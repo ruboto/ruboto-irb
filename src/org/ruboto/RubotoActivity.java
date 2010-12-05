@@ -9,7 +9,7 @@ import org.ruboto.Script;
 import java.io.IOException;
 import android.app.ProgressDialog;
 
-public class RubotoActivity extends android.app.Activity implements android.view.View.OnTouchListener, android.view.View.OnKeyListener, android.content.DialogInterface.OnClickListener, android.app.DatePickerDialog.OnDateSetListener, android.app.TimePickerDialog.OnTimeSetListener, android.widget.TabHost.OnTabChangeListener, android.widget.TextView.OnEditorActionListener, android.widget.DatePicker.OnDateChangedListener, android.widget.TimePicker.OnTimeChangedListener, android.hardware.SensorEventListener {
+public class RubotoActivity extends android.app.Activity {
   private Ruby __ruby__;
   private String scriptName;
   private String remoteVariable = "";
@@ -65,18 +65,7 @@ public class RubotoActivity extends android.app.Activity implements android.view
   public static final int CB_DETACHED_FROM_WINDOW = 47;
   public static final int CB_KEY_LONG_PRESS = 48;
   public static final int CB_APPLY_THEME_RESOURCE = 49;
-  public static final int CB_TOUCH = 50;
-  public static final int CB_KEY = 51;
-  public static final int CB_CLICK = 52;
-  public static final int CB_DATE_SET = 53;
-  public static final int CB_TIME_SET = 54;
-  public static final int CB_TAB_CHANGED = 55;
-  public static final int CB_EDITOR_ACTION = 56;
-  public static final int CB_DATE_CHANGED = 57;
-  public static final int CB_TIME_CHANGED = 58;
-  public static final int CB_ACCURACY_CHANGED = 59;
-  public static final int CB_SENSOR_CHANGED = 60;
-  private IRubyObject[] callbackProcs = new IRubyObject[63];
+  private IRubyObject[] callbackProcs = new IRubyObject[52];
 
   private Ruby getRuby() {
     if (__ruby__ == null) __ruby__ = Script.getRuby();
@@ -832,127 +821,6 @@ public class RubotoActivity extends android.app.Activity implements android.view
       }
     } else {
       super.onApplyThemeResource(theme, resid, first);
-    }
-  }
-
-  public boolean onTouch(android.view.View v, android.view.MotionEvent event) {
-    if (callbackProcs[CB_TOUCH] != null) {
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_TOUCH], "call" , JavaUtil.convertJavaToRuby(getRuby(), v), JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  public boolean onKey(android.view.View v, int keyCode, android.view.KeyEvent event) {
-    if (callbackProcs[CB_KEY] != null) {
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_KEY], "call" , JavaUtil.convertJavaToRuby(getRuby(), v), JavaUtil.convertJavaToRuby(getRuby(), keyCode), JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  public void onClick(android.content.DialogInterface dialog, int which) {
-    if (callbackProcs[CB_CLICK] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CLICK], "call" , JavaUtil.convertJavaToRuby(getRuby(), dialog), JavaUtil.convertJavaToRuby(getRuby(), which));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onDateSet(android.widget.DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-    if (callbackProcs[CB_DATE_SET] != null) {
-      try {
-        IRubyObject[] args = {JavaUtil.convertJavaToRuby(getRuby(), view), JavaUtil.convertJavaToRuby(getRuby(), year), JavaUtil.convertJavaToRuby(getRuby(), monthOfYear), JavaUtil.convertJavaToRuby(getRuby(), dayOfMonth)};
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_DATE_SET], "call" , args);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onTimeSet(android.widget.TimePicker view, int hourOfDay, int minute) {
-    if (callbackProcs[CB_TIME_SET] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_TIME_SET], "call" , JavaUtil.convertJavaToRuby(getRuby(), view), JavaUtil.convertJavaToRuby(getRuby(), hourOfDay), JavaUtil.convertJavaToRuby(getRuby(), minute));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onTabChanged(java.lang.String tabId) {
-    if (callbackProcs[CB_TAB_CHANGED] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_TAB_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), tabId));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public boolean onEditorAction(android.widget.TextView v, int actionId, android.view.KeyEvent event) {
-    if (callbackProcs[CB_EDITOR_ACTION] != null) {
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_EDITOR_ACTION], "call" , JavaUtil.convertJavaToRuby(getRuby(), v), JavaUtil.convertJavaToRuby(getRuby(), actionId), JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  public void onDateChanged(android.widget.DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-    if (callbackProcs[CB_DATE_CHANGED] != null) {
-      try {
-        IRubyObject[] args = {JavaUtil.convertJavaToRuby(getRuby(), view), JavaUtil.convertJavaToRuby(getRuby(), year), JavaUtil.convertJavaToRuby(getRuby(), monthOfYear), JavaUtil.convertJavaToRuby(getRuby(), dayOfMonth)};
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_DATE_CHANGED], "call" , args);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onTimeChanged(android.widget.TimePicker view, int hourOfDay, int minute) {
-    if (callbackProcs[CB_TIME_CHANGED] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_TIME_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), view), JavaUtil.convertJavaToRuby(getRuby(), hourOfDay), JavaUtil.convertJavaToRuby(getRuby(), minute));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onAccuracyChanged(android.hardware.Sensor sensor, int accuracy) {
-    if (callbackProcs[CB_ACCURACY_CHANGED] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_ACCURACY_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), sensor), JavaUtil.convertJavaToRuby(getRuby(), accuracy));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onSensorChanged(android.hardware.SensorEvent event) {
-    if (callbackProcs[CB_SENSOR_CHANGED] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_SENSOR_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), event));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
     }
   }
 }	
