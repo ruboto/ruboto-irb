@@ -8,7 +8,7 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(6)
+confirm_ruboto_version(6, false)
 
 ruboto_import_widgets :LinearLayout, :TextView, :RelativeLayout,
   :TableLayout, :TableRow,
@@ -441,6 +441,7 @@ class RubotoActivity
   #
 
   def self.sensors(context)
+    ruboto_import "org.ruboto.callbacks.RubotoSensorEventListener"
     context.start_ruboto_activity "$sensors" do
       setTitle "OS/Sensors"
 
@@ -478,11 +479,11 @@ class RubotoActivity
       end
 
       handle_resume do 
-        @sensors.each{|s| @manager.registerListener(self, s, SensorManager::SENSOR_DELAY_FASTEST)}
+        @sensors.each{|s| @manager.registerListener(@sensor_event_listener, s, SensorManager::SENSOR_DELAY_FASTEST)}
       end
 
       handle_stop do 
-        @sensors.each{|s| @manager.unregisterListener(self, s)}
+        @sensors.each{|s| @manager.unregisterListener(@sensor_event_listener, s)}
       end
 
       @rv.handle_draw do |canvas|
@@ -545,7 +546,7 @@ class RubotoActivity
         end
       end
 
-      handle_sensor_changed do |event|
+      @sensor_event_listener = RubotoSensorEventListener.new.handle_sensor_changed do |event|
         if @bitmap
           if (event.sensor.getType == Sensor::TYPE_ORIENTATION)
             @orientation_values = [event.values[0], event.values[1], event.values[2]]
@@ -614,6 +615,9 @@ class RubotoActivity
   end
 
   def self.date_dialog(context)
+    ruboto_import "org.ruboto.callbacks.RubotoOnDateSetListener"
+    ruboto_import "org.ruboto.callbacks.RubotoOnTimeSetListener"
+
     context.start_ruboto_activity "$date_dialog" do
       setTitle "Views/Date Widgets/1. Dialog"
       setup_content do
@@ -631,35 +635,37 @@ class RubotoActivity
 
       handle_create_dialog do |dialog_id, bundle|
         if dialog_id == 1
-          TimePickerDialog.new(self, self, @time.hour, @time.min, false)
+          TimePickerDialog.new(self, @time_set_listener, @time.hour, @time.min, false)
         else
-          DatePickerDialog.new(self, self, @time.year, @time.month-1, @time.day)
+          DatePickerDialog.new(self, @date_set_listener, @time.year, @time.month-1, @time.day)
         end
       end
 
-      handle_date_set do |view, year, month, day|
+      @date_set_listener = RubotoOnDateSetListener.new.handle_date_set do |view, year, month, day|
         @tv.setText("%d-%d-%d #{@tv.getText.split(' ')[1]}" % [month+1, day, year])
       end
 
-      handle_time_set do |view, hour, minute|
+      @time_set_listener = RubotoOnTimeSetListener.new.handle_time_set do |view, hour, minute|
         @tv.setText("#{@tv.getText.split(' ')[0]} %02d:%02d" % [hour, minute])
       end
     end
   end
 
   def self.date_inline(context)
+    ruboto_import "org.ruboto.callbacks.RubotoOnTimeChangedListener"
+
     context.start_ruboto_activity "$date_inline" do
       setTitle "Views/Date Widgets/#{title}"
       setup_content do
         linear_layout do
-          time_picker :on_time_changed_listener => self, 
+          time_picker :on_time_changed_listener => @time_changed_listener, 
                       :current_hour => 12, 
                       :current_minute=> 15
           @tv = text_view :text => "12:15"
         end
       end
 
-      handle_time_changed do |view, hour, minute|
+      @time_changed_listener = RubotoOnTimeChangedListener.new.handle_time_changed do |view, hour, minute|
         @tv.setText("%02d:%02d" % [hour, minute]) if @tv
       end
     end

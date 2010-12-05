@@ -9,7 +9,7 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(6)
+confirm_ruboto_version(6, false)
 
 java_import "android.view.WindowManager"
 java_import "android.view.Gravity"
@@ -19,6 +19,9 @@ java_import "android.app.AlertDialog"
 java_import "android.content.DialogInterface"
 java_import "android.content.Context"
 java_import "android.text.method.ScrollingMovementMethod"
+
+ruboto_import "org.ruboto.callbacks.RubotoOnTabChangeListener"
+ruboto_import "org.ruboto.callbacks.RubotoOnKeyListener"
 
 ruboto_import_widgets :TabHost, :LinearLayout, :FrameLayout, :TabWidget, 
   :Button, :EditText, :TextView, :ListView, :ScrollView
@@ -45,7 +48,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
         frame_layout(:id => AndroidIds::tabcontent, :height => :fill_parent) do
           linear_layout(:id => 55555, :height => :fill_parent,
                         :orientation => LinearLayout::VERTICAL) do
-            @irb_edit = edit_text :lines => 1, :on_key_listener => self
+            @irb_edit = edit_text :lines => 1, :on_key_listener => @on_key_listener
             @irb_text = text_view :text => "#{explanation_text}\n\n>> ", :height => :fill_parent, 
                             :gravity => (Gravity::BOTTOM | Gravity::CLIP_VERTICAL), 
                             :text_color => 0xffffffff, 
@@ -66,7 +69,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     @tabs.addTab(@tabs.newTabSpec("irb").setContent(55555).setIndicator("IRB"))
     @tabs.addTab(@tabs.newTabSpec("editor").setContent(55556).setIndicator("Editor"))
     @tabs.addTab(@tabs.newTabSpec("scripts").setContent(55557).setIndicator("Scripts"))
-    @tabs.setOnTabChangedListener(self)
+    @tabs.setOnTabChangedListener(@on_tab_change_listener)
     @tabs
   end
 
@@ -188,7 +191,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   # Tab change
   #
 
-  handle_tab_changed do |tab|
+  @on_tab_change_listener = RubotoOnTabChangeListener.new.handle_tab_changed do |tab|
     if tab == "scripts"
         getSystemService(Context::INPUT_METHOD_SERVICE).
            hideSoftInputFromWindow(@tabs.getWindowToken, 0)
@@ -199,21 +202,21 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   # Key actions for keeping the history of the IRB EditText
   #
 
-  handle_key do |view, key_code, event|
+  @on_key_listener = RubotoOnKeyListener.new.handle_key do |view, key_code, event|
     rv = false
     if [KeyEvent::ACTION_DOWN, KeyEvent::ACTION_MULTIPLE].include? event.getAction
       if (@cursor > 0 and key_code == KeyEvent::KEYCODE_DPAD_UP) or 
          (@cursor < (@history.size - 1) and key_code == KeyEvent::KEYCODE_DPAD_DOWN)
-	@history[@cursor] = @irb_edit.getText.toString if @cursor == (@history.size - 1)
+        @history[@cursor] = @irb_edit.getText.toString if @cursor == (@history.size - 1)
         @cursor += (key_code == KeyEvent::KEYCODE_DPAD_UP) ? -1 : 1
-	@irb_edit.setText @history[@cursor]
+        @irb_edit.setText @history[@cursor]
         rv = true
       end
     elsif key_code == KeyEvent::KEYCODE_ENTER
       line = @irb_edit.getText.toString
       line["\n"] = ""
       unless line == ""
-	@history[-1] = line
+        @history[-1] = line
         @history << ""
         @cursor = @history.size - 1
         @irb_edit.setText ""
