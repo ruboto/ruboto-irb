@@ -13,29 +13,29 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-		    <intent-filter>
-		        <action android:name="android.intent.action.VIEW" />
-		        <category android:name="android.intent.category.DEFAULT" />
-		        <category android:name="android.intent.category.BROWSABLE" />
-		        <data android:scheme="http" />
-		        <data android:host="*" />
-		        <data android:pathPattern=".*\\.rb" />
-			</intent-filter>
+		        <intent-filter>
+		            <action android:name="android.intent.action.VIEW" />
+		            <category android:name="android.intent.category.DEFAULT" />
+		            <category android:name="android.intent.category.BROWSABLE" />
+		            <data android:scheme="http" />
+		            <data android:host="*" />
+		            <data android:pathPattern=".*\\.rb" />
+			    </intent-filter>
         </activity>
         <activity android:name="org.ruboto.irb.ShortcutBuilder">                  
-			<intent-filter>
-			  <action android:name="android.intent.action.CREATE_SHORTCUT" />
-			  <category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
+			    <intent-filter>
+			      <action android:name="android.intent.action.CREATE_SHORTCUT" />
+			      <category android:name="android.intent.category.DEFAULT" />
+			    </intent-filter>
         </activity>
         <activity android:name="org.ruboto.RubotoActivity">
-			<intent-filter>
-			  <action android:name="org.ruboto.intent.action.LAUNCH_SCRIPT" />
-			  <category android:name="android.intent.category.DEFAULT" />
-			</intent-filter>
+			    <intent-filter>
+			      <action android:name="org.ruboto.intent.action.LAUNCH_SCRIPT" />
+			      <category android:name="android.intent.category.DEFAULT" />
+			    </intent-filter>
         </activity>
-        <activity android:name="org.ruboto.RubotoDialog" android:theme="@android:style/Theme.Dialog">
-        </activity>
+        <activity android:name="org.ruboto.RubotoDialog" android:theme="@android:style/Theme.Dialog" />
+        <activity android:name="org.ruboto.RubotoPreferenceActivity" />
     </application>
     
     <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="8"/>
