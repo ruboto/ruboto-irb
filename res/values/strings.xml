@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Ruboto IRB</string>
-    <string name="version_name">0.4</string>
+    <string name="version_name">0.5</string>
+    <string name="ruboto_script_version">6</string>
 
     <string name="IRB_Tab">IRB</string>
     <string name="Editor_Tab">Editor</string>
@@ -29,4 +30,8 @@
     <string name="Dialog_cancel">Cancel</string>
     
     <string name="About_text">Ruboto IRB is a UI for scripting Android using the Ruby language through JRuby.\n\nSource code:\nhttp://github.com/ruboto/ruboto-irb\n\nJoin us or give feedback:\nhttp://groups.google.com/group/ruboto\n\nDevelopers:\nCharlie Nutter\nJan Berkel\nPascal Chatterjee (jruby-for-android project)\nScott Moyer\nDaniel Jackoway\n\nJRuby Project:\nhttp://jruby.org\n\nIcon:\nRuby Visual Identity Team\nhttp://rubyidentity.org\nCC ShareAlike 2.5</string>
+
+    <string name="Script_update_text">We have made modifications to the core ruboto.rb script and corresponding demos. Please update your scripts now, or click cancel to update manually (Menu -> More -> Reload demos from assets).</string>
+
+    <string name="Update_ok">Update</string>
 </resources>
