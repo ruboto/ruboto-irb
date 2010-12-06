@@ -22,18 +22,19 @@
 		            <data android:pathPattern=".*\\.rb" />
 			    </intent-filter>
         </activity>
-        <activity android:name="org.ruboto.irb.ShortcutBuilder">                  
+        <activity android:name="ShortcutBuilder">                  
 			    <intent-filter>
 			      <action android:name="android.intent.action.CREATE_SHORTCUT" />
 			      <category android:name="android.intent.category.DEFAULT" />
 			    </intent-filter>
         </activity>
-        <activity android:name="org.ruboto.RubotoActivity">
+        <activity android:name="ScriptLaunch">
 			    <intent-filter>
 			      <action android:name="org.ruboto.intent.action.LAUNCH_SCRIPT" />
 			      <category android:name="android.intent.category.DEFAULT" />
 			    </intent-filter>
         </activity>
+        <activity android:name="org.ruboto.RubotoActivity" />
         <activity android:name="org.ruboto.RubotoDialog" android:theme="@android:style/Theme.Dialog" />
         <activity android:name="org.ruboto.RubotoPreferenceActivity" />
     </application>
