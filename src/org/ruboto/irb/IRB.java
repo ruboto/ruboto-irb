@@ -333,11 +333,11 @@ import android.widget.Toast;
 	                prefsEditor = prefs.edit();
 	
 	                tabWidget.setVisibility(tabWidget.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-	            	if (prefs.getBoolean("Fullscreen", false)) {
-	            		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-	            	} else {
-	                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-	            	}
+                  if (prefs.getBoolean("Fullscreen", false)) {
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                  } else {
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                  }
 	
 	                prefsEditor.putBoolean("HideTabs", tabWidget.getVisibility() == View.GONE);
 	                prefsEditor.putBoolean("Fullscreen", !prefs.getBoolean("Fullscreen", false));
@@ -379,7 +379,7 @@ import android.widget.Toast;
 	                executeScript(scripts.get(((AdapterContextMenuInfo) item.getMenuInfo()).position));
 	                return true;
 	            case DELETE_MENU:
-	                comfirmDelete(scripts.get(((AdapterContextMenuInfo) item.getMenuInfo()).position));
+	                confirmDelete(scripts.get(((AdapterContextMenuInfo) item.getMenuInfo()).position));
 	                return true;
 	            default:
 	                return false;
@@ -509,7 +509,7 @@ import android.widget.Toast;
 	    /*
  	     * Script deletion dialog
 	     */
-	    private void comfirmDelete(final String fname) {
+	    private void confirmDelete(final String fname) {
 			displayDialog("Confirm", "Delete " + fname + "?", 
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {deleteScript(fname);}
@@ -580,8 +580,11 @@ import android.widget.Toast;
 	    private void configScriptsDir() {
 	        if (Script.configDir(SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts")) {
 	            // on first install init directory + copy sample scripts
-	            copyDemoScripts(DEMO_SCRIPTS, Script.getDirFile());                
-	        }
+	            copyDemoScripts(DEMO_SCRIPTS, Script.getDirFile());
+	        } else if (!checkVersionString()) {
+              // Scripts exist but need updating
+              confirmUpdate();
+          }
 	    }
 	        
 	    private void copyDemoScripts(String from, File to) {                        
@@ -605,12 +608,14 @@ import android.widget.Toast;
 	                is.close();
 	                fos.close();                
 	            }
+
+              updateVersionString();
 	        } catch (IOException iox) {
 	            Log.e(TAG, "error copying demo scripts", iox);     
 	        }
 	    }    
 	
-	    private String recopyDemoScripts(String from, File to) {      
+	    public String recopyDemoScripts(String from, File to) {      
 	    	String rv = "Copied:";
 	        try {
 	            byte[] buffer = new byte[8192];        
@@ -635,10 +640,40 @@ import android.widget.Toast;
 	                fos.close();   
 	                rv += "\n" + f;
 	            }
+
+              updateVersionString();
 	        } catch (IOException iox) {
 	            Log.e(TAG, "error copying demo scripts", iox);
 	            rv = "Copy failed";
 	        }
 	        return rv;
-	    }    
+	    }
+
+      private boolean checkVersionString() {
+          return getPreferences(Context.MODE_PRIVATE).
+                  getString("Ruboto_script_version", "0").
+                  equals(getString(R.string.ruboto_script_version));
+      }
+
+      private void updateVersionString() {
+          if (!checkVersionString()) {
+              SharedPreferences.Editor prefsEditor = getPreferences(Context.MODE_PRIVATE).edit();
+              prefsEditor.putString("Ruboto_script_version", getString(R.string.ruboto_script_version));
+              prefsEditor.commit();
+          }
+      }
+
+      private void confirmUpdate() {
+          displayDialog("Update Scripts", getString(R.string.Script_update_text), 
+              new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int id) {
+	                  Toast.makeText(IRB.this, 
+	                  		IRB.this.recopyDemoScripts(DEMO_SCRIPTS, Script.getDirFile()), 
+	                  		Toast.LENGTH_SHORT).show();
+                  }
+              },
+              new DialogInterface.OnClickListener() {
+                  public void onClick(DialogInterface dialog, int id) {dialog.cancel();}
+              });
+        }
 	}
