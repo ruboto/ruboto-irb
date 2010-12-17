@@ -1,6 +1,6 @@
 #######################################################
 #
-# demo-opengl.rb (by Scott Moyer)
+# glsurfaceview.rb (by Scott Moyer)
 # 
 # This demo ports the GLSurfaceView demo from the Android 
 # API Demos to Ruboto.
@@ -22,6 +22,79 @@ java_import "java.nio.IntBuffer"
 
 # A class implementing GLSurfaceView.Renderer
 ruboto_import "org.ruboto.callbacks.RubotoGLSurfaceViewRenderer"
+
+#######################################################
+#
+# Cube Class
+#
+#   Needs to get set up before the Activity tries to use it
+#
+
+class Cube
+  def initialize
+    one = 0x10000
+    vertices = [
+      -one, -one, -one,
+       one, -one, -one,
+       one,  one, -one,
+      -one,  one, -one,
+      -one, -one,  one,
+       one, -one,  one,
+       one,  one,  one,
+      -one,  one,  one,
+    ]
+
+    colors = [
+        0,    0,    0,  one,
+      one,    0,    0,  one,
+      one,  one,    0,  one,
+        0,  one,    0,  one,
+        0,    0,  one,  one,
+      one,    0,  one,  one,
+      one,  one,  one,  one,
+        0,  one,  one,  one,
+     ]
+
+    indices = [
+      0, 4, 5,    0, 5, 1,
+      1, 5, 6,    1, 6, 2,
+      2, 6, 7,    2, 7, 3,
+      3, 7, 4,    3, 4, 0,
+      4, 7, 6,    4, 6, 5,
+      3, 0, 1,    3, 1, 2
+    ]
+
+    vbb = ByteBuffer.allocateDirect(vertices.length*4)
+    vbb.order(ByteOrder.nativeOrder)
+    @vertex_buffer = vbb.asIntBuffer
+    @vertex_buffer.put(vertices.to_java(:int))
+    @vertex_buffer.position(0)
+
+    cbb = ByteBuffer.allocateDirect(colors.length*4)
+    cbb.order(ByteOrder.nativeOrder)
+    @color_buffer = cbb.asIntBuffer
+    @color_buffer.put(colors.to_java(:int))
+    @color_buffer.position(0)
+
+    @index_buffer = ByteBuffer.allocateDirect(indices.length)
+    @index_buffer.put(indices.to_java(:byte))
+    @index_buffer.position(0)
+  end
+
+  def draw(gl)
+    gl.glFrontFace(GL10::GL_CW)
+    gl.glVertexPointer(3, GL10::GL_FIXED, 0, @vertex_buffer)
+    gl.glColorPointer(4, GL10::GL_FIXED, 0, @color_buffer)
+    gl.glDrawElements(GL10::GL_TRIANGLES, 36, GL10::GL_UNSIGNED_BYTE, @index_buffer)
+  end
+end
+
+#######################################################
+#
+# Activity
+#
+#   Start a new activity or connect to $activity
+#
 
 $activity.start_ruboto_activity "$glsurface" do
   setTitle "GLSurfaceView"
@@ -88,65 +161,6 @@ $activity.start_ruboto_activity "$glsurface" do
     gl.glEnable(GL10::GL_CULL_FACE)
     gl.glShadeModel(GL10::GL_SMOOTH)
     gl.glEnable(GL10::GL_DEPTH_TEST)
-  end
-end
-
-class Cube
-  def initialize
-    one = 0x10000
-    vertices = [
-      -one, -one, -one,
-       one, -one, -one,
-       one,  one, -one,
-      -one,  one, -one,
-      -one, -one,  one,
-       one, -one,  one,
-       one,  one,  one,
-      -one,  one,  one,
-    ]
-
-    colors = [
-        0,    0,    0,  one,
-      one,    0,    0,  one,
-      one,  one,    0,  one,
-        0,  one,    0,  one,
-        0,    0,  one,  one,
-      one,    0,  one,  one,
-      one,  one,  one,  one,
-        0,  one,  one,  one,
-     ]
-
-    indices = [
-      0, 4, 5,    0, 5, 1,
-      1, 5, 6,    1, 6, 2,
-      2, 6, 7,    2, 7, 3,
-      3, 7, 4,    3, 4, 0,
-      4, 7, 6,    4, 6, 5,
-      3, 0, 1,    3, 1, 2
-    ]
-
-    vbb = ByteBuffer.allocateDirect(vertices.length*4)
-    vbb.order(ByteOrder.nativeOrder)
-    @vertex_buffer = vbb.asIntBuffer
-    @vertex_buffer.put(vertices.to_java(:int))
-    @vertex_buffer.position(0)
-
-    cbb = ByteBuffer.allocateDirect(colors.length*4)
-    cbb.order(ByteOrder.nativeOrder)
-    @color_buffer = cbb.asIntBuffer
-    @color_buffer.put(colors.to_java(:int))
-    @color_buffer.position(0)
-
-    @index_buffer = ByteBuffer.allocateDirect(indices.length)
-    @index_buffer.put(indices.to_java(:byte))
-    @index_buffer.position(0)
-  end
-
-  def draw(gl)
-    gl.glFrontFace(GL10::GL_CW)
-    gl.glVertexPointer(3, GL10::GL_FIXED, 0, @vertex_buffer)
-    gl.glColorPointer(4, GL10::GL_FIXED, 0, @color_buffer)
-    gl.glDrawElements(GL10::GL_TRIANGLES, 36, GL10::GL_UNSIGNED_BYTE, @index_buffer)
   end
 end
 
