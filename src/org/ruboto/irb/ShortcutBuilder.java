@@ -49,7 +49,7 @@ public class ShortcutBuilder extends Activity implements OnItemClickListener {
 		intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, sc_intent);
 		intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, scripts.get(pos));
 		intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, 
-				Intent.ShortcutIconResource.fromContext(this, R.drawable.app_icon));
+				Intent.ShortcutIconResource.fromContext(this, R.drawable.icon));
 		
 		setResult((intent != null) ? RESULT_OK : RESULT_CANCELED, intent);
 		finish();
