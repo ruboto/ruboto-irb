@@ -3,8 +3,12 @@
   <title>DOMO ARIGATO</title>
   <style type="text/css">
     body {
+       width: 800px;
        color: #fff;
        background-color: #000;
+    }
+    h1,h2 {
+        color: #f00;
     }
     a {
        color: #fff
