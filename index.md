@@ -2,12 +2,14 @@
 layout: home
 ---
 
-<img style="float:left" src="ruboto.png" />
+<img style="float:left ; padding: 1em" src="ruboto.png" />
 <img style="float:right" src="ruboto.png" />
 
 # Ruboto -- Ruby on Android
 
 Ruboto allows you to run Ruby scripts on Android devices.  Using Ruby code, you have access to the complete Android API.  Currently, we have 2 offerings:  ruboto-irb and ruboto-core.  Ruboto is based on [JRuby](http://jruby.org).
+
+<br clear="all"/>
 
 ## ruboto-irb
 
