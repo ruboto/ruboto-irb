@@ -16,7 +16,7 @@
       border:1px dashed #333;
     }
     h1,h2 {
-      color: #f00;
+      color: #C81010;
     }
     a {
       color: #fff
