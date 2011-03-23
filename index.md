@@ -27,7 +27,7 @@ You can install ruboto-irb from the Android Market or download it directly to yo
 
 [ruboto-core on GitHub](http://github.com/ruboto/ruboto-core/)
 
-ruboto-core is a framework for writing full Android apps in Ruby.  It includes generators for creating projects, classes, tests, and more.
+ruboto-core is a framework for writing full Android apps in Ruby.  It includes support libraries and generators for creating projects, classes, tests, and more.
 
 ## Community
 
