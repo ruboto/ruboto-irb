@@ -2,7 +2,7 @@
 layout: home
 ---
 
-<img style="float:left" src="ruboto.png" />
+<img style="float:right" src="ruboto.png" />
 ![Robot](/ruboto.png)
 
 # Ruboto -- Ruby on Android
