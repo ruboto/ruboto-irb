@@ -11,7 +11,7 @@
     }
     #Content {
       margin: 0px auto;
-      width: 800px;
+      width: 770px;
       text-align: left;
       padding: 15px;
       border: 1px dashed #333;
