@@ -17,7 +17,7 @@ Ruboto allows you to run Ruby scripts on Android devices.  Using Ruby code, you 
 
 ruboto-irb is an Android application installable from the Android Market and includes an IRB (Interactive Ruby) console and also allows for scripts that interface with the Android API.  You can also create shortcuts to scripts directly from the home screen.  Scripts can be uploaded separateley if you like.
 
-You can download ruboto-irb directly to your Android device here:
+You can install ruboto-irb from the Android Market or download it directly to your Android device here:
 
 [ruboto-irb download](http://www.androidzoom.com/android_applications/tools/ruboto-irb-ruby-on-android_hwcd_download.html)
 
