@@ -3,7 +3,8 @@
   <title>DOMO ARIGATO</title>
   <style type="text/css">
     body {
-      margin: 0px 0px; padding:0px;
+      margin: 0px 0px;
+      padding: 0px;
       text-align: center;
       color: #fff;
       background-color: #000;
