@@ -15,7 +15,7 @@
       text-align: left;
       padding: 15px;
       border: 1px dashed #333;
-      background_color: #30587C;
+      background-color: #30587C;
     }
     h1,h2 {
       color: #C81010;
