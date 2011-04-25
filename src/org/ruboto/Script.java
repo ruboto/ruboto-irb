@@ -72,6 +72,7 @@ public class Script {
 
     public static synchronized Ruby setUpJRuby(PrintStream out) {
         if (ruby == null) {
+            System.setProperty("jruby.interfaces.useProxy", "true");
             RubyInstanceConfig config = new RubyInstanceConfig();
             config.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
             config.setKCode(KCode.UTF8);
