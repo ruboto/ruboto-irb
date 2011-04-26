@@ -18,7 +18,19 @@ end
 
 require 'java'
 
-$package_name = "org.ruboto.irb"
+$package_name = ($activity || $service || $broadcast_receiver).package_name
+$package = eval("Java::#{$package_name}")
+
+class Object
+  def self.android
+    Java::android
+  end
+
+  def android
+    Java::android
+  end
+end
+module Java ; undef android ; end
 
 java_import "android.R"
 
@@ -41,15 +53,16 @@ def setup_activity
  java_import "android.app.Activity"
 
  Activity.class_eval do
-  def start_ruboto_dialog(remote_variable, &block)
-    start_ruboto_activity(remote_variable, RubotoDialog, &block)
+  def start_ruboto_dialog(remote_variable, theme=R.style::Theme_Dialog, &block)
+    start_ruboto_activity(remote_variable, RubotoDialog, theme, &block)
   end
 
-  def start_ruboto_activity(remote_variable, klass=RubotoActivity, &block)
+  def start_ruboto_activity(remote_variable, klass=RubotoActivity, theme=nil, &block)
     $activity_init_block = block
 
     if @initialized or self == $activity
       b = Java::android.os.Bundle.new
+      b.putInt("Theme", theme) if theme
       b.putString("Remote Variable", remote_variable)
       b.putBoolean("Define Remote Variable", true)
       b.putString("Initialize Script", "#{remote_variable}.initialize_activity")
@@ -158,14 +171,20 @@ def ruboto_configure_activity(klass)
 
     def handle_create_options_menu &block
       p = Proc.new do |*args|
-        @menu, @context_menu = args[0], nil
+        @menu = args[0]
         instance_eval {block.call(*args)} if block
       end
       setCallbackProc(self.class.const_get("CB_CREATE_OPTIONS_MENU"), p)
 
       p = Proc.new do |num,menu_item|
-        (instance_eval &(menu_item.on_click); return true) if @menu
-        false
+        # handles a problem where this is called for context items
+        unless @just_processed_context_item == menu_item
+          instance_eval &(menu_item.on_click)
+          @just_processed_context_item = nil
+          true
+        else
+          false
+        end
       end
       setCallbackProc(self.class.const_get("CB_MENU_ITEM_SELECTED"), p)
     end
@@ -186,14 +205,24 @@ def ruboto_configure_activity(klass)
 
     def handle_create_context_menu &block
       p = Proc.new do |*args|
-        @menu, @context_menu = nil, args[0]
+        @context_menu = args[0]
         instance_eval {block.call(*args)} if block
       end
       setCallbackProc(self.class.const_get("CB_CREATE_CONTEXT_MENU"), p)
 
       p = Proc.new do |menu_item|
-        (instance_eval {menu_item.on_click.call(menu_item.getMenuInfo.position)}; return true) if menu_item.on_click
-        false
+        if menu_item.on_click
+          arg = menu_item
+          begin
+            arg = menu_item.getMenuInfo.position
+          rescue
+          end
+          instance_eval {menu_item.on_click.call(arg)}
+          @just_processed_context_item = menu_item
+          true
+        else
+          false
+        end
       end
       setCallbackProc(self.class.const_get("CB_CONTEXT_ITEM_SELECTED"), p)
     end
@@ -236,13 +265,21 @@ end
 
 def ruboto_import_widget(class_name, package_name="android.widget")
   view_class = java_import "#{package_name}.#{class_name}"
-  return unless view_class
 
   RubotoActivity.class_eval "
      def #{(class_name.to_s.gsub(/([A-Z])/) {'_' + $1.downcase})[1..-1]}(params={})
-        rv = #{class_name}.new self
-        @view_parent.addView(rv) if @view_parent
+        force_style = params.delete(:default_style)
+        rv = force_style ? #{class_name}.new(self, nil, force_style) : #{class_name}.new(self)
+
+        force_parent = params.delete(:parent)
+        if force_index = params.delete(:parent_index)
+          (force_parent || @view_parent).addView(rv, force_index) if (force_parent || @view_parent)
+        else
+          (force_parent || @view_parent).addView(rv) if (force_parent || @view_parent)
+        end
+
         rv.configure self, params
+
         if block_given?
           old_view_parent, @view_parent = @view_parent, rv
           yield
@@ -253,6 +290,7 @@ def ruboto_import_widget(class_name, package_name="android.widget")
    "
 
   setup_list_view       if class_name == :ListView
+  setup_spinner         if class_name == :Spinner
   setup_button          if class_name == :Button
   setup_linear_layout   if class_name == :LinearLayout
   setup_relative_layout if class_name == :RelativeLayout
@@ -344,7 +382,8 @@ def setup_list_view
       if params.has_key? :list
         @adapter_list = Java::java.util.ArrayList.new
         @adapter_list.addAll(params[:list])
-        @adapter = Java::android.widget.ArrayAdapter.new(context, R::layout::simple_list_item_1, @adapter_list)
+        item_layout = params.delete(:item_layout) || R::layout::simple_list_item_1
+        @adapter = Java::android.widget.ArrayAdapter.new(context, item_layout, @adapter_list)
         setAdapter @adapter
         params.delete :list
       end
@@ -353,7 +392,7 @@ def setup_list_view
     end
 
     def reload_list(list)
-      @adapter_list.clear();
+      @adapter_list.clear
       @adapter_list.addAll(list)
       @adapter.notifyDataSetChanged
       invalidate
@@ -361,6 +400,34 @@ def setup_list_view
   end
 
   ruboto_register_handler("org.ruboto.callbacks.RubotoOnItemClickListener", "item_click", ListView, "setOnItemClickListener")
+end
+
+def setup_spinner
+  Spinner.class_eval do
+    attr_reader :adapter, :adapter_list
+
+    def configure(context, params = {})
+      if params.has_key? :list
+        @adapter_list = Java::java.util.ArrayList.new
+        @adapter_list.addAll(params[:list])
+        item_layout = params.delete(:item_layout) || R::layout::simple_spinner_item
+        @adapter = Java::android.widget.ArrayAdapter.new(context, item_layout, @adapter_list)
+        setAdapter @adapter
+        params.delete :list
+      end
+      setOnItemSelectedListener(context)
+      super(context, params)
+    end
+
+    def reload_list(list)
+      @adapter.clear
+      @adapter.addAll(list)
+      @adapter.notifyDataSetChanged
+      invalidate
+    end
+  end
+
+  ruboto_register_handler("org.ruboto.callbacks.RubotoOnItemSelectedListener", "item_selected", Spinner, "setOnItemSelectedListener")
 end
 
 #############################################################################
