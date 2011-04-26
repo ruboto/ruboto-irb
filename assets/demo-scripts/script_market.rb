@@ -8,9 +8,9 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(6)
+confirm_ruboto_version(6, false)
 
-ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText, :ScrollView
+ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText, :ScrollView, :ListView
 
 # Use Java classes until we compile Ruby
 #require "net/http"
