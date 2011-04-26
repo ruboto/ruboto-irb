@@ -8,7 +8,7 @@
 #######################################################
 
 require "ruboto.rb"
-confirm_ruboto_version(6)
+confirm_ruboto_version(6, false)
 
 #
 # ruboto_import_widgets imports the UI widgets needed
@@ -16,7 +16,7 @@ confirm_ruboto_version(6)
 # come in automatically because those classes get extended.
 #
 
-ruboto_import_widgets :LinearLayout, :EditText, :TextView
+ruboto_import_widgets :LinearLayout, :EditText, :TextView, :ListView, :Button
 
 #
 # $activity is the Activity that launched the 
@@ -39,9 +39,9 @@ $activity.start_ruboto_activity "$ruboto_demo" do
     linear_layout(:orientation => LinearLayout::VERTICAL) do
       @et = edit_text
       linear_layout do
-        button :text => "Hello, World"
-        button :text => "Hello, Ruboto"
-        button :text => "List"
+        button :text => "Hello, World",  :on_click_listener => Proc.new{|v| my_click(v.getText)}
+        button :text => "Hello, Ruboto", :on_click_listener => Proc.new{|v| my_click(v.getText)}
+        button :text => "List",          :on_click_listener => Proc.new{|v| launch_list}
       end
       @tv = text_view :text => "Click buttons or menu items:"
     end
@@ -59,19 +59,6 @@ $activity.start_ruboto_activity "$ruboto_demo" do
     add_menu("Hello, Ruboto") {my_click "Hello, Ruboto"}
     add_menu("Exit") {finish}
     true
-  end
-
-  #
-  # Another callback method for OnClick. Buttons
-  # automatically get the activity as a handler.
-  #
-  handle_click do |view|
-    case view.getText
-      when "List"
-        launch_list
-      else
-        my_click(view.getText)
-    end
   end
 
   #
