@@ -101,6 +101,12 @@ public class RubotoActivity extends android.app.Activity {
     args = new Object[1];
     args[0] = arg0;
 
+    android.os.Bundle configBundle = getIntent().getBundleExtra("RubotoActivity Config");
+
+    if (configBundle != null && configBundle.containsKey("Theme")) {
+      setTheme(configBundle.getInt("Theme"));
+    }
+
     super.onCreate(arg0);
 
     Script.copyScriptsIfNeeded(getFilesDir().getAbsolutePath() + "/scripts", getAssets());
@@ -109,8 +115,6 @@ public class RubotoActivity extends android.app.Activity {
 
     Script.defineGlobalVariable("$activity", this);
     Script.defineGlobalVariable("$bundle", arg0);
-
-    android.os.Bundle configBundle = getIntent().getBundleExtra("RubotoActivity Config");
 
     if (configBundle != null) {
       setRemoteVariable(configBundle.getString("Remote Variable"));
