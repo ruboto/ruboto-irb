@@ -34,8 +34,8 @@
 			      <category android:name="android.intent.category.DEFAULT" />
 			    </intent-filter>
         </activity>
-        <activity android:name="org.ruboto.RubotoActivity" />
-        <activity android:name="org.ruboto.RubotoDialog" android:theme="@android:style/Theme.Dialog" />
+        <activity android:name="org.ruboto.RubotoActivity"  android:configChanges="orientation" />
+        <activity android:name="org.ruboto.RubotoDialog" android:theme="@android:style/Theme.Dialog"  android:configChanges="orientation" />
         <activity android:name="org.ruboto.RubotoPreferenceActivity" />
     </application>
     
