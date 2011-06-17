@@ -31,8 +31,9 @@ ruboto-core is a framework for writing full Android apps in Ruby.  It includes s
 
 ## Community
 
+* [Merchandise](http://www.cafepress.co.uk/ruboto)
 * [Wiki](https://github.com/ruboto/ruboto-core/wiki)
 * [Mailing list](http://groups.google.com/group/ruboto)
 * IRC chat: [#ruboto](irc://irc.freenode.net/ruboto) on Freenode.
 * [Issue tracker](https://github.com/ruboto/ruboto-core/issues)
-* [Merchandise](http://www.cafepress.co.uk/ruboto)
+* [Continuos Integration](http://ci.jruby.org/view/Ruboto/)
