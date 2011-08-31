@@ -1,7 +1,7 @@
-	package org.ruboto.irb;
+package org.ruboto.irb;
 	
 	
-	import java.io.BufferedOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -187,8 +187,12 @@ import android.widget.Toast;
 	                    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 	                    Script.setUpJRuby(new PrintStream(new WriterOutputStream(new Writer() {
 	                        @Override
-	                        public void write(char[] chars, int start, int length) throws IOException {
-	                            IRB.appendToIRB(new String(chars, start, length));
+	                        public void write(final char[] chars, final int start, final int length) throws IOException {
+                                IRB.this.runOnUiThread(new Runnable() {
+                        	        public void run() {
+        	                            IRB.appendToIRB(new String(chars, start, length));
+                                    }
+                                });
 	                        }
 	                        @Override
 	                        public void flush() throws IOException {
