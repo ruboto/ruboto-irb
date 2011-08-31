@@ -127,7 +127,8 @@ import android.widget.Toast;
 	    private void irbSetUp() {
 	        tabs.addTab(tabs.newTabSpec("irb")
 	                .setContent(R.id.tab1)
-	                .setIndicator(getString(R.string.IRB_Tab)));
+	                .setIndicator(getString(R.string.IRB_Tab),
+						getResources().getDrawable(R.drawable.ic_tab_irb)));
 	
 	        irbInput = (HistoryEditText) findViewById(R.id.irb_edittext);
 	        irbOutput = (TextView) findViewById(R.id.irb_textview);
@@ -148,7 +149,8 @@ import android.widget.Toast;
 	    private void editorSetUp() {
 	        tabs.addTab(tabs.newTabSpec("editor")
 	                .setContent(R.id.tab2)
-	                .setIndicator(getString(R.string.Editor_Tab)));
+	                .setIndicator(getString(R.string.Editor_Tab),
+						getResources().getDrawable(R.drawable.ic_tab_editor)));
 	
 	        scrollView = (ScrollView) findViewById(R.id.editor_scroll_view);
 	        sourceEditor = (LineNumberEditText) findViewById(R.id.source_editor);
@@ -160,7 +162,8 @@ import android.widget.Toast;
 	    private void scriptsListSetUp() {
 	    	tabs.addTab(tabs.newTabSpec("scripts")
 	                .setContent(R.id.tab3)
-	                .setIndicator(getString(R.string.Scripts_Tab)));
+	                .setIndicator(getString(R.string.Scripts_Tab),
+						getResources().getDrawable(R.drawable.ic_tab_scripts)));
 	
 	        ListView scriptsList = (ListView) findViewById(R.id.scripts_listview);
 	
