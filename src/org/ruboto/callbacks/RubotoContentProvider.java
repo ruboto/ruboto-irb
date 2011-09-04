@@ -1,14 +1,8 @@
 package org.ruboto.callbacks;
 
-import org.jruby.Ruby;
-import org.jruby.javasupport.util.RuntimeHelpers;
-import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.javasupport.JavaUtil;
-import org.jruby.exceptions.RaiseException;
 import org.ruboto.Script;
 
 public class RubotoContentProvider extends android.content.ContentProvider {
-  private Ruby __ruby__;
 
   public static final int CB_DELETE = 0;
   public static final int CB_GET_TYPE = 1;
@@ -16,29 +10,20 @@ public class RubotoContentProvider extends android.content.ContentProvider {
   public static final int CB_CREATE = 3;
   public static final int CB_QUERY = 4;
   public static final int CB_UPDATE = 5;
-  private IRubyObject[] callbackProcs = new IRubyObject[6];
+
+    private Object[] callbackProcs = new Object[6];
 
   public  RubotoContentProvider() {
     super();
   }
 
-  private Ruby getRuby() {
-    if (__ruby__ == null) __ruby__ = Script.getRuby();
-    return __ruby__;
-  }
-
-  public void setCallbackProc(int id, IRubyObject obj) {
+  public void setCallbackProc(int id, Object obj) {
     callbackProcs[id] = obj;
   }
 	
   public int delete(android.net.Uri uri, java.lang.String selection, java.lang.String[] selectionArgs) {
     if (callbackProcs[CB_DELETE] != null) {
-      try {
-        return (Integer)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_DELETE], "call" , JavaUtil.convertJavaToRuby(getRuby(), uri), JavaUtil.convertJavaToRuby(getRuby(), selection), JavaUtil.convertJavaToRuby(getRuby(), selectionArgs)).toJava(int.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return 0;
-      }
+      return (Integer) Script.callMethod(callbackProcs[CB_DELETE], "call" , new Object[]{uri, selection, selectionArgs}, Integer.class);
     } else {
       return 0;
     }
@@ -46,12 +31,7 @@ public class RubotoContentProvider extends android.content.ContentProvider {
 
   public java.lang.String getType(android.net.Uri uri) {
     if (callbackProcs[CB_GET_TYPE] != null) {
-      try {
-        return (java.lang.String)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_GET_TYPE], "call" , JavaUtil.convertJavaToRuby(getRuby(), uri)).toJava(java.lang.String.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (java.lang.String) Script.callMethod(callbackProcs[CB_GET_TYPE], "call" , uri, java.lang.String.class);
     } else {
       return null;
     }
@@ -59,12 +39,7 @@ public class RubotoContentProvider extends android.content.ContentProvider {
 
   public android.net.Uri insert(android.net.Uri uri, android.content.ContentValues values) {
     if (callbackProcs[CB_INSERT] != null) {
-      try {
-        return (android.net.Uri)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_INSERT], "call" , JavaUtil.convertJavaToRuby(getRuby(), uri), JavaUtil.convertJavaToRuby(getRuby(), values)).toJava(android.net.Uri.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (android.net.Uri) Script.callMethod(callbackProcs[CB_INSERT], "call" , new Object[]{uri, values}, android.net.Uri.class);
     } else {
       return null;
     }
@@ -72,12 +47,7 @@ public class RubotoContentProvider extends android.content.ContentProvider {
 
   public boolean onCreate() {
     if (callbackProcs[CB_CREATE] != null) {
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE], "call" ).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE], "call" , Boolean.class);
     } else {
       return false;
     }
@@ -85,13 +55,7 @@ public class RubotoContentProvider extends android.content.ContentProvider {
 
   public android.database.Cursor query(android.net.Uri uri, java.lang.String[] projection, java.lang.String selection, java.lang.String[] selectionArgs, java.lang.String sortOrder) {
     if (callbackProcs[CB_QUERY] != null) {
-      try {
-        IRubyObject[] args = {JavaUtil.convertJavaToRuby(getRuby(), uri), JavaUtil.convertJavaToRuby(getRuby(), projection), JavaUtil.convertJavaToRuby(getRuby(), selection), JavaUtil.convertJavaToRuby(getRuby(), selectionArgs), JavaUtil.convertJavaToRuby(getRuby(), sortOrder)};
-        return (android.database.Cursor)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_QUERY], "call" , args).toJava(android.database.Cursor.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (android.database.Cursor) Script.callMethod(callbackProcs[CB_QUERY], "call" , new Object[]{uri, projection, selection, selectionArgs, sortOrder}, android.database.Cursor.class);
     } else {
       return null;
     }
@@ -99,15 +63,10 @@ public class RubotoContentProvider extends android.content.ContentProvider {
 
   public int update(android.net.Uri uri, android.content.ContentValues values, java.lang.String selection, java.lang.String[] selectionArgs) {
     if (callbackProcs[CB_UPDATE] != null) {
-      try {
-        IRubyObject[] args = {JavaUtil.convertJavaToRuby(getRuby(), uri), JavaUtil.convertJavaToRuby(getRuby(), values), JavaUtil.convertJavaToRuby(getRuby(), selection), JavaUtil.convertJavaToRuby(getRuby(), selectionArgs)};
-        return (Integer)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_UPDATE], "call" , args).toJava(int.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return 0;
-      }
+      return (Integer) Script.callMethod(callbackProcs[CB_UPDATE], "call" , new Object[]{uri, values, selection, selectionArgs}, Integer.class);
     } else {
       return 0;
     }
   }
+
 }
