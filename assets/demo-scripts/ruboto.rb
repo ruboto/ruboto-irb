@@ -44,9 +44,11 @@ class Object
   def with_large_stack(opts = {}, &block)
     opts = {:size => opts} if opts.is_a? Integer
     opts = {:name => 'Block with large stack'}.update(opts)
+    exception = nil
     result = nil
-    t = Thread.with_large_stack(opts, &proc{result = block.call})
+    t = Thread.with_large_stack(opts, &proc{result = block.call rescue exception = $!})
     t.join
+    raise exception if exception
     result
   end
 end
@@ -79,7 +81,7 @@ def setup_activity
     def start_ruboto_activity(remote_variable, klass=RubotoActivity, theme=nil, &block)
       $activity_init_block = block
 
-      if @initialized or self == $activity
+      if @initialized or (self == $activity && !$activity.kind_of?(RubotoActivity))
         b = Java::android.os.Bundle.new
         b.putInt("Theme", theme) if theme
         b.putString("Remote Variable", remote_variable)
