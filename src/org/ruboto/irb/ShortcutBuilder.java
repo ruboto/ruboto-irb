@@ -11,7 +11,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
-import org.ruboto.Script;
 
 public class ShortcutBuilder extends Activity implements OnItemClickListener {
     public static final String TAG = "Ruboto-IRB";
@@ -23,13 +22,13 @@ public class ShortcutBuilder extends Activity implements OnItemClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Script.configDir(IRB.SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts");
+        IRBScript.setDir(IRB.scriptsDirName(this));
         
         ListView scriptsList = new ListView(this);
         setContentView(scriptsList);
         setTitle("Select a Ruboto Script");
 
-        scripts = Script.list();
+        scripts = IRBScript.list();
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, scripts);
         scriptsList.setAdapter(adapter);
         scriptsList.setOnItemClickListener(this);
