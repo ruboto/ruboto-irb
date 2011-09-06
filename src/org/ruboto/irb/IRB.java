@@ -12,7 +12,6 @@ import java.io.Writer;
 import java.util.List;
 
 import org.jruby.embed.io.WriterOutputStream;
-import org.ruboto.Script;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -23,6 +22,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
+import android.os.Environment;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -63,7 +63,7 @@ import android.widget.Toast;
 	    private ScrollView scrollView;
 	    private LineNumberEditText sourceEditor;
 	    private TextView fnameTextView;
-	    private Script currentScript;
+	    private IRBScript currentScript;
 	
 	    /* Script_Tab Elements */
 	    private ArrayAdapter<String> adapter;
@@ -138,9 +138,12 @@ import android.widget.Toast;
 	        irbInput.setLineListener(new HistoryEditText.LineListener() {
 	            public void onNewLine(String rubyCode) {
 	                irbOutput.append(rubyCode + "\n");
-	                String inspected = Script.execute(rubyCode);
-	                irbOutput.append("=> " + inspected + "\n");
-	                irbOutput.append(">> ");
+                    try {
+	                    irbOutput.append("=> ");
+                        irbOutput.append(IRBScript.execute(rubyCode));
+                    } catch (RuntimeException e) {
+                    }
+                    irbOutput.append("\n>> ");
 	                irbInput.setText("");
 	            }
 	        });
@@ -156,7 +159,7 @@ import android.widget.Toast;
 	        sourceEditor = (LineNumberEditText) findViewById(R.id.source_editor);
 	        fnameTextView = (TextView) findViewById(R.id.fname_textview);
         
-	        editScript(Script.UNTITLED_RB, false);
+	        editScript(IRBScript.UNTITLED_RB, false);
 	    }
 	    
 	    private void scriptsListSetUp() {
@@ -164,10 +167,10 @@ import android.widget.Toast;
 	                .setContent(R.id.tab3)
 	                .setIndicator(getString(R.string.Scripts_Tab),
 						getResources().getDrawable(R.drawable.ic_tab_scripts)));
-	
+
 	        ListView scriptsList = (ListView) findViewById(R.id.scripts_listview);
 	
-	        scripts = Script.list();
+	        scripts = IRBScript.list();
 	        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, scripts);
 	        scriptsList.setAdapter(adapter);
 	        TextView emptyView = new TextView(this);
@@ -176,33 +179,34 @@ import android.widget.Toast;
 	        scriptsList.setOnItemClickListener(this);
 	        registerForContextMenu(scriptsList);
 	    }
-	
+
 	    /* Initializes jruby in its own thread */
 	    private void setUpJRuby() {
-	        if (!Script.initialized()) {
+	        if (!IRBScript.isInitialized()) {
+                IRBScript.setLocalVariableBehavior("PERSISTENT");
 	            irbOutput.append("Initializing JRuby...");
 	            new Thread("JRuby-init") {
 	                public void run() {
 	                    // try to avoid ANR's
 	                    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-	                    Script.setUpJRuby(new PrintStream(new WriterOutputStream(new Writer() {
-	                        @Override
-	                        public void write(final char[] chars, final int start, final int length) throws IOException {
+	                    IRBScript.setUpJRuby(IRB.this, new PrintStream(new WriterOutputStream(new Writer() {
+                            @Override
+                            public void write(final char[] chars, final int start, final int length) throws IOException {
                                 IRB.this.runOnUiThread(new Runnable() {
                         	        public void run() {
-        	                            IRB.appendToIRB(new String(chars, start, length));
+	                                    IRB.appendToIRB(new String(chars, start, length));
                                     }
                                 });
-	                        }
-	                        @Override
-	                        public void flush() throws IOException {
-		                        // no buffer
-	                        }
-	                        @Override
-	                        public void close() throws IOException {
-		                        // meaningless
-	                        }
-	                    })));
+                            }
+                            @Override
+                            public void flush() throws IOException {
+                                // no buffer
+                            }
+                            @Override
+                            public void close() throws IOException {
+                                // meaningless
+                            }
+                        })));
 	                    handler.post(notifyComplete);
 	                }
 	            }.start();
@@ -214,8 +218,9 @@ import android.widget.Toast;
 	    /* Called when jruby finishes loading */
 	    protected final Runnable notifyComplete = new Runnable() {
 	        public void run() {
-	            Script.defineGlobalVariable("$activity", IRB.this);
-	            irbOutput.append("Done\n>>");
+	            IRBScript.defineGlobalVariable("$activity", IRB.this);
+	            irbOutput.append("Done\n>> ");
+                configScriptsDir();
 	            autoLoadScript();
 	        }
 	    };
@@ -228,9 +233,17 @@ import android.widget.Toast;
 	    /* Loads the script specified in the Intent (if supplied) */
 	    public void autoLoadScript() {
 			if (getIntent().getData() != null) {
-				Script script = Script.fromURL(getIntent().getData().toString());
+				IRBScript script = IRBScript.fromURL(getIntent().getData().toString());
 				if (script != null) editScript(script, true);
 			}
+	    }
+	    
+        /* Common method for copying stacktrace to irbOutput */
+	    private void reportExecption(Exception e) {
+            // TODO: Compact or highlight some levels
+            for (java.lang.StackTraceElement ste : e.getStackTrace()) {
+                irbOutput.append(ste.toString() + "\n");
+            }
 	    }
 	    
 	    /*********************************************************************************************
@@ -266,7 +279,7 @@ import android.widget.Toast;
 	    	if (tabId.equals("scripts") ) {
 	            ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
 	            	.hideSoftInputFromWindow(tabs.getWindowToken(), 0);
-	            if (Script.scriptsDirChanged()) scanScripts();
+	            if (IRBScript.scriptsDirChanged()) scanScripts();
 	    	}
 	    }
 	
@@ -308,10 +321,10 @@ import android.widget.Toast;
 	                runEditorScript();
 	                return true;
 	            case NEW_MENU:
-	                editScript(Script.UNTITLED_RB, true);
+	                editScript(IRBScript.UNTITLED_RB, true);
 	                return true;
 	            case HISTORY_MENU:
-	                editScript(new Script(Script.UNTITLED_RB, irbInput.getHistoryString()), true);
+	                editScript(new IRBScript(IRBScript.UNTITLED_RB, irbInput.getHistoryString()), true);
 	                return true;
 	            case ABOUT_MENU:
 	            	aboutDialog();
@@ -322,7 +335,7 @@ import android.widget.Toast;
 	                return true;
 	            case RELOAD_DEMOS_MENU:
 	                Toast.makeText(this, 
-	                		recopyDemoScripts(DEMO_SCRIPTS, Script.getDirFile()), 
+	                		recopyDemoScripts(DEMO_SCRIPTS, IRBScript.getDirFile()), 
 	                		Toast.LENGTH_SHORT).show();
 	                scanScripts();
 	                tabs.setCurrentTab(SCRIPTS_TAB);
@@ -332,7 +345,7 @@ import android.widget.Toast;
 	                tabs.setCurrentTab(IRB_TAB);
 	                return true;
 	            case EDIT_IRB_MENU:
-	                editScript(new Script(Script.UNTITLED_RB, irbOutput.getText().toString()), true);
+	                editScript(new IRBScript(IRBScript.UNTITLED_RB, irbOutput.getText().toString()), true);
 	                tabs.setCurrentTab(EDITOR_TAB);
 	                return true;
 	            case MAX_SCREEN_MENU:
@@ -406,34 +419,33 @@ import android.widget.Toast;
 	    /* Reload the list of scripts */
 	    private void scanScripts() {
 	        try {
-	            scripts = Script.list(scripts);
+	            scripts = IRBScript.list(scripts);
 	            adapter.notifyDataSetChanged();
 	        }
 	        catch (SecurityException se) {
-	            Toast.makeText(this, "Could not create " + Script.getDir(), Toast.LENGTH_SHORT);
+	            Toast.makeText(this, "Could not create " + IRBScript.getDir(), Toast.LENGTH_SHORT);
 	        }
 	    }
 	
 	    /* Run the script currently in the editor */
 	    private void runEditorScript() {
-	        try {
-	            irbOutput.append("[Running editor script (" + currentScript.getName() + ")]\n");
-	            String inspected = currentScript.setContents(sourceEditor.getText().toString()).execute();
-	            irbOutput.append("=> " + inspected + "\n>> ");
-	            tabs.setCurrentTab(IRB_TAB);
-	        }
-	        catch (IOException e) {
-	            Toast.makeText(this, "Could not execute script", Toast.LENGTH_SHORT).show();
-	        }
+            irbOutput.append("[Running editor script (" + currentScript.getName() + ")]\n");
+            try {
+              irbOutput.append("=> ");
+              irbOutput.append(IRBScript.execute(sourceEditor.getText().toString()));
+            } catch (RuntimeException e) {
+              reportExecption(e);
+            }
+            irbOutput.append("\n>> ");
+
+            tabs.setCurrentTab(IRB_TAB);
 	    }
 	
 	    /* Save the script currently in the editor */
 	    private void saveEditorScript() {
 	        try {
-	            currentScript
-	                    .setName(fnameTextView.getText().toString())
-	                    .setContents(sourceEditor.getText().toString())
-	                    .save();
+	            IRBScript tmp = (IRBScript)(currentScript.setName(fnameTextView.getText().toString()));
+	            tmp.setContents(sourceEditor.getText().toString()).save();
 	            scanScripts();
 	            Toast.makeText(this, "Saved " + currentScript.getName(), Toast.LENGTH_SHORT).show();
 	            tabs.setCurrentTab(SCRIPTS_TAB);
@@ -444,11 +456,11 @@ import android.widget.Toast;
 	    }
 	
 	    /* Load script into editor and switch to editor view */
-	    private void editScript(Script script, Boolean switchTab) {
+	    private void editScript(IRBScript script, Boolean switchTab) {
 	        try {
 	            currentScript = script;
 	            fnameTextView.setText(script.getName());
-	            sourceEditor.setText(script.getContents());
+                sourceEditor.setText(script.getFile().exists() ? script.getContents() : "");
 	            scrollView.scrollTo(0, 0);
 	            if (switchTab) tabs.setCurrentTab(EDITOR_TAB);
 	        } catch (IOException e) {
@@ -457,24 +469,28 @@ import android.widget.Toast;
 	    }
 	
 	    private void editScript(String name, Boolean switchTab) {
-	        editScript(new Script(name), switchTab);
+	        editScript(new IRBScript(name), switchTab);
 	    }
 	
 	    /* Execute the script and switch to IRB tab*/
 	    private void executeScript(String name) {
 	        try {
-	            irbOutput.append("[Running " + name + "]\n");
-	            irbOutput.append("=> " + (new Script(name).execute()) + "\n>> ");
-	            tabs.setCurrentTab(IRB_TAB);
-	        }
-	        catch (IOException e) {
+              irbOutput.append("[Running " + name + "]\n");
+              irbOutput.append("=> ");
+              irbOutput.append(new IRBScript(name).execute());
+            } catch (IOException e) {
 	            Toast.makeText(this, "Could not open " + name, Toast.LENGTH_SHORT).show();
-	        }
+            } catch (RuntimeException e) {
+              reportExecption(e);
+            }
+            irbOutput.append("\n>> ");
+
+            tabs.setCurrentTab(IRB_TAB);
 	    }
 	
 	    /* Delete script and reload scripts list */
 	    private void deleteScript(String fname) {
-	        if (new Script(fname).delete()) {
+	        if (new IRBScript(fname).delete()) {
 	            Toast.makeText(this, fname + " deleted!", Toast.LENGTH_SHORT).show();
 	        } else {
 	            Toast.makeText(this, "Could not delete " + fname, Toast.LENGTH_SHORT).show();
@@ -570,7 +586,7 @@ import android.widget.Toast;
 	    @Override
 	    public void onActivityResult(int requestCode, int resultCode, Intent data) {
 	        super.onActivityResult(requestCode, resultCode, data);
-	        Script.defineGlobalVariable("$last_activity_result", new ActivityResult(requestCode, resultCode, data));
+	        IRBScript.defineGlobalVariable("$last_activity_result", new ActivityResult(requestCode, resultCode, data));
 	    }
 	
 	    public static class ActivityResult {
@@ -583,18 +599,28 @@ import android.widget.Toast;
 	            data = dat;
 	        }
 	    }
+
+        protected static String scriptsDirName(Activity context) {
+            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                return Environment.getExternalStorageDirectory().getAbsolutePath() + "/jruby";
+            } else {
+                return context.getFilesDir().getAbsolutePath() + "/scripts";
+            }
+        }
 	
 	    private void configScriptsDir() {
-	        if (Script.configDir(SDCARD_SCRIPTS_DIR, getFilesDir().getAbsolutePath() + "/scripts")) {
+            IRBScript.setDir(IRB.scriptsDirName(this));
+	        if (!IRBScript.getDirFile().exists()) {
 	            // on first install init directory + copy sample scripts
-	            copyDemoScripts(DEMO_SCRIPTS, Script.getDirFile());
+	            copyDemoScripts(DEMO_SCRIPTS, IRBScript.getDirFile());
 	        } else if (!checkVersionString()) {
-              // Scripts exist but need updating
-              confirmUpdate();
-          }
+                // Scripts exist but need updating
+                confirmUpdate();
+            }
 	    }
-	        
-	    private void copyDemoScripts(String from, File to) {                        
+
+	    private void copyDemoScripts(String from, File to) {  
+            IRBScript.getDirFile().mkdirs();                  
 	        try {
 	            byte[] buffer = new byte[8192];        
 	            for (String f : getAssets().list(from)) {
@@ -675,7 +701,7 @@ import android.widget.Toast;
               new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int id) {
 	                  Toast.makeText(IRB.this, 
-	                  		IRB.this.recopyDemoScripts(DEMO_SCRIPTS, Script.getDirFile()), 
+	                  		IRB.this.recopyDemoScripts(DEMO_SCRIPTS, IRBScript.getDirFile()), 
 	                  		Toast.LENGTH_SHORT).show();
                   }
               },
