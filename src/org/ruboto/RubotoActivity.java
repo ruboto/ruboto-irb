@@ -1,19 +1,23 @@
 package org.ruboto;
 
-import org.jruby.Ruby;
-import org.jruby.javasupport.util.RuntimeHelpers;
-import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.javasupport.JavaUtil;
-import org.jruby.exceptions.RaiseException;
-import org.ruboto.Script;
 import java.io.IOException;
+
+import org.ruboto.Script;
+
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 
 public class RubotoActivity extends android.app.Activity {
-  private Ruby __ruby__;
-  private String scriptName;
-  private String remoteVariable = "";
-  public Object[] args;
+    private String scriptName;
+    private String remoteVariable = null;
+    private Object[] args;
+    private Bundle configBundle;
 
   public static final int CB_ACTIVITY_RESULT = 0;
   public static final int CB_CHILD_TITLE_CHANGED = 1;
@@ -23,118 +27,122 @@ public class RubotoActivity extends android.app.Activity {
   public static final int CB_CONTEXT_MENU_CLOSED = 5;
   public static final int CB_CREATE_CONTEXT_MENU = 6;
   public static final int CB_CREATE_DESCRIPTION = 7;
-  public static final int CB_CREATE_DIALOG = 8;
-  public static final int CB_CREATE_OPTIONS_MENU = 9;
-  public static final int CB_CREATE_PANEL_MENU = 10;
-  public static final int CB_CREATE_PANEL_VIEW = 11;
-  public static final int CB_CREATE_THUMBNAIL = 12;
-  public static final int CB_CREATE_VIEW = 13;
-  public static final int CB_DESTROY = 14;
-  public static final int CB_KEY_DOWN = 15;
-  public static final int CB_KEY_MULTIPLE = 16;
-  public static final int CB_KEY_UP = 17;
-  public static final int CB_LOW_MEMORY = 18;
-  public static final int CB_MENU_ITEM_SELECTED = 19;
-  public static final int CB_MENU_OPENED = 20;
-  public static final int CB_NEW_INTENT = 21;
-  public static final int CB_OPTIONS_ITEM_SELECTED = 22;
-  public static final int CB_OPTIONS_MENU_CLOSED = 23;
-  public static final int CB_PANEL_CLOSED = 24;
-  public static final int CB_PAUSE = 25;
-  public static final int CB_POST_CREATE = 26;
-  public static final int CB_POST_RESUME = 27;
-  public static final int CB_PREPARE_DIALOG = 28;
-  public static final int CB_PREPARE_OPTIONS_MENU = 29;
-  public static final int CB_PREPARE_PANEL = 30;
-  public static final int CB_RESTART = 31;
-  public static final int CB_RESTORE_INSTANCE_STATE = 32;
-  public static final int CB_RESUME = 33;
-  public static final int CB_RETAIN_NON_CONFIGURATION_INSTANCE = 34;
-  public static final int CB_SAVE_INSTANCE_STATE = 35;
-  public static final int CB_SEARCH_REQUESTED = 36;
-  public static final int CB_START = 37;
-  public static final int CB_STOP = 38;
-  public static final int CB_TITLE_CHANGED = 39;
-  public static final int CB_TOUCH_EVENT = 40;
-  public static final int CB_TRACKBALL_EVENT = 41;
-  public static final int CB_WINDOW_ATTRIBUTES_CHANGED = 42;
-  public static final int CB_WINDOW_FOCUS_CHANGED = 43;
-  public static final int CB_USER_INTERACTION = 44;
-  public static final int CB_USER_LEAVE_HINT = 45;
-  public static final int CB_ATTACHED_TO_WINDOW = 46;
-  public static final int CB_DETACHED_FROM_WINDOW = 47;
-  public static final int CB_KEY_LONG_PRESS = 48;
-  public static final int CB_APPLY_THEME_RESOURCE = 49;
-  private IRubyObject[] callbackProcs = new IRubyObject[52];
+  public static final int CB_CREATE_OPTIONS_MENU = 8;
+  public static final int CB_CREATE_PANEL_MENU = 9;
+  public static final int CB_CREATE_PANEL_VIEW = 10;
+  public static final int CB_CREATE_THUMBNAIL = 11;
+  public static final int CB_CREATE_VIEW = 12;
+  public static final int CB_DESTROY = 13;
+  public static final int CB_KEY_DOWN = 14;
+  public static final int CB_KEY_MULTIPLE = 15;
+  public static final int CB_KEY_UP = 16;
+  public static final int CB_LOW_MEMORY = 17;
+  public static final int CB_MENU_ITEM_SELECTED = 18;
+  public static final int CB_MENU_OPENED = 19;
+  public static final int CB_NEW_INTENT = 20;
+  public static final int CB_OPTIONS_ITEM_SELECTED = 21;
+  public static final int CB_OPTIONS_MENU_CLOSED = 22;
+  public static final int CB_PANEL_CLOSED = 23;
+  public static final int CB_PAUSE = 24;
+  public static final int CB_POST_CREATE = 25;
+  public static final int CB_POST_RESUME = 26;
+  public static final int CB_PREPARE_OPTIONS_MENU = 27;
+  public static final int CB_PREPARE_PANEL = 28;
+  public static final int CB_RESTART = 29;
+  public static final int CB_RESTORE_INSTANCE_STATE = 30;
+  public static final int CB_RESUME = 31;
+  public static final int CB_RETAIN_NON_CONFIGURATION_INSTANCE = 32;
+  public static final int CB_SAVE_INSTANCE_STATE = 33;
+  public static final int CB_SEARCH_REQUESTED = 34;
+  public static final int CB_START = 35;
+  public static final int CB_STOP = 36;
+  public static final int CB_TITLE_CHANGED = 37;
+  public static final int CB_TOUCH_EVENT = 38;
+  public static final int CB_TRACKBALL_EVENT = 39;
+  public static final int CB_WINDOW_ATTRIBUTES_CHANGED = 40;
+  public static final int CB_WINDOW_FOCUS_CHANGED = 41;
+  public static final int CB_USER_INTERACTION = 42;
+  public static final int CB_USER_LEAVE_HINT = 43;
 
-  private Ruby getRuby() {
-    if (__ruby__ == null) __ruby__ = Script.getRuby();
+    private Object[] callbackProcs = new Object[44];
 
-    if (__ruby__ == null) {
-      Script.setUpJRuby(null);
-      __ruby__ = Script.getRuby();
+    public void setCallbackProc(int id, Object obj) {
+        callbackProcs[id] = obj;
     }
-
-    return __ruby__;
-  }
-
-  public void setCallbackProc(int id, IRubyObject obj) {
-    callbackProcs[id] = obj;
-  }
 	
-  public RubotoActivity setRemoteVariable(String var) {
-    remoteVariable = ((var == null) ? "" : (var + "."));
-    return this;
-  }
+    public RubotoActivity setRemoteVariable(String var) {
+        remoteVariable = var;
+        return this;
+    }
 
-  public void setScriptName(String name){
-    scriptName = name;
-  }
+    public String getRemoteVariableCall(String call) {
+        return (remoteVariable == null ? "" : (remoteVariable + ".")) + call;
+    }
 
-  /****************************************************************************************
-   * 
-   *  Activity Lifecycle: onCreate
-   */
+    public void setScriptName(String name) {
+        scriptName = name;
+    }
+
+    /****************************************************************************************
+     *
+     *  Activity Lifecycle: onCreate
+     */
 	
-  @Override
-  public void onCreate(android.os.Bundle arg0) {
-    args = new Object[1];
-    args[0] = arg0;
+    @Override
+    public void onCreate(Bundle bundle) {
+        args = new Object[1];
+        args[0] = bundle;
 
-    android.os.Bundle configBundle = getIntent().getBundleExtra("RubotoActivity Config");
+        configBundle = getIntent().getBundleExtra("RubotoActivity Config");
 
-    if (configBundle != null && configBundle.containsKey("Theme")) {
-      setTheme(configBundle.getInt("Theme"));
+        if (configBundle != null) {
+            if (configBundle.containsKey("Theme")) {
+                setTheme(configBundle.getInt("Theme"));
+            }
+            if (configBundle.containsKey("Script")) {
+                if (this.getClass().getName() == RubotoActivity.class.getName()) {
+                    setScriptName(configBundle.getString("Script"));
+                } else {
+                    throw new IllegalArgumentException("Only local Intents may set script name.");
+                }
+            }
+        }
+
+        super.onCreate(bundle);
+    
+        if (Script.isInitialized()) {
+            prepareJRuby();
+    	    loadScript();
+        }
     }
 
-    super.onCreate(arg0);
-
-    Script.copyScriptsIfNeeded(getFilesDir().getAbsolutePath() + "/scripts", getAssets());
-
-    getRuby();
-
-    Script.defineGlobalVariable("$activity", this);
-    Script.defineGlobalVariable("$bundle", arg0);
-
-    if (configBundle != null) {
-      setRemoteVariable(configBundle.getString("Remote Variable"));
-      if (configBundle.getBoolean("Define Remote Variable")) {
-        Script.defineGlobalVariable(configBundle.getString("Remote Variable"), this);
-        setRemoteVariable(configBundle.getString("Remote Variable"));
-      }
-      if (configBundle.getString("Initialize Script") != null) {
-        Script.execute(configBundle.getString("Initialize Script"));
-      }
-      Script.execute(remoteVariable + "on_create($bundle)");
-    } else {
-      try {
-        new Script(scriptName).execute();
-      } catch(IOException e){
-        e.printStackTrace();
-        ProgressDialog.show(this, "Script failed", "Something bad happened", true, false);
-      }
+    // This causes JRuby to initialize and takes while
+    protected void prepareJRuby() {
+        Script.put("$activity", this);
+        Script.put("$bundle", args[0]);
     }
-  }
+
+    protected void loadScript() {
+        try {
+            if (scriptName != null) {
+                new Script(scriptName).execute();
+            } else if (configBundle != null && configBundle.getString("Remote Variable") != null) {
+                setRemoteVariable(configBundle.getString("Remote Variable"));
+                if (configBundle.getBoolean("Define Remote Variable")) {
+                    Script.put(remoteVariable, this);
+                }
+                if (configBundle.getString("Initialize Script") != null) {
+                    Script.execute(configBundle.getString("Initialize Script"));
+                }
+                Script.execute(getRemoteVariableCall("on_create($bundle)"));
+            } else {
+                throw new RuntimeException("Neither script name nor remote variable was set.");
+            }
+        } catch(IOException e){
+            e.printStackTrace();
+            ProgressDialog.show(this, "Script failed", "Something bad happened", true, true);
+        }
+    }
 
   /****************************************************************************************
    * 
@@ -144,11 +152,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
     if (callbackProcs[CB_ACTIVITY_RESULT] != null) {
       super.onActivityResult(requestCode, resultCode, data);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_ACTIVITY_RESULT], "call" , JavaUtil.convertJavaToRuby(getRuby(), requestCode), JavaUtil.convertJavaToRuby(getRuby(), resultCode), JavaUtil.convertJavaToRuby(getRuby(), data));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_ACTIVITY_RESULT], "call" , new Object[]{requestCode, resultCode, data});
     } else {
       super.onActivityResult(requestCode, resultCode, data);
     }
@@ -157,11 +161,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onChildTitleChanged(android.app.Activity childActivity, java.lang.CharSequence title) {
     if (callbackProcs[CB_CHILD_TITLE_CHANGED] != null) {
       super.onChildTitleChanged(childActivity, title);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CHILD_TITLE_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), childActivity), JavaUtil.convertJavaToRuby(getRuby(), title));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_CHILD_TITLE_CHANGED], "call" , new Object[]{childActivity, title});
     } else {
       super.onChildTitleChanged(childActivity, title);
     }
@@ -170,11 +170,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onConfigurationChanged(android.content.res.Configuration newConfig) {
     if (callbackProcs[CB_CONFIGURATION_CHANGED] != null) {
       super.onConfigurationChanged(newConfig);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CONFIGURATION_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), newConfig));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
     } else {
       super.onConfigurationChanged(newConfig);
     }
@@ -183,11 +179,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onContentChanged() {
     if (callbackProcs[CB_CONTENT_CHANGED] != null) {
       super.onContentChanged();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CONTENT_CHANGED], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_CONTENT_CHANGED], "call" );
     } else {
       super.onContentChanged();
     }
@@ -196,12 +188,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onContextItemSelected(android.view.MenuItem item) {
     if (callbackProcs[CB_CONTEXT_ITEM_SELECTED] != null) {
       super.onContextItemSelected(item);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CONTEXT_ITEM_SELECTED], "call" , JavaUtil.convertJavaToRuby(getRuby(), item)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_CONTEXT_ITEM_SELECTED], "call" , item, Boolean.class);
     } else {
       return super.onContextItemSelected(item);
     }
@@ -210,11 +197,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onContextMenuClosed(android.view.Menu menu) {
     if (callbackProcs[CB_CONTEXT_MENU_CLOSED] != null) {
       super.onContextMenuClosed(menu);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CONTEXT_MENU_CLOSED], "call" , JavaUtil.convertJavaToRuby(getRuby(), menu));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_CONTEXT_MENU_CLOSED], "call" , menu);
     } else {
       super.onContextMenuClosed(menu);
     }
@@ -223,11 +206,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onCreateContextMenu(android.view.ContextMenu menu, android.view.View v, android.view.ContextMenu.ContextMenuInfo menuInfo) {
     if (callbackProcs[CB_CREATE_CONTEXT_MENU] != null) {
       super.onCreateContextMenu(menu, v, menuInfo);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_CONTEXT_MENU], "call" , JavaUtil.convertJavaToRuby(getRuby(), menu), JavaUtil.convertJavaToRuby(getRuby(), v), JavaUtil.convertJavaToRuby(getRuby(), menuInfo));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_CREATE_CONTEXT_MENU], "call" , new Object[]{menu, v, menuInfo});
     } else {
       super.onCreateContextMenu(menu, v, menuInfo);
     }
@@ -236,40 +215,16 @@ public class RubotoActivity extends android.app.Activity {
   public java.lang.CharSequence onCreateDescription() {
     if (callbackProcs[CB_CREATE_DESCRIPTION] != null) {
       super.onCreateDescription();
-      try {
-        return (java.lang.CharSequence)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_DESCRIPTION], "call" ).toJava(java.lang.CharSequence.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (java.lang.CharSequence) Script.callMethod(callbackProcs[CB_CREATE_DESCRIPTION], "call" , java.lang.CharSequence.class);
     } else {
       return super.onCreateDescription();
-    }
-  }
-
-  public android.app.Dialog onCreateDialog(int id) {
-    if (callbackProcs[CB_CREATE_DIALOG] != null) {
-      super.onCreateDialog(id);
-      try {
-        return (android.app.Dialog)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_DIALOG], "call" , JavaUtil.convertJavaToRuby(getRuby(), id)).toJava(android.app.Dialog.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
-    } else {
-      return super.onCreateDialog(id);
     }
   }
 
   public boolean onCreateOptionsMenu(android.view.Menu menu) {
     if (callbackProcs[CB_CREATE_OPTIONS_MENU] != null) {
       super.onCreateOptionsMenu(menu);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_OPTIONS_MENU], "call" , JavaUtil.convertJavaToRuby(getRuby(), menu)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_OPTIONS_MENU], "call" , menu, Boolean.class);
     } else {
       return super.onCreateOptionsMenu(menu);
     }
@@ -278,12 +233,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onCreatePanelMenu(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_CREATE_PANEL_MENU] != null) {
       super.onCreatePanelMenu(featureId, menu);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_PANEL_MENU], "call" , JavaUtil.convertJavaToRuby(getRuby(), featureId), JavaUtil.convertJavaToRuby(getRuby(), menu)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_PANEL_MENU], "call" , new Object[]{featureId, menu}, Boolean.class);
     } else {
       return super.onCreatePanelMenu(featureId, menu);
     }
@@ -292,12 +242,7 @@ public class RubotoActivity extends android.app.Activity {
   public android.view.View onCreatePanelView(int featureId) {
     if (callbackProcs[CB_CREATE_PANEL_VIEW] != null) {
       super.onCreatePanelView(featureId);
-      try {
-        return (android.view.View)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_PANEL_VIEW], "call" , JavaUtil.convertJavaToRuby(getRuby(), featureId)).toJava(android.view.View.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (android.view.View) Script.callMethod(callbackProcs[CB_CREATE_PANEL_VIEW], "call" , featureId, android.view.View.class);
     } else {
       return super.onCreatePanelView(featureId);
     }
@@ -306,12 +251,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onCreateThumbnail(android.graphics.Bitmap outBitmap, android.graphics.Canvas canvas) {
     if (callbackProcs[CB_CREATE_THUMBNAIL] != null) {
       super.onCreateThumbnail(outBitmap, canvas);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_THUMBNAIL], "call" , JavaUtil.convertJavaToRuby(getRuby(), outBitmap), JavaUtil.convertJavaToRuby(getRuby(), canvas)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_THUMBNAIL], "call" , new Object[]{outBitmap, canvas}, Boolean.class);
     } else {
       return super.onCreateThumbnail(outBitmap, canvas);
     }
@@ -320,12 +260,7 @@ public class RubotoActivity extends android.app.Activity {
   public android.view.View onCreateView(java.lang.String name, android.content.Context context, android.util.AttributeSet attrs) {
     if (callbackProcs[CB_CREATE_VIEW] != null) {
       super.onCreateView(name, context, attrs);
-      try {
-        return (android.view.View)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_VIEW], "call" , JavaUtil.convertJavaToRuby(getRuby(), name), JavaUtil.convertJavaToRuby(getRuby(), context), JavaUtil.convertJavaToRuby(getRuby(), attrs)).toJava(android.view.View.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (android.view.View) Script.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{name, context, attrs}, android.view.View.class);
     } else {
       return super.onCreateView(name, context, attrs);
     }
@@ -334,11 +269,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onDestroy() {
     if (callbackProcs[CB_DESTROY] != null) {
       super.onDestroy();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_DESTROY], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_DESTROY], "call" );
     } else {
       super.onDestroy();
     }
@@ -347,12 +278,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_DOWN] != null) {
       super.onKeyDown(keyCode, event);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_KEY_DOWN], "call" , JavaUtil.convertJavaToRuby(getRuby(), keyCode), JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_DOWN], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyDown(keyCode, event);
     }
@@ -361,12 +287,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onKeyMultiple(int keyCode, int repeatCount, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_MULTIPLE] != null) {
       super.onKeyMultiple(keyCode, repeatCount, event);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_KEY_MULTIPLE], "call" , JavaUtil.convertJavaToRuby(getRuby(), keyCode), JavaUtil.convertJavaToRuby(getRuby(), repeatCount), JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_MULTIPLE], "call" , new Object[]{keyCode, repeatCount, event}, Boolean.class);
     } else {
       return super.onKeyMultiple(keyCode, repeatCount, event);
     }
@@ -375,12 +296,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_UP] != null) {
       super.onKeyUp(keyCode, event);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_KEY_UP], "call" , JavaUtil.convertJavaToRuby(getRuby(), keyCode), JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_UP], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyUp(keyCode, event);
     }
@@ -389,11 +305,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onLowMemory() {
     if (callbackProcs[CB_LOW_MEMORY] != null) {
       super.onLowMemory();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_LOW_MEMORY], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
     } else {
       super.onLowMemory();
     }
@@ -402,12 +314,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onMenuItemSelected(int featureId, android.view.MenuItem item) {
     if (callbackProcs[CB_MENU_ITEM_SELECTED] != null) {
       super.onMenuItemSelected(featureId, item);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_MENU_ITEM_SELECTED], "call" , JavaUtil.convertJavaToRuby(getRuby(), featureId), JavaUtil.convertJavaToRuby(getRuby(), item)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_MENU_ITEM_SELECTED], "call" , new Object[]{featureId, item}, Boolean.class);
     } else {
       return super.onMenuItemSelected(featureId, item);
     }
@@ -416,12 +323,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onMenuOpened(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_MENU_OPENED] != null) {
       super.onMenuOpened(featureId, menu);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_MENU_OPENED], "call" , JavaUtil.convertJavaToRuby(getRuby(), featureId), JavaUtil.convertJavaToRuby(getRuby(), menu)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_MENU_OPENED], "call" , new Object[]{featureId, menu}, Boolean.class);
     } else {
       return super.onMenuOpened(featureId, menu);
     }
@@ -430,11 +332,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onNewIntent(android.content.Intent intent) {
     if (callbackProcs[CB_NEW_INTENT] != null) {
       super.onNewIntent(intent);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_NEW_INTENT], "call" , JavaUtil.convertJavaToRuby(getRuby(), intent));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_NEW_INTENT], "call" , intent);
     } else {
       super.onNewIntent(intent);
     }
@@ -443,12 +341,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onOptionsItemSelected(android.view.MenuItem item) {
     if (callbackProcs[CB_OPTIONS_ITEM_SELECTED] != null) {
       super.onOptionsItemSelected(item);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_OPTIONS_ITEM_SELECTED], "call" , JavaUtil.convertJavaToRuby(getRuby(), item)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_OPTIONS_ITEM_SELECTED], "call" , item, Boolean.class);
     } else {
       return super.onOptionsItemSelected(item);
     }
@@ -457,11 +350,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onOptionsMenuClosed(android.view.Menu menu) {
     if (callbackProcs[CB_OPTIONS_MENU_CLOSED] != null) {
       super.onOptionsMenuClosed(menu);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_OPTIONS_MENU_CLOSED], "call" , JavaUtil.convertJavaToRuby(getRuby(), menu));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_OPTIONS_MENU_CLOSED], "call" , menu);
     } else {
       super.onOptionsMenuClosed(menu);
     }
@@ -470,11 +359,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onPanelClosed(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_PANEL_CLOSED] != null) {
       super.onPanelClosed(featureId, menu);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_PANEL_CLOSED], "call" , JavaUtil.convertJavaToRuby(getRuby(), featureId), JavaUtil.convertJavaToRuby(getRuby(), menu));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_PANEL_CLOSED], "call" , new Object[]{featureId, menu});
     } else {
       super.onPanelClosed(featureId, menu);
     }
@@ -483,11 +368,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onPause() {
     if (callbackProcs[CB_PAUSE] != null) {
       super.onPause();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_PAUSE], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_PAUSE], "call" );
     } else {
       super.onPause();
     }
@@ -496,11 +377,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onPostCreate(android.os.Bundle savedInstanceState) {
     if (callbackProcs[CB_POST_CREATE] != null) {
       super.onPostCreate(savedInstanceState);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_POST_CREATE], "call" , JavaUtil.convertJavaToRuby(getRuby(), savedInstanceState));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_POST_CREATE], "call" , savedInstanceState);
     } else {
       super.onPostCreate(savedInstanceState);
     }
@@ -509,38 +386,16 @@ public class RubotoActivity extends android.app.Activity {
   public void onPostResume() {
     if (callbackProcs[CB_POST_RESUME] != null) {
       super.onPostResume();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_POST_RESUME], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_POST_RESUME], "call" );
     } else {
       super.onPostResume();
-    }
-  }
-
-  public void onPrepareDialog(int id, android.app.Dialog dialog) {
-    if (callbackProcs[CB_PREPARE_DIALOG] != null) {
-      super.onPrepareDialog(id, dialog);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_PREPARE_DIALOG], "call" , JavaUtil.convertJavaToRuby(getRuby(), id), JavaUtil.convertJavaToRuby(getRuby(), dialog));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    } else {
-      super.onPrepareDialog(id, dialog);
     }
   }
 
   public boolean onPrepareOptionsMenu(android.view.Menu menu) {
     if (callbackProcs[CB_PREPARE_OPTIONS_MENU] != null) {
       super.onPrepareOptionsMenu(menu);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_PREPARE_OPTIONS_MENU], "call" , JavaUtil.convertJavaToRuby(getRuby(), menu)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_PREPARE_OPTIONS_MENU], "call" , menu, Boolean.class);
     } else {
       return super.onPrepareOptionsMenu(menu);
     }
@@ -549,12 +404,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onPreparePanel(int featureId, android.view.View view, android.view.Menu menu) {
     if (callbackProcs[CB_PREPARE_PANEL] != null) {
       super.onPreparePanel(featureId, view, menu);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_PREPARE_PANEL], "call" , JavaUtil.convertJavaToRuby(getRuby(), featureId), JavaUtil.convertJavaToRuby(getRuby(), view), JavaUtil.convertJavaToRuby(getRuby(), menu)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_PREPARE_PANEL], "call" , new Object[]{featureId, view, menu}, Boolean.class);
     } else {
       return super.onPreparePanel(featureId, view, menu);
     }
@@ -563,11 +413,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onRestart() {
     if (callbackProcs[CB_RESTART] != null) {
       super.onRestart();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_RESTART], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_RESTART], "call" );
     } else {
       super.onRestart();
     }
@@ -576,11 +422,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onRestoreInstanceState(android.os.Bundle savedInstanceState) {
     if (callbackProcs[CB_RESTORE_INSTANCE_STATE] != null) {
       super.onRestoreInstanceState(savedInstanceState);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_RESTORE_INSTANCE_STATE], "call" , JavaUtil.convertJavaToRuby(getRuby(), savedInstanceState));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_RESTORE_INSTANCE_STATE], "call" , savedInstanceState);
     } else {
       super.onRestoreInstanceState(savedInstanceState);
     }
@@ -589,11 +431,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onResume() {
     if (callbackProcs[CB_RESUME] != null) {
       super.onResume();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_RESUME], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_RESUME], "call" );
     } else {
       super.onResume();
     }
@@ -602,12 +440,7 @@ public class RubotoActivity extends android.app.Activity {
   public java.lang.Object onRetainNonConfigurationInstance() {
     if (callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE] != null) {
       super.onRetainNonConfigurationInstance();
-      try {
-        return (java.lang.Object)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE], "call" ).toJava(java.lang.Object.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (java.lang.Object) Script.callMethod(callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE], "call" , java.lang.Object.class);
     } else {
       return super.onRetainNonConfigurationInstance();
     }
@@ -616,11 +449,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onSaveInstanceState(android.os.Bundle outState) {
     if (callbackProcs[CB_SAVE_INSTANCE_STATE] != null) {
       super.onSaveInstanceState(outState);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_SAVE_INSTANCE_STATE], "call" , JavaUtil.convertJavaToRuby(getRuby(), outState));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_SAVE_INSTANCE_STATE], "call" , outState);
     } else {
       super.onSaveInstanceState(outState);
     }
@@ -629,12 +458,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onSearchRequested() {
     if (callbackProcs[CB_SEARCH_REQUESTED] != null) {
       super.onSearchRequested();
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_SEARCH_REQUESTED], "call" ).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_SEARCH_REQUESTED], "call" , Boolean.class);
     } else {
       return super.onSearchRequested();
     }
@@ -643,11 +467,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onStart() {
     if (callbackProcs[CB_START] != null) {
       super.onStart();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_START], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_START], "call" );
     } else {
       super.onStart();
     }
@@ -656,11 +476,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onStop() {
     if (callbackProcs[CB_STOP] != null) {
       super.onStop();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_STOP], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_STOP], "call" );
     } else {
       super.onStop();
     }
@@ -669,11 +485,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onTitleChanged(java.lang.CharSequence title, int color) {
     if (callbackProcs[CB_TITLE_CHANGED] != null) {
       super.onTitleChanged(title, color);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_TITLE_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), title), JavaUtil.convertJavaToRuby(getRuby(), color));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_TITLE_CHANGED], "call" , new Object[]{title, color});
     } else {
       super.onTitleChanged(title, color);
     }
@@ -682,12 +494,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onTouchEvent(android.view.MotionEvent event) {
     if (callbackProcs[CB_TOUCH_EVENT] != null) {
       super.onTouchEvent(event);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_TOUCH_EVENT], "call" , JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_TOUCH_EVENT], "call" , event, Boolean.class);
     } else {
       return super.onTouchEvent(event);
     }
@@ -696,12 +503,7 @@ public class RubotoActivity extends android.app.Activity {
   public boolean onTrackballEvent(android.view.MotionEvent event) {
     if (callbackProcs[CB_TRACKBALL_EVENT] != null) {
       super.onTrackballEvent(event);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_TRACKBALL_EVENT], "call" , JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_TRACKBALL_EVENT], "call" , event, Boolean.class);
     } else {
       return super.onTrackballEvent(event);
     }
@@ -710,11 +512,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onWindowAttributesChanged(android.view.WindowManager.LayoutParams params) {
     if (callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED] != null) {
       super.onWindowAttributesChanged(params);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), params));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED], "call" , params);
     } else {
       super.onWindowAttributesChanged(params);
     }
@@ -723,11 +521,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onWindowFocusChanged(boolean hasFocus) {
     if (callbackProcs[CB_WINDOW_FOCUS_CHANGED] != null) {
       super.onWindowFocusChanged(hasFocus);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_WINDOW_FOCUS_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), hasFocus));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_WINDOW_FOCUS_CHANGED], "call" , hasFocus);
     } else {
       super.onWindowFocusChanged(hasFocus);
     }
@@ -736,11 +530,7 @@ public class RubotoActivity extends android.app.Activity {
   public void onUserInteraction() {
     if (callbackProcs[CB_USER_INTERACTION] != null) {
       super.onUserInteraction();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_USER_INTERACTION], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_USER_INTERACTION], "call" );
     } else {
       super.onUserInteraction();
     }
@@ -749,83 +539,10 @@ public class RubotoActivity extends android.app.Activity {
   public void onUserLeaveHint() {
     if (callbackProcs[CB_USER_LEAVE_HINT] != null) {
       super.onUserLeaveHint();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_USER_LEAVE_HINT], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_USER_LEAVE_HINT], "call" );
     } else {
       super.onUserLeaveHint();
     }
   }
 
-  public void onAttachedToWindow() {
-    if (callbackProcs[CB_ATTACHED_TO_WINDOW] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_ATTACHED_TO_WINDOW], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onDetachedFromWindow() {
-    if (callbackProcs[CB_DETACHED_FROM_WINDOW] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_DETACHED_FROM_WINDOW], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
-    if (callbackProcs[CB_KEY_LONG_PRESS] != null) {
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_KEY_LONG_PRESS], "call" , JavaUtil.convertJavaToRuby(getRuby(), keyCode), JavaUtil.convertJavaToRuby(getRuby(), event)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  public android.app.Dialog onCreateDialog(int id, android.os.Bundle args) {
-    if (callbackProcs[CB_CREATE_DIALOG] != null) {
-      try {
-        return (android.app.Dialog)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CREATE_DIALOG], "call" , JavaUtil.convertJavaToRuby(getRuby(), id), JavaUtil.convertJavaToRuby(getRuby(), args)).toJava(android.app.Dialog.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
-    } else {
-      return null;
-    }
-  }
-
-  public void onPrepareDialog(int id, android.app.Dialog dialog, android.os.Bundle args) {
-    if (callbackProcs[CB_PREPARE_DIALOG] != null) {
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_PREPARE_DIALOG], "call" , JavaUtil.convertJavaToRuby(getRuby(), id), JavaUtil.convertJavaToRuby(getRuby(), dialog), JavaUtil.convertJavaToRuby(getRuby(), args));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    }
-  }
-
-  public void onApplyThemeResource(android.content.res.Resources.Theme theme, int resid, boolean first) {
-    if (callbackProcs[CB_APPLY_THEME_RESOURCE] != null) {
-      super.onApplyThemeResource(theme, resid, first);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_APPLY_THEME_RESOURCE], "call" , JavaUtil.convertJavaToRuby(getRuby(), theme), JavaUtil.convertJavaToRuby(getRuby(), resid), JavaUtil.convertJavaToRuby(getRuby(), first));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
-    } else {
-      super.onApplyThemeResource(theme, resid, first);
-    }
-  }
-}	
-
+}

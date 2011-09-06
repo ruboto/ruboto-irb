@@ -1,16 +1,10 @@
 package org.ruboto;
 
-import org.jruby.Ruby;
-import org.jruby.javasupport.util.RuntimeHelpers;
-import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.javasupport.JavaUtil;
-import org.jruby.exceptions.RaiseException;
 import org.ruboto.Script;
 import java.io.IOException;
 import android.app.ProgressDialog;
 
 public abstract class RubotoService extends android.app.Service {
-  private Ruby __ruby__;
   private String scriptName;
   private String remoteVariable = "";
   public Object[] args;
@@ -23,20 +17,10 @@ public abstract class RubotoService extends android.app.Service {
   public static final int CB_START = 5;
   public static final int CB_UNBIND = 6;
   public static final int CB_START_COMMAND = 7;
-  private IRubyObject[] callbackProcs = new IRubyObject[8];
 
-  private Ruby getRuby() {
-    if (__ruby__ == null) __ruby__ = Script.getRuby();
+  private Object[] callbackProcs = new Object[8];
 
-    if (__ruby__ == null) {
-      Script.setUpJRuby(null);
-      __ruby__ = Script.getRuby();
-    }
-
-    return __ruby__;
-  }
-
-  public void setCallbackProc(int id, IRubyObject obj) {
+  public void setCallbackProc(int id, Object obj) {
     callbackProcs[id] = obj;
   }
 	
@@ -60,14 +44,15 @@ public abstract class RubotoService extends android.app.Service {
 
     super.onCreate();
 
-    getRuby();
-
-    Script.defineGlobalVariable("$service", this);
-
-    try {
-      new Script(scriptName).execute();
-    } catch(IOException e) {
-      e.printStackTrace();
+    if (Script.setUpJRuby(this)) {
+        Script.defineGlobalVariable("$service", this);
+        try {
+            new Script(scriptName).execute();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    } else {
+      // FIXME(uwe):  What to do if the Ruboto Core plarform cannot be found?
     }
   }
 
@@ -78,12 +63,7 @@ public abstract class RubotoService extends android.app.Service {
 
   public android.os.IBinder onBind(android.content.Intent intent) {
     if (callbackProcs[CB_BIND] != null) {
-      try {
-        return (android.os.IBinder)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_BIND], "call" , JavaUtil.convertJavaToRuby(getRuby(), intent)).toJava(android.os.IBinder.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return null;
-      }
+      return (android.os.IBinder) Script.callMethod(callbackProcs[CB_BIND], "call" , intent, android.os.IBinder.class);
     } else {
       return null;
     }
@@ -92,11 +72,7 @@ public abstract class RubotoService extends android.app.Service {
   public void onConfigurationChanged(android.content.res.Configuration newConfig) {
     if (callbackProcs[CB_CONFIGURATION_CHANGED] != null) {
       super.onConfigurationChanged(newConfig);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_CONFIGURATION_CHANGED], "call" , JavaUtil.convertJavaToRuby(getRuby(), newConfig));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
     } else {
       super.onConfigurationChanged(newConfig);
     }
@@ -105,11 +81,7 @@ public abstract class RubotoService extends android.app.Service {
   public void onDestroy() {
     if (callbackProcs[CB_DESTROY] != null) {
       super.onDestroy();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_DESTROY], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_DESTROY], "call" );
     } else {
       super.onDestroy();
     }
@@ -118,11 +90,7 @@ public abstract class RubotoService extends android.app.Service {
   public void onLowMemory() {
     if (callbackProcs[CB_LOW_MEMORY] != null) {
       super.onLowMemory();
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_LOW_MEMORY], "call" );
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
     } else {
       super.onLowMemory();
     }
@@ -131,11 +99,7 @@ public abstract class RubotoService extends android.app.Service {
   public void onRebind(android.content.Intent intent) {
     if (callbackProcs[CB_REBIND] != null) {
       super.onRebind(intent);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_REBIND], "call" , JavaUtil.convertJavaToRuby(getRuby(), intent));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_REBIND], "call" , intent);
     } else {
       super.onRebind(intent);
     }
@@ -144,11 +108,7 @@ public abstract class RubotoService extends android.app.Service {
   public void onStart(android.content.Intent intent, int startId) {
     if (callbackProcs[CB_START] != null) {
       super.onStart(intent, startId);
-      try {
-        RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_START], "call" , JavaUtil.convertJavaToRuby(getRuby(), intent), JavaUtil.convertJavaToRuby(getRuby(), startId));
-      } catch (RaiseException re) {
-        re.printStackTrace();
-      }
+      Script.callMethod(callbackProcs[CB_START], "call" , new Object[]{intent, startId});
     } else {
       super.onStart(intent, startId);
     }
@@ -157,12 +117,7 @@ public abstract class RubotoService extends android.app.Service {
   public boolean onUnbind(android.content.Intent intent) {
     if (callbackProcs[CB_UNBIND] != null) {
       super.onUnbind(intent);
-      try {
-        return (Boolean)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_UNBIND], "call" , JavaUtil.convertJavaToRuby(getRuby(), intent)).toJava(boolean.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return false;
-      }
+      return (Boolean) Script.callMethod(callbackProcs[CB_UNBIND], "call" , intent, Boolean.class);
     } else {
       return super.onUnbind(intent);
     }
@@ -170,16 +125,12 @@ public abstract class RubotoService extends android.app.Service {
 
   public int onStartCommand(android.content.Intent intent, int flags, int startId) {
     if (callbackProcs[CB_START_COMMAND] != null) {
-      try {
-        return (Integer)RuntimeHelpers.invoke(getRuby().getCurrentContext(), callbackProcs[CB_START_COMMAND], "call" , JavaUtil.convertJavaToRuby(getRuby(), intent), JavaUtil.convertJavaToRuby(getRuby(), flags), JavaUtil.convertJavaToRuby(getRuby(), startId)).toJava(int.class);
-      } catch (RaiseException re) {
-        re.printStackTrace();
-        return 0;
-      }
+      return (Integer) Script.callMethod(callbackProcs[CB_START_COMMAND], "call" , new Object[]{intent, flags, startId}, Integer.class);
     } else {
       return 0;
     }
   }
-}	
+
+}
 
 
