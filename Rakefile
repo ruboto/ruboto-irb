@@ -1,52 +1,6 @@
-raise "Needs JRuby 1.5" unless RUBY_PLATFORM =~ /java/
-require 'ant'
 require 'rake/clean'
-require 'rexml/document'
-
-generated_libs     = 'generated_libs'
-stdlib             = 'libs/jruby-stdlib.jar'
-jruby_jar          = 'libs/jruby.jar'
-stdlib_precompiled = File.join(generated_libs, 'jruby-stdlib-precompiled.jar')
-jruby_ruboto_jar   = File.join(generated_libs, 'jruby-ruboto.jar')
-ant.property :name=>'external.libs.dir', :value => generated_libs
-dirs = ['tmp/ruby', 'tmp/precompiled', generated_libs]
-dirs.each { |d| directory d }
 
 CLEAN.include('tmp', 'bin', generated_libs)
-
-ant_import
-
-file stdlib_precompiled => :compile_stdlib
-file jruby_ruboto_jar => generated_libs do
-  ant.zip(:destfile=>jruby_ruboto_jar) do
-    zipfileset(:src=>jruby_jar) do
-      exclude(:name=>'jni/**')
-      exclude(:name=>'org/jruby/ant/**')
-      exclude(:name=>'org/jruby/compiler/ir/**')
-      exclude(:name=>'org/jruby/demo/**')
-      exclude(:name=>'org/jruby/embed/bsf/**')
-      exclude(:name=>'org/jruby/embed/jsr223/**')
-      exclude(:name=>'org/jruby/ext/ffi/**')
-      exclude(:name=>'org/jruby/javasupport/bsf/**')
-    end
-  end
-end
-
-desc "precompile ruby stdlib"
-task :compile_stdlib => [:clean, *dirs] do
-  ant.unzip(:src=>stdlib, :dest=>'tmp/ruby')
-  Dir.chdir('tmp/ruby') { sh "jrubyc . -t ../precompiled" }
-  ant.zip(:destfile=>stdlib_precompiled, :basedir=>'tmp/precompiled')
-end
-
-task :generate_libs => [generated_libs, jruby_ruboto_jar] do
-  cp stdlib, generated_libs
-end
-
-task :debug   => :generate_libs
-task :release => :generate_libs
-
-task :default => :debug
 
 task :tag => :release do
   unless `git branch` =~ /^\* master$/
@@ -56,7 +10,138 @@ task :tag => :release do
   sh "git commit --allow-empty -a -m 'Release #{version}'"
   sh "git tag #{version}"
   sh "git push origin master --tags"
-  #sh "gem push pkg/#{name}-#{version}.gem"
+end
+
+
+# These are callbacks that have been remove in case we need them again
+task :removed_callbacks do
+  [
+    %w(android.opengl.GLSurfaceView.EGLConfigChooser),
+    %w(android.opengl.GLSurfaceView.GLWrapper),
+
+    %w(android.media.AudioManager.OnAudioFocusChangeListener), #
+    %w(android.media.MediaPlayer.OnBufferingUpdateListener MediaPlayerOnBufferingUpdateListener),
+    %w(android.media.MediaPlayer.OnCompletionListener MediaPlayerOnCompletionListener),
+    %w(android.media.MediaPlayer.OnErrorListener MediaPlayerOnErrorListener),
+    %w(android.media.MediaPlayer.OnInfoListener MediaPlayerOnInfoListener),
+    %w(android.media.MediaPlayer.OnPreparedListener MediaPlayerOnPreparedListener),
+    %w(android.media.MediaPlayer.OnSeekCompleteListener MediaPlayerOnSeekCompleteListener),
+    %w(android.media.MediaPlayer.OnVideoSizeChangedListener MediaPlayerOnVideoSizeChangedListener),
+    %w(android.media.MediaRecorder.OnErrorListener MediaRecorderOnErrorListener),
+    %w(android.media.MediaRecorder.OnInfoListener MediaRecorderOnInfoListener),
+    %w(android.media.MediaScannerConnection.OnScanCompletedListener), #
+    %w(android.media.SoundPool.OnLoadCompleteListener SoundPoolOnLoadCompleteListener), #
+
+    %w(android.content.DialogInterface.OnCancelListener DialogOnCancelListener),
+    %w(android.content.DialogInterface.OnClickListener DialogOnClickListener),
+    %w(android.content.DialogInterface.OnDismissListener DialogOnDismissListener),
+    %w(android.content.DialogInterface.OnKeyListener DialogOnKeyListener),
+    %w(android.content.DialogInterface.OnMultiChoiceClickListener DialogOnMultiChoiceClickListener),
+    %w(android.content.DialogInterface.OnShowListener DialogOnShowListener), #
+    %w(android.content.IntentSender.OnFinished IntentSenderOnFinished), #
+    %w(android.content.SharedPreferences.OnSharedPreferenceChangeListener),
+    %w(android.content.SyncStatusObserver), #
+
+    %w(android.location.GpsStatus.Listener GpsStatusListener),
+    %w(android.location.GpsStatus.NmeaListener), #
+
+    %w(android.preference.Preference.OnPreferenceChangeListener),
+    %w(android.preference.Preference.OnPreferenceClickListener),
+
+    %w(android.view.View.OnTouchListener),
+    %w(android.view.View.OnLongClickListener),
+    %w(android.view.View.OnFocusChangeListener),
+    %w(android.view.View.OnKeyListener),
+
+    %w(android.speech.tts.TextToSpeech.OnInitListener TextToSpeechOnInitListener), #
+    %w(android.speech.tts.TextToSpeech.OnUtteranceCompletedListener TextToSpeechOnUtteranceCompletedListener), #
+
+    %w(android.gesture.GestureOverlayView.OnGesturePerformedListener), #
+
+    %w(android.app.KeyguardManager.OnKeyguardExitResult),
+    %w(android.app.PendingIntent.OnFinished PendingIntentOnFinished),
+    %w(android.app.SearchManager.OnCancelListener SearchOnCancelListener),
+    %w(android.app.SearchManager.OnDismissListener SearchOnDismissListener),
+    %w(android.app.DatePickerDialog.OnDateSetListener),
+    %w(android.app.TimePickerDialog.OnTimeSetListener),
+
+    %w(android.database.sqlite.SQLiteDatabase.CursorFactory SQLiteCursorFactory),
+
+    %w(java.lang.Runnable),
+    %w(android.os.Handler.Callback Handler),
+
+    %w(android.widget.AdapterView.OnItemLongClickListener),
+    %w(android.widget.TabHost.TabContentFactory),
+    %w(android.widget.TabHost.OnTabChangeListener),
+    %w(android.widget.TextView.OnEditorActionListener),
+    %w(android.widget.DatePicker.OnDateChangedListener),
+    %w(android.widget.TimePicker.OnTimeChangedListener),
+  ].each do |c, n|
+    # Do something
+  end
+end
+
+# Generate callbacks
+# Make sure to set package to org.ruboto.callbacks
+# TODO: add --package option to gen interface and gen subclass
+task :callbacks do
+  [
+    %w(android.opengl.GLSurfaceView.EGLContextFactory), #
+    %w(android.opengl.GLSurfaceView.EGLWindowSurfaceFactory), #
+    %w(android.opengl.GLSurfaceView.Renderer GLSurfaceViewRenderer),
+    %w(android.view.SurfaceHolder.Callback SurfaceHolderCallback),
+
+
+    %w(android.media.AudioRecord.OnRecordPositionUpdateListener),
+    %w(android.media.AudioTrack.OnPlaybackPositionUpdateListener),
+    %w(android.media.JetPlayer.OnJetEventListener),
+    %w(android.media.MediaScannerConnection.MediaScannerConnectionClient), #
+
+    %w(android.location.LocationListener),
+
+    %w(android.view.GestureDetector.OnDoubleTapListener),
+    %w(android.view.GestureDetector.OnGestureListener),
+    %w(android.view.ScaleGestureDetector.OnScaleGestureListener), #
+    %w(android.view.ViewGroup.OnHierarchyChangeListener),
+
+    %w(android.speech.RecognitionListener), #
+
+    %w(android.gesture.GestureOverlayView.OnGestureListener), #
+    %w(android.gesture.GestureOverlayView.OnGesturingListener), #
+
+    %w(android.database.sqlite.SQLiteTransactionListener), #5
+
+    %w(android.widget.AdapterView.OnItemSelectedListener),
+
+    %w(android.hardware.SensorEventListener),
+  ].each do |c, n|
+    puts `ruboto gen interface #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --force include`
+  end
+
+  [
+    %w(android.telephony.PhoneStateListener),
+    %w(android.database.sqlite.SQLiteOpenHelper),
+    %w(android.view.GestureDetector.SimpleOnGestureListener),
+    %w(android.view.ScaleGestureDetector.SimpleOnScaleGestureListener),
+  ].each do |c, n|
+    puts `ruboto gen subclass #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base on --force include`
+  end
+
+  [
+    %w(android.content.ContentProvider),
+  ].each do |c, n|
+    puts `ruboto gen subclass #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base abstract --force include`
+  end
+end
+
+# Generate callback subclasses for widgets
+# Make sure to set package to org.ruboto.widget
+# TODO: add --package option to gen subclass
+task :widgets do
+  ruboto_dir = "../ruboto-core/bin/"
+  %w(EditText TextView Button ListView ScrollView SeekBar).each do |c, n|
+    puts `ruboto gen subclass android.widget.#{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base on --force include`
+  end
 end
 
 def manifest
