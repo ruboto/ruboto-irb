@@ -1,5 +1,7 @@
 package org.ruboto.irb;
 
+import java.io.FileReader;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -88,7 +90,17 @@ public class IRBScript extends Script {
 
     public String getContents() throws IOException {
         if (this.contents == null) {
-            this.contents = super.getContents();
+            BufferedReader buffer = new BufferedReader(new FileReader(getFile()), 8192);
+            StringBuilder source = new StringBuilder();
+            while (true) {
+                String line = buffer.readLine();
+			    if (line == null) {
+				    break;
+			    }
+                source.append(line).append("\n");
+            }
+            buffer.close();
+            this.contents = source.toString();
         }
         return this.contents;
     }
@@ -104,9 +116,9 @@ public class IRBScript extends Script {
         buffer.close();
     }
 
-//    public String execute() throws IOException {
-//        return Script.execute(getContents());
-//    }
+    public String execute() throws IOException {
+        return Script.execute(getContents());
+    }
 
     public boolean delete() {
         return getFile().delete();
