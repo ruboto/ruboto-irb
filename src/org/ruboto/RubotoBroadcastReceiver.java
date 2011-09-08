@@ -5,11 +5,10 @@ import java.io.IOException;
 public abstract class RubotoBroadcastReceiver extends android.content.BroadcastReceiver {
     private String scriptName;
     private String remoteVariable = "";
-    public Object[] args;
 
+  public static final int CB_RECEIVE = 0;
 
-
-    private Object[] callbackProcs = new Object[0];
+    private Object[] callbackProcs = new Object[1];
 
     public void setCallbackProc(int id, Object obj) {
         callbackProcs[id] = obj;
@@ -24,28 +23,19 @@ public abstract class RubotoBroadcastReceiver extends android.content.BroadcastR
         scriptName = name;
     }
 
-    /****************************************************************************************
-     * 
-     *  Activity Lifecycle: onCreate
-     */
-	
-    @Override
-    public void onReceive(android.content.Context context, android.content.Intent intent) {
-        args = new Object[2];
-        args[0] = context;
-        args[1] = intent;
+    public RubotoBroadcastReceiver(String scriptName) {
+        setScriptName(scriptName);
+        if (Script.isInitialized()) {
+            loadScript();
+        }
+    }
 
-        if (Script.setUpJRuby(context)) {
-            Script.defineGlobalVariable("$broadcast_receiver", this);
-            Script.defineGlobalVariable("$broadcast_context", context);
-            Script.defineGlobalVariable("$broadcast_intent", intent);
-            try {
-                new Script(scriptName).execute();
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-        	// FIXME(uwe): What to do if the Ruboto Core platform is missing?
+    protected void loadScript() {
+        Script.put("$broadcast_receiver", this);
+        try {
+            new Script(scriptName).execute();
+        } catch(IOException e) {
+            throw new RuntimeException("IOException loading broadcast receiver script", e);
         }
     }
 
@@ -54,7 +44,11 @@ public abstract class RubotoBroadcastReceiver extends android.content.BroadcastR
      *  Generated Methods
      */
 
-
+  public void onReceive(android.content.Context context, android.content.Intent intent) {
+    if (callbackProcs[CB_RECEIVE] != null) {
+      Script.callMethod(callbackProcs[CB_RECEIVE], "call" , new Object[]{context, intent});
+    }
+  }
 
 }	
 
