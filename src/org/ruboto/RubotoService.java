@@ -14,11 +14,10 @@ public abstract class RubotoService extends android.app.Service {
   public static final int CB_DESTROY = 2;
   public static final int CB_LOW_MEMORY = 3;
   public static final int CB_REBIND = 4;
-  public static final int CB_START = 5;
-  public static final int CB_UNBIND = 6;
-  public static final int CB_START_COMMAND = 7;
+  public static final int CB_UNBIND = 5;
+  public static final int CB_START_COMMAND = 6;
 
-  private Object[] callbackProcs = new Object[8];
+  private Object[] callbackProcs = new Object[7];
 
   public void setCallbackProc(int id, Object obj) {
     callbackProcs[id] = obj;
@@ -105,15 +104,6 @@ public abstract class RubotoService extends android.app.Service {
     }
   }
 
-  public void onStart(android.content.Intent intent, int startId) {
-    if (callbackProcs[CB_START] != null) {
-      super.onStart(intent, startId);
-      Script.callMethod(callbackProcs[CB_START], "call" , new Object[]{intent, startId});
-    } else {
-      super.onStart(intent, startId);
-    }
-  }
-
   public boolean onUnbind(android.content.Intent intent) {
     if (callbackProcs[CB_UNBIND] != null) {
       super.onUnbind(intent);
@@ -125,9 +115,10 @@ public abstract class RubotoService extends android.app.Service {
 
   public int onStartCommand(android.content.Intent intent, int flags, int startId) {
     if (callbackProcs[CB_START_COMMAND] != null) {
+      super.onStartCommand(intent, flags, startId);
       return (Integer) Script.callMethod(callbackProcs[CB_START_COMMAND], "call" , new Object[]{intent, flags, startId}, Integer.class);
     } else {
-      return 0;
+      return super.onStartCommand(intent, flags, startId);
     }
   }
 
