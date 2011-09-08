@@ -65,7 +65,7 @@ public class Script {
         }
     };
 
-	public static boolean isInitialized() {
+	public static synchronized boolean isInitialized() {
 		return initialized;
 	}
 
@@ -74,7 +74,7 @@ public class Script {
     }
 
     public static synchronized boolean setUpJRuby(Context appContext, PrintStream out) {
-        if (ruby == null) {
+        if (!initialized) {
             Log.d(TAG, "Setting up JRuby runtime");
             System.setProperty("jruby.bytecode.version", "1.5");
             System.setProperty("jruby.interfaces.useProxy", "true");
@@ -152,40 +152,30 @@ public class Script {
                     Log.i(TAG, "Added extra scripts path: " + extraScriptsDir);
                 }
                 initialized = true;
-                return true;
             } catch (ClassNotFoundException e) {
-                // FIXME(uwe): ScriptingContainer not found in the platform APK...
-                e.printStackTrace();
+                handleInitException(e);
             } catch (IllegalArgumentException e) {
-                Log.e(TAG, "IllegalArgumentException starting JRuby: " + e.getMessage());
-                e.printStackTrace();
+                handleInitException(e);
             } catch (SecurityException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                handleInitException(e);
             } catch (InstantiationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                handleInitException(e);
             } catch (IllegalAccessException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                handleInitException(e);
             } catch (InvocationTargetException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                handleInitException(e);
             } catch (NoSuchMethodException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            return false;
-        } else {
-            while (!initialized) {
-                Log.i(TAG, "Waiting for JRuby runtime to initialize.");
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException iex) {
-                }
+                handleInitException(e);
             }
         }
-        return true;
+        return initialized;
+    }
+
+    private static void handleInitException(Exception e) {
+        Log.e(TAG, "Exception starting JRuby");
+        Log.e(TAG, e.getMessage());
+        e.printStackTrace();
+        ruby = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -435,7 +425,7 @@ public class Script {
     }
 
     public String getContents() throws IOException {
-        BufferedReader buffer = new BufferedReader(new FileReader(getFile()), 8192);
+        BufferedReader buffer = new BufferedReader(new java.io.InputStreamReader(getClass().getClassLoader().getResourceAsStream(name)), 8192);
         StringBuilder source = new StringBuilder();
         while (true) {
             String line = buffer.readLine();
@@ -462,8 +452,8 @@ public class Script {
     }
 
     public String execute() throws IOException {
-    	Script.setScriptFilename(name);
-        return Script.execute("load '" + name + "'");
+    	Script.setScriptFilename(getClass().getClassLoader().getResource(name).getPath());
+        return Script.execute(getContents());
     }
 
 	public static void callMethod(Object receiver, String methodName, Object[] args) {
@@ -476,7 +466,7 @@ public class Script {
         } catch (IllegalAccessException iae) {
             throw new RuntimeException(iae);
         } catch (java.lang.reflect.InvocationTargetException ite) {
-            throw new RuntimeException(ite);
+            throw (RuntimeException)(ite.getCause());
         }
     }
 
