@@ -63,8 +63,12 @@ public class RubotoActivity extends android.app.Activity {
   public static final int CB_WINDOW_FOCUS_CHANGED = 41;
   public static final int CB_USER_INTERACTION = 42;
   public static final int CB_USER_LEAVE_HINT = 43;
+  public static final int CB_ATTACHED_TO_WINDOW = 44;
+  public static final int CB_BACK_PRESSED = 45;
+  public static final int CB_DETACHED_FROM_WINDOW = 46;
+  public static final int CB_KEY_LONG_PRESS = 47;
 
-    private Object[] callbackProcs = new Object[44];
+    private Object[] callbackProcs = new Object[48];
 
     public void setCallbackProc(int id, Object obj) {
         callbackProcs[id] = obj;
@@ -542,6 +546,42 @@ public class RubotoActivity extends android.app.Activity {
       Script.callMethod(callbackProcs[CB_USER_LEAVE_HINT], "call" );
     } else {
       super.onUserLeaveHint();
+    }
+  }
+
+  public void onAttachedToWindow() {
+    if (callbackProcs[CB_ATTACHED_TO_WINDOW] != null) {
+      super.onAttachedToWindow();
+      Script.callMethod(callbackProcs[CB_ATTACHED_TO_WINDOW], "call" );
+    } else {
+      super.onAttachedToWindow();
+    }
+  }
+
+  public void onBackPressed() {
+    if (callbackProcs[CB_BACK_PRESSED] != null) {
+      super.onBackPressed();
+      Script.callMethod(callbackProcs[CB_BACK_PRESSED], "call" );
+    } else {
+      super.onBackPressed();
+    }
+  }
+
+  public void onDetachedFromWindow() {
+    if (callbackProcs[CB_DETACHED_FROM_WINDOW] != null) {
+      super.onDetachedFromWindow();
+      Script.callMethod(callbackProcs[CB_DETACHED_FROM_WINDOW], "call" );
+    } else {
+      super.onDetachedFromWindow();
+    }
+  }
+
+  public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
+    if (callbackProcs[CB_KEY_LONG_PRESS] != null) {
+      super.onKeyLongPress(keyCode, event);
+      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_LONG_PRESS], "call" , new Object[]{keyCode, event}, Boolean.class);
+    } else {
+      return super.onKeyLongPress(keyCode, event);
     }
   }
 
