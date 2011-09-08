@@ -39,9 +39,9 @@ $activity.start_ruboto_activity "$ruboto_demo" do
     linear_layout(:orientation => LinearLayout::VERTICAL) do
       @et = edit_text
       linear_layout do
-        button :text => "Hello, World",  :on_click_listener => Proc.new{|v| my_click(v.getText)}
-        button :text => "Hello, Ruboto", :on_click_listener => Proc.new{|v| my_click(v.getText)}
-        button :text => "List",          :on_click_listener => Proc.new{|v| launch_list}
+        button :text => "Hello, World",  :on_click_listener => proc{|v| my_click(v.getText)}
+        button :text => "Hello, Ruboto", :on_click_listener => proc{|v| my_click(v.getText)}
+        button :text => "List",          :on_click_listener => proc{|v| launch_list}
       end
       @tv = text_view :text => "Click buttons or menu items:"
     end
@@ -66,7 +66,7 @@ $activity.start_ruboto_activity "$ruboto_demo" do
   # need to be declared with self. This one 
   # handles some of the button and menu clicks.
   # 
-  def self.my_click(text)
+  def my_click(text)
     toast text
     @tv.append "\n#{text}"
     @et.setText text
@@ -76,15 +76,14 @@ $activity.start_ruboto_activity "$ruboto_demo" do
   # Launches a separate activity for displaying
   # a ListView.
   #
-  def self.launch_list
+  def launch_list
     self.start_ruboto_activity("$my_list") do
       setTitle "Pick Something"
       @list = ["Hello, World", "Hello, Ruboto"]
-      setup_content {list_view :list => @list}
-      handle_item_click do |adapter_view, view, pos, item_id| 
-        toast(@list[pos])
-        finish
+      setup_content do
+        list_view :list => @list, :on_item_click_listener => proc{|av, v, pos, item_id| toast(@list[pos]); finish}
       end
     end
   end
 end
+
