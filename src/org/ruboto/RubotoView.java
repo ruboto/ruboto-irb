@@ -33,8 +33,9 @@ public class RubotoView extends android.view.View {
   public static final int CB_FINISH_TEMPORARY_DETACH = 26;
   public static final int CB_KEY_PRE_IME = 27;
   public static final int CB_START_TEMPORARY_DETACH = 28;
+  public static final int CB_KEY_LONG_PRESS = 29;
 
-    private Object[] callbackProcs = new Object[29];
+    private Object[] callbackProcs = new Object[30];
 
   public  RubotoView(android.content.Context context) {
     super(context);
@@ -310,6 +311,15 @@ public class RubotoView extends android.view.View {
       Script.callMethod(callbackProcs[CB_START_TEMPORARY_DETACH], "call" );
     } else {
       super.onStartTemporaryDetach();
+    }
+  }
+
+  public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
+    if (callbackProcs[CB_KEY_LONG_PRESS] != null) {
+      super.onKeyLongPress(keyCode, event);
+      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_LONG_PRESS], "call" , new Object[]{keyCode, event}, Boolean.class);
+    } else {
+      return super.onKeyLongPress(keyCode, event);
     }
   }
 
