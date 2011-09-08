@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 public class RubotoPreferenceActivity extends android.preference.PreferenceActivity {
     private String scriptName;
-    private String remoteVariable = "";
+    private String remoteVariable = null;
     private Object[] args;
     private Bundle configBundle;
 
@@ -57,16 +57,24 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public static final int CB_WINDOW_FOCUS_CHANGED = 35;
   public static final int CB_USER_INTERACTION = 36;
   public static final int CB_USER_LEAVE_HINT = 37;
+  public static final int CB_ATTACHED_TO_WINDOW = 38;
+  public static final int CB_BACK_PRESSED = 39;
+  public static final int CB_DETACHED_FROM_WINDOW = 40;
+  public static final int CB_KEY_LONG_PRESS = 41;
 
-    private Object[] callbackProcs = new Object[38];
+    private Object[] callbackProcs = new Object[42];
 
     public void setCallbackProc(int id, Object obj) {
         callbackProcs[id] = obj;
     }
 	
     public RubotoPreferenceActivity setRemoteVariable(String var) {
-        remoteVariable = ((var == null) ? "" : (var + "."));
+        remoteVariable = var;
         return this;
+    }
+
+    public String getRemoteVariableCall(String call) {
+        return (remoteVariable == null ? "" : (remoteVariable + ".")) + call;
     }
 
     public void setScriptName(String name) {
@@ -119,12 +127,14 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
             } else if (configBundle != null && configBundle.getString("Remote Variable") != null) {
                 setRemoteVariable(configBundle.getString("Remote Variable"));
                 if (configBundle.getBoolean("Define Remote Variable")) {
-                    Script.defineGlobalVariable(remoteVariable, this);
+                    Script.put(remoteVariable, this);
                 }
                 if (configBundle.getString("Initialize Script") != null) {
                     Script.execute(configBundle.getString("Initialize Script"));
                 }
-                Script.execute(remoteVariable + "on_create($bundle)");
+                Script.execute(getRemoteVariableCall("on_create($bundle)"));
+            } else {
+                throw new RuntimeException("Neither script name nor remote variable was set.");
             }
         } catch(IOException e){
             e.printStackTrace();
@@ -476,6 +486,42 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
       Script.callMethod(callbackProcs[CB_USER_LEAVE_HINT], "call" );
     } else {
       super.onUserLeaveHint();
+    }
+  }
+
+  public void onAttachedToWindow() {
+    if (callbackProcs[CB_ATTACHED_TO_WINDOW] != null) {
+      super.onAttachedToWindow();
+      Script.callMethod(callbackProcs[CB_ATTACHED_TO_WINDOW], "call" );
+    } else {
+      super.onAttachedToWindow();
+    }
+  }
+
+  public void onBackPressed() {
+    if (callbackProcs[CB_BACK_PRESSED] != null) {
+      super.onBackPressed();
+      Script.callMethod(callbackProcs[CB_BACK_PRESSED], "call" );
+    } else {
+      super.onBackPressed();
+    }
+  }
+
+  public void onDetachedFromWindow() {
+    if (callbackProcs[CB_DETACHED_FROM_WINDOW] != null) {
+      super.onDetachedFromWindow();
+      Script.callMethod(callbackProcs[CB_DETACHED_FROM_WINDOW], "call" );
+    } else {
+      super.onDetachedFromWindow();
+    }
+  }
+
+  public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
+    if (callbackProcs[CB_KEY_LONG_PRESS] != null) {
+      super.onKeyLongPress(keyCode, event);
+      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_LONG_PRESS], "call" , new Object[]{keyCode, event}, Boolean.class);
+    } else {
+      return super.onKeyLongPress(keyCode, event);
     }
   }
 
