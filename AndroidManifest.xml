@@ -40,9 +40,11 @@
         <activity android:name="org.ruboto.RubotoActivity"  android:configChanges="orientation" />
         <activity android:name="org.ruboto.RubotoDialog" android:theme="@android:style/Theme.Dialog"  android:configChanges="orientation" />
         <activity android:name="org.ruboto.RubotoPreferenceActivity" />
+
+        <service android:name="org.ruboto.RubotoService" android:exported="false" />
     </application>
     
-    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="13"/>
+    <uses-sdk android:minSdkVersion="5" android:targetSdkVersion="13"/>
 
   	<supports-screens
          android:xlargeScreens="true"
@@ -60,6 +62,7 @@
     <uses-feature android:name="android.hardware.microphone"        android:required="false" />
     <uses-feature android:name="android.hardware.camera"            android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus"  android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth"         android:required="false" />
     
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
@@ -78,4 +81,5 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
 </manifest> 
