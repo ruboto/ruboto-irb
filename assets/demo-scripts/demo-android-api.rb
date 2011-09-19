@@ -7,34 +7,8 @@
 #
 #######################################################
 
-require "ruboto.rb"
-confirm_ruboto_version(6, false)
-
-ruboto_import_widgets :LinearLayout, :TextView, :RelativeLayout,
-  :TableLayout, :TableRow,
-  :Chronometer, :DatePicker, :TimePicker, :EditText, :ToggleButton
-
-java_import "android.os.SystemClock"
-java_import "android.view.Window"
-java_import "android.view.WindowManager"
-java_import "android.view.Gravity"
-java_import "android.content.Context"
-java_import "android.util.AttributeSet"
-java_import "android.graphics.drawable.GradientDrawable"
-java_import "android.graphics.Color"
-java_import "android.graphics.Paint"
-java_import "android.graphics.RectF"
-java_import "android.graphics.Canvas"
-java_import "android.graphics.Bitmap"
-java_import "android.graphics.Path"
-java_import "android.hardware.SensorManager"
-java_import "android.hardware.Sensor"
-java_import "android.app.TimePickerDialog"
-java_import "android.app.DatePickerDialog"
-java_import "android.graphics.Typeface"
-java_import "android.content.res.ColorStateList"
-
-ruboto_import "org.ruboto.RubotoView"
+require 'ruboto'
+confirm_ruboto_version(10, false)
 
 class RubotoActivity
   @@lists = {
@@ -97,10 +71,12 @@ class RubotoActivity
   end
 
   def self.launch_list(context, var, title, list_id, extra_text=nil)
+    ruboto_import_widgets :LinearLayout, :TextView, :ListView
+
     context.start_ruboto_activity var do
       setTitle title
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL do
+        linear_layout :orientation => :vertical do
           text_view(:text => extra_text) if extra_text
           list_view :list => @@lists[list_id]
         end
@@ -121,6 +97,12 @@ class RubotoActivity
   #
 
   def self.custom_dialog(context)
+    java_import "android.graphics.drawable.GradientDrawable"
+    java_import "android.view.Gravity"
+    java_import "android.graphics.Color"
+
+    ruboto_import_widgets :LinearLayout, :TextView
+
     context.start_ruboto_dialog "$custom_dialog" do
       setTitle "App/Activity/Custom Dialog"
 
@@ -133,7 +115,7 @@ class RubotoActivity
                             ViewGroup::LayoutParams::WRAP_CONTENT)
         getWindow.setBackgroundDrawable(cd)
 
-        linear_layout(:orientation => LinearLayout::VERTICAL, :padding => [10,0,10,10]) do
+        linear_layout(:orientation => :vertical, :padding => [10,0,10,10]) do
           text_view :text => "Example of how you can use a custom Theme.Dialog theme to make an activity that looks like a customized dialog, here with an ugly frame.", 
             :text_size => 14,
             :gravity => Gravity::CENTER_HORIZONTAL
@@ -147,18 +129,24 @@ class RubotoActivity
   #
 
   def self.custom_title(context)
+    java_import "android.graphics.Typeface"
+    java_import "android.view.Window"
+    java_import "android.graphics.Color"
+
+    ruboto_import_widgets :LinearLayout, :TextView, :Button, :EditText, :RelativeLayout
+
     context.start_ruboto_activity "$custom_title" do
       requestWindowFeature Window::FEATURE_CUSTOM_TITLE
 
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL do
+        linear_layout :orientation => :vertical do
           linear_layout do
             @etl = edit_text(:text => "Left is best", :min_ems => 10, :max_ems => 10)
-            button :text => "Change left"
+            button :text => "Change left", :on_click_listener => proc{@tvl.text = @etl.text}
           end
           linear_layout do
             @etr = edit_text(:text => "Right is always right", :min_ems => 10, :max_ems => 10)
-            button :text => "Change right"
+            button :text => "Change right", :on_click_listener => proc{@tvr.text = @etr.text}
           end
         end
       end
@@ -168,21 +156,13 @@ class RubotoActivity
                                 Ruboto::R::layout::empty_relative_layout)
 
         @rl = findViewById(Ruboto::Id::empty_relative_layout)
-        @tvl = text_view :text => "Left is best", 
-                         :text_color => ColorStateList.valueOf(0xFFFFFFFF),
-                         :typeface => [Typeface::DEFAULT, Typeface::BOLD]
-        @rl.addView @tvl
-        @tvl.getLayoutParams.addRule RelativeLayout::ALIGN_PARENT_LEFT
+        @tvl = text_view :text => "Left is best", :text_color => Color::WHITE,
+                         :typeface => [Typeface::DEFAULT, Typeface::BOLD],
+                         :parent => @rl, :layout => {:add_rule => :align_parent_left}
 
-        @tvr = text_view :text => "Right is always right", 
-                         :text_color => ColorStateList.valueOf(0xFFFFFFFF),
-                         :typeface => [Typeface::DEFAULT, Typeface::BOLD]
-        @rl.addView @tvr
-        @tvr.getLayoutParams.addRule RelativeLayout::ALIGN_PARENT_RIGHT
-      end
-
-      handle_click do |view|
-        view.getText == "Change left" ? @tvl.setText(@etl.getText) : @tvr.setText(@etr.getText)
+        @tvr = text_view :text => "Right is always right", :text_color => Color::WHITE,
+                         :typeface => [Typeface::DEFAULT, Typeface::BOLD],
+                         :parent => @rl, :layout => {:add_rule => :align_parent_right}
       end
     end
   end
@@ -192,19 +172,23 @@ class RubotoActivity
   #
 
   def self.forwarding(context)
+    java_import "android.view.Gravity"
+
+    ruboto_import_widgets :LinearLayout, :Button, :TextView
+
     context.start_ruboto_activity "$forwarding" do
       setTitle "App/Activity/Forwarding"
 
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL do
+        linear_layout :orientation => :vertical do
           text_view :text => "Press the button to go forward to the next activity.  This activity will stop, so you will no longer see it when going back."
           linear_layout(:gravity => Gravity::CENTER_HORIZONTAL) do
-            button :text => "Go", :width => :wrap_content
+            button :text => "Go", :width => :wrap_content, :on_click_listener => @handle_click
           end
         end
       end
 
-      handle_click do |view|
+      @handle_click = proc do |view|
         context.start_ruboto_activity "$forwarding2" do
           setTitle "App/Activity/Forwarding"
           setup_content do
@@ -221,6 +205,10 @@ class RubotoActivity
   #
 
   def self.hello_world(context)
+    java_import "android.view.Gravity"
+
+    ruboto_import_widgets :TextView
+
     context.start_ruboto_activity "$hello_world" do
       setTitle "App/Activity/Hello World"
 
@@ -236,6 +224,10 @@ class RubotoActivity
   #
 
   def self.persistent_state(context)
+    java_import "android.view.WindowManager"
+
+    ruboto_import_widgets :LinearLayout, :TextView, :EditText
+
     context.start_ruboto_activity "$persistent_state" do
       setTitle "App/Activity/Persistent State"
       getWindow.setSoftInputMode(
@@ -243,17 +235,15 @@ class RubotoActivity
                  WindowManager::LayoutParams::SOFT_INPUT_ADJUST_RESIZE)
 
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL, :padding => [4,4,4,4] do
+        linear_layout :orientation => :vertical, :padding => [4,4,4,4] do
           text_view :text => "Demonstration of persistent activity state with getPreferences(0).edit() and getPreferences(0).", :padding => [0,0,0,4]
           text_view :text => "This text field saves its state:", :padding => [0,0,0,4]
           @save = edit_text(:text => "Initial text.", :backgroundColor => 0x7700ff00, 
-                            :padding => [0,4,0,4])
-          @save.getLayoutParams.weight = 1.0
+                            :padding => [0,4,0,4], :layout => {:weight= => 1.0})
 
           text_view :text => "This text field does not save its state:", :padding => [0,8,0,4]
-          et = edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000, 
-                            :padding => [0,4,0,4]
-          et.getLayoutParams.weight = 1.0
+          edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000, 
+                            :padding => [0,4,0,4], :layout => {:weight= => 1.0}
         end
       end
 
@@ -286,6 +276,10 @@ class RubotoActivity
   #
 
   def self.save_and_restore_state(context)
+    java_import "android.view.WindowManager"
+
+    ruboto_import_widgets :LinearLayout, :TextView, :EditText
+
     context.start_ruboto_activity "$save_and_restore_state" do
       setTitle "App/Activity/Save & Restore State"
       getWindow.setSoftInputMode(
@@ -293,17 +287,15 @@ class RubotoActivity
                  WindowManager::LayoutParams::SOFT_INPUT_ADJUST_RESIZE)
 
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL, :padding => [4,4,4,4] do
+        linear_layout :orientation => :vertical, :padding => [4,4,4,4] do
           text_view :text => "Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().", :padding => [0,0,0,4]
           text_view :text => "This text field saves its state:", :padding => [0,0,0,4]
-          @save = edit_text(:text => "Initial text.", :backgroundColor => 0x7700ff00, 
-                            :padding => [0,4,0,4], :freezes_text => true, :id => 55555)
-          @save.getLayoutParams.weight = 1.0
+          @save = edit_text(:text => "Initial text.", :backgroundColor => 0x7700ff00, :padding => [0,4,0,4], 
+                            :freezes_text => true, :id => 55555, :layout => {:weight= => 1.0})
 
           text_view :text => "This text field does not save its state:", :padding => [0,8,0,4]
-          et = edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000,
-                         :padding => [0,4,0,4]
-          et.getLayoutParams.weight = 1.0
+          edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000,
+                           :padding => [0,4,0,4], :layout => {:weight= => 1.0}
         end
       end
     end
@@ -319,6 +311,12 @@ class RubotoActivity
   #
 
   def self.arcs(context)
+    java_import "android.graphics.Color"
+    java_import "android.graphics.Paint"
+    java_import "android.graphics.RectF"
+
+    ruboto_import "org.ruboto.RubotoView"
+
     context.start_ruboto_activity "$arcs" do
       setTitle "Graphics/Arcs"
 
@@ -338,21 +336,21 @@ class RubotoActivity
         @mPaints[0] = Paint.new
         @mPaints[0].setAntiAlias(true)
         @mPaints[0].setStyle(Paint::Style::FILL)
-        @mPaints[0].setColor(0x88FF0000)
+        @mPaints[0].setColor(Color::RED)
         @mUseCenters[0] = false
             
         @mPaints[1] = Paint.new(@mPaints[0])
-        @mPaints[1].setColor(0x8800FF00)
+        @mPaints[1].setColor(Color::GREEN)
         @mUseCenters[1] = true
            
         @mPaints[2] = Paint.new(@mPaints[0])
         @mPaints[2].setStyle(Paint::Style::STROKE)
         @mPaints[2].setStrokeWidth(4)
-        @mPaints[2].setColor(0x880000FF)
+        @mPaints[2].setColor(Color::BLUE)
         @mUseCenters[2] = false
 
         @mPaints[3] = Paint.new(@mPaints[2])
-        @mPaints[3].setColor(0x88888888)
+        @mPaints[3].setColor(Color::GRAY)
         @mUseCenters[3] = true
             
         @mBigOval  = RectF.new( 40,  10, 280, 250)
@@ -407,6 +405,10 @@ class RubotoActivity
   #
 
   def self.morse_code(context)
+    java_import "android.content.Context"
+
+    ruboto_import_widgets :LinearLayout, :EditText, :Button
+
     context.start_ruboto_activity "$morse_code" do
       @base  = 100
       @durations = {"." => [@base, @base],  "-" => [@base* 3, @base], 
@@ -422,12 +424,12 @@ class RubotoActivity
                 "6" => "-....","7" => "--...","8" => "---..","9" => "----."}
       setTitle "OS/Morse Code"
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL do
+        linear_layout :orientation => :vertical do
           @et = edit_text
-          button :text => "Vibrate", :width => :wrap_content
+          button :text => "Vibrate", :width => :wrap_content, :on_click_listener => @handle_click
         end
       end
-      handle_click do |view|
+      @handle_click = proc do |view|
         getSystemService(Context::VIBRATOR_SERVICE).vibrate(
           @et.getText.to_s.upcase.split('').
           map {|i| @codes[i] || " "}.join('|').split('').
@@ -441,22 +443,44 @@ class RubotoActivity
   #
 
   def self.sensors(context)
+    java_import "android.graphics.Path"
+    java_import "android.hardware.SensorManager"
+    java_import "android.hardware.Sensor"
+    java_import "android.graphics.Color"
+    java_import "android.graphics.Paint"
+    java_import "android.graphics.RectF"
+    java_import "android.graphics.Bitmap"
+    java_import "android.graphics.Canvas"
+    java_import "android.content.Context"
+
+    ruboto_import "org.ruboto.RubotoView"
     ruboto_import "org.ruboto.callbacks.RubotoSensorEventListener"
+
     context.start_ruboto_activity "$sensors" do
-      setTitle "OS/Sensors"
+       setTitle "OS/Sensors"
 
-      @rv = RubotoView.new(self)
-
-      setup_content do
-        @rv
-      end
-
-      handle_finish_create do |*args|
+      def on_create(bundle)
         @manager = getSystemService(Context::SENSOR_SERVICE)
         @sensors = [Sensor::TYPE_ACCELEROMETER, 
                     Sensor::TYPE_MAGNETIC_FIELD, 
                     Sensor::TYPE_ORIENTATION].map {|s| @manager.getDefaultSensor(s)}
 
+        self.content_view = @rv
+      end
+
+      def on_resume
+        @sensors.each{|s| @manager.registerListener(@sensor_event_listener, s, SensorManager::SENSOR_DELAY_FASTEST)}
+      end
+
+      def on_stop
+        @sensors.each{|s| @manager.unregisterListener(@sensor_event_listener, s)}
+      end
+
+      def view
+        @rv
+      end
+
+      @rv = RubotoView.new(self).initialize_ruboto_callbacks do
         @canvas = Canvas.new
         @last_values = []
         @orientation_values = [0.0, 0.0, 0.0]
@@ -476,95 +500,93 @@ class RubotoActivity
 
         @path = Path.new
         @path.arcTo(@rect, 0, 180)
-      end
 
-      handle_resume do 
-        @sensors.each{|s| @manager.registerListener(@sensor_event_listener, s, SensorManager::SENSOR_DELAY_FASTEST)}
-      end
+        def on_draw(canvas)
+            if @bitmap
+              if (@last_x >= @max_x)
+                @last_x = 0
+                oneG = SensorManager::STANDARD_GRAVITY * @scale[0]
+                @paint.setColor(Color.argb(0xFF, 0xAA, 0xAA, 0xAA))
+                @canvas.drawColor(Color::WHITE)
+                @canvas.drawLine(0, @y_offset,        @max_x, @y_offset,        @paint)
+                @canvas.drawLine(0, @y_offset + oneG, @max_x, @y_offset + oneG, @paint)
+                @canvas.drawLine(0, @y_offset - oneG, @max_x, @y_offset - oneG, @paint)
+              end
 
-      handle_stop do 
-        @sensors.each{|s| @manager.unregisterListener(@sensor_event_listener, s)}
-      end
+              canvas.drawBitmap(@bitmap, 0, 0, nil)
 
-      @rv.handle_draw do |canvas|
-        if @bitmap
-          if (@last_x >= @max_x)
-            @last_x = 0
-            oneG = SensorManager::STANDARD_GRAVITY * @scale[0]
-            @paint.setColor(0xFFAAAAAA)
-            @canvas.drawColor(0xFFFFFFFF)
-            @canvas.drawLine(0, @y_offset,        @max_x, @y_offset,        @paint)
-            @canvas.drawLine(0, @y_offset + oneG, @max_x, @y_offset + oneG, @paint)
-            @canvas.drawLine(0, @y_offset - oneG, @max_x, @y_offset - oneG, @paint)
-          end
-
-          canvas.drawBitmap(@bitmap, 0, 0, nil)
-
-          0.upto(2) do |i|
-            canvas.save(Canvas::MATRIX_SAVE_FLAG)
-            canvas.translate(@circle_centers[i][0], @circle_centers[i][1])
-            canvas.save(Canvas::MATRIX_SAVE_FLAG)
-            @paint.setColor(0xFFC0C0C0)
-            canvas.scale(@circle_size, @circle_size)
-            canvas.drawOval(@rect, @paint)
-            canvas.restore
-            canvas.scale(@circle_size - 5, @circle_size - 5)
-            @paint.setColor(0xFFff7010)
-            canvas.rotate(0.0 - @orientation_values[i])
-            canvas.drawPath(@path, @paint)
-            canvas.restore
-          end
-        end
-      end
-
-      @rv.handle_size_changed do |w, h, oldw, oldh|
-        @bitmap   = Bitmap.createBitmap(w, h, Bitmap::Config::RGB_565)
-        @y_offset = h * 0.5
-        @scale    = [(h * -0.5 * (1.0 / (SensorManager::STANDARD_GRAVITY * 2))),
-                      (h * -0.5 * (1.0 / (SensorManager::MAGNETIC_FIELD_EARTH_MAX)))]
-        @width    = w
-        @height   = h
-        @max_x    = w + ((@width < @height) ? 0 : 50)
-        @last_x   = @max_x
-
-        @canvas.setBitmap(@bitmap)
-        @canvas.drawColor(0xFFFFFFFF)
-
-        @circle_space = ((@width < @height) ? @width : @height) * 0.333333
-        @circle_size = @circle_space - 32
-        @circle_centers = []
-        x = @circle_space * 0.5
-        y = @circle_space * 0.5
-        0.upto(2) do |i|
-          if (@width < @height)
-            @circle_centers << [x, y + 4.0]
-            x += @circle_space
-          else
-            @circle_centers << [@width - (x + 4.0), y]
-            y += @circle_space
-          end
-        end
-      end
-
-      @sensor_event_listener = RubotoSensorEventListener.new.handle_sensor_changed do |event|
-        if @bitmap
-          if (event.sensor.getType == Sensor::TYPE_ORIENTATION)
-            @orientation_values = [event.values[0], event.values[1], event.values[2]]
-          else
-            j = (event.sensor.getType == Sensor::TYPE_MAGNETIC_FIELD) ? 1 : 0
-            0.upto(2) do |i|
-              k = i + j * 3
-              v = @y_offset + event.values[i] * @scale[j]
-              @paint.setColor(@line_colors[k])
-              @canvas.drawLine(@last_x, @last_values[k], @last_x + @speed, v, @paint)
-              @last_values[k] = v
+              0.upto(2) do |i|
+                canvas.save(Canvas::MATRIX_SAVE_FLAG)
+                canvas.translate(@circle_centers[i][0], @circle_centers[i][1])
+                canvas.save(Canvas::MATRIX_SAVE_FLAG)
+                @paint.setColor(Color.argb(0xFF, 0xC0, 0xC0, 0xC0))
+                canvas.scale(@circle_size, @circle_size)
+                canvas.drawOval(@rect, @paint)
+                canvas.restore
+                canvas.scale(@circle_size - 5, @circle_size - 5)
+                @paint.setColor(Color.argb(0xFF, 0xFF, 0x70, 0x10))
+                canvas.rotate(0.0 - @orientation_values[i])
+                canvas.drawPath(@path, @paint)
+                canvas.restore
+              end
             end
-            @last_x += @speed if (event.sensor.getType == Sensor::TYPE_MAGNETIC_FIELD)
-          end
-          @rv.invalidate
+        end
+
+        def on_size_changed(w, h, oldw, oldh)
+            @bitmap   = Bitmap.createBitmap(w, h, Bitmap::Config::RGB_565)
+            @y_offset = h * 0.5
+            @scale    = [(h * -0.5 * (1.0 / (SensorManager::STANDARD_GRAVITY * 2))),
+                          (h * -0.5 * (1.0 / (SensorManager::MAGNETIC_FIELD_EARTH_MAX)))]
+            @width    = w
+            @height   = h
+            @max_x    = w + ((@width < @height) ? 0 : 50)
+            @last_x   = @max_x
+
+            @canvas.setBitmap(@bitmap)
+            @canvas.drawColor(Color::WHITE)
+
+            @circle_space = ((@width < @height) ? @width : @height) * 0.333333
+            @circle_size = @circle_space - 32
+            @circle_centers = []
+            x = @circle_space * 0.5
+            y = @circle_space * 0.5
+            0.upto(2) do |i|
+              if (@width < @height)
+                @circle_centers << [x, y + 4.0]
+                x += @circle_space
+              else
+                @circle_centers << [@width - (x + 4.0), y]
+                y += @circle_space
+              end
+            end
+        end
+
+        def sensor_changed(event)
+            if @bitmap
+              if (event.sensor.getType == Sensor::TYPE_ORIENTATION)
+                @orientation_values = [event.values[0], event.values[1], event.values[2]]
+              else
+                j = (event.sensor.getType == Sensor::TYPE_MAGNETIC_FIELD) ? 1 : 0
+                0.upto(2) do |i|
+                  k = i + j * 3
+                  v = @y_offset + event.values[i] * @scale[j]
+                  @paint.setColor(@line_colors[k])
+                  @canvas.drawLine(@last_x, @last_values[k], @last_x + @speed, v, @paint)
+                  @last_values[k] = v
+                end
+                @last_x += @speed if (event.sensor.getType == Sensor::TYPE_MAGNETIC_FIELD)
+              end
+              self.invalidate
+            end
         end
       end
-    end
+
+      @sensor_event_listener = RubotoSensorEventListener.new_with_callbacks do
+         def on_sensor_changed(event)
+           $sensors.view.sensor_changed(event)
+         end
+      end
+  end
   end
 
   #######################################################
@@ -573,41 +595,36 @@ class RubotoActivity
   #
 
   def self.chronometer_demo(context)
+    java_import "android.os.SystemClock"
+    java_import "android.view.Gravity"
+
+    ruboto_import_widgets :LinearLayout, :Button, :Chronometer
+
     context.start_ruboto_activity "$chronometer_demo" do
       setTitle "Views/Chronometer"
       setup_content do
-        linear_layout(:orientation => LinearLayout::VERTICAL, 
-                      :gravity => Gravity::CENTER_HORIZONTAL) do
-          @c = chronometer :format => "Initial format: %s", 
-                           :width => :wrap_content, 
-                           :padding => [0,30,0,30] 
-          button :text => "Start", :width => :wrap_content
-          button :text => "Stop", :width => :wrap_content
-          button :text => "Reset", :width => :wrap_content
-          button :text => "Set format string", :width => :wrap_content
-          button :text => "Clear format string", :width => :wrap_content
-        end
-      end
-
-      handle_click do |view|
-        case view.getText
-        when "Start"               : @c.start
-        when "Stop"                : @c.stop
-        when "Reset"               : @c.setBase SystemClock.elapsedRealtime
-        when "Set format string"   : @c.setFormat("Formatted time (%s)")
-        when "Clear format string" : @c.setFormat(nil)
+        linear_layout(:orientation => :vertical, :gravity => Gravity::CENTER_HORIZONTAL) do
+          @c = chronometer :format => "Initial format: %s", :width => :wrap_content, :padding => [0,30,0,30] 
+          button :text => "Start", :width => :wrap_content, :on_click_listener => proc{@c.start}
+          button :text => "Stop", :width => :wrap_content, :on_click_listener => proc{@c.stop}
+          button :text => "Reset", :width => :wrap_content, :on_click_listener => proc{@c.setBase SystemClock.elapsedRealtime}
+          button :text => "Set format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat("Formatted time (%s)")}
+          button :text => "Clear format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat(nil)}
         end
       end
     end
   end
 
   def self.buttons(context)
+    ruboto_import_widgets :LinearLayout, :Button, :ToggleButton
+
     context.start_ruboto_activity "$buttons" do
       setTitle "Views/Buttons"
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL do
+        linear_layout :orientation => :vertical do
           button :text => "Normal", :width => :wrap_content
-          button :text => "Small", :width => :wrap_content, :padding => [8,0,8,0]
+          button :text => "Small", :width => :wrap_content, 
+                    :default_style => JavaUtilities.get_proxy_class("android.R$attr")::buttonStyleSmall
           toggle_button :width => :wrap_content
         end
       end
@@ -615,58 +632,52 @@ class RubotoActivity
   end
 
   def self.date_dialog(context)
-    ruboto_import "org.ruboto.callbacks.RubotoOnDateSetListener"
-    ruboto_import "org.ruboto.callbacks.RubotoOnTimeSetListener"
+    java_import "android.app.TimePickerDialog"
+    java_import "android.app.DatePickerDialog"
+
+    ruboto_import_widgets :LinearLayout, :TextView, :Button
 
     context.start_ruboto_activity "$date_dialog" do
       setTitle "Views/Date Widgets/1. Dialog"
       setup_content do
-        linear_layout :orientation => LinearLayout::VERTICAL do
+        linear_layout :orientation => :vertical do
           @time  = Time.now
+
           @tv = text_view :text => @time.strftime("%m-%d-%Y %R")
-          button :text => "change the date", :width => :wrap_content
-          button :text => "change the time", :width => :wrap_content
+          button :text => "change the date", :width => :wrap_content, :on_click_listener => proc{date_picker.show}
+          button :text => "change the time", :width => :wrap_content, :on_click_listener => proc{time_picker.show}
         end
       end
 
-      handle_click do |view|
-        showDialog(view.getText == "change the time" ? 1 : 0)
+      def date_picker
+          @date_picker ||= DatePickerDialog.new(self, @date_set_listener, @time.year, @time.month-1, @time.day)
       end
 
-      handle_create_dialog do |dialog_id, bundle|
-        if dialog_id == 1
-          TimePickerDialog.new(self, @time_set_listener, @time.hour, @time.min, false)
-        else
-          DatePickerDialog.new(self, @date_set_listener, @time.year, @time.month-1, @time.day)
-        end
+      def time_picker
+          @time_picker ||= TimePickerDialog.new(self, @time_set_listener, @time.hour, @time.min, false)
       end
 
-      @date_set_listener = RubotoOnDateSetListener.new.handle_date_set do |view, year, month, day|
-        @tv.setText("%d-%d-%d #{@tv.getText.split(' ')[1]}" % [month+1, day, year])
+      @date_set_listener = proc do |view, year, month, day|
+        @tv.text = ("%d-%d-%d #{@tv.text.split(' ')[1]}" % [month+1, day, year])
       end
 
-      @time_set_listener = RubotoOnTimeSetListener.new.handle_time_set do |view, hour, minute|
-        @tv.setText("#{@tv.getText.split(' ')[0]} %02d:%02d" % [hour, minute])
+      @time_set_listener = proc do |view, hour, minute|
+        @tv.text = ("#{@tv.text.split(' ')[0]} %02d:%02d" % [hour, minute])
       end
     end
   end
 
   def self.date_inline(context)
-    ruboto_import "org.ruboto.callbacks.RubotoOnTimeChangedListener"
+    ruboto_import_widgets :LinearLayout, :TextView, :TimePicker
 
     context.start_ruboto_activity "$date_inline" do
       setTitle "Views/Date Widgets/#{title}"
       setup_content do
         linear_layout do
-          time_picker :on_time_changed_listener => @time_changed_listener, 
-                      :current_hour => 12, 
-                      :current_minute=> 15
+          time_picker :on_time_changed_listener => proc{|v, h, m| @tv.setText("%02d:%02d" % [h, m]) if @tv}, 
+                      :current_hour => 12, :current_minute=> 15
           @tv = text_view :text => "12:15"
         end
-      end
-
-      @time_changed_listener = RubotoOnTimeChangedListener.new.handle_time_changed do |view, hour, minute|
-        @tv.setText("%02d:%02d" % [hour, minute]) if @tv
       end
     end
   end

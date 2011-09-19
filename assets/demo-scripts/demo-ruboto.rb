@@ -7,8 +7,11 @@
 #
 #######################################################
 
-require "ruboto.rb"
-confirm_ruboto_version(6, false)
+require 'ruboto/activity'
+require 'ruboto/widget'
+require 'ruboto/menu'
+require 'ruboto/util/toast'
+confirm_ruboto_version(10, false)
 
 #
 # ruboto_import_widgets imports the UI widgets needed

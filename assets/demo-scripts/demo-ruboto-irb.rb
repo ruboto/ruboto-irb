@@ -8,8 +8,8 @@
 #
 #######################################################
 
-require "ruboto.rb"
-confirm_ruboto_version(6, false)
+require 'ruboto'
+confirm_ruboto_version(10, false)
 
 java_import "android.view.WindowManager"
 java_import "android.view.Gravity"
@@ -19,9 +19,6 @@ java_import "android.app.AlertDialog"
 java_import "android.content.DialogInterface"
 java_import "android.content.Context"
 java_import "android.text.method.ScrollingMovementMethod"
-
-ruboto_import "org.ruboto.callbacks.RubotoOnTabChangeListener"
-ruboto_import "org.ruboto.callbacks.RubotoOnKeyListener"
 
 ruboto_import_widgets :TabHost, :LinearLayout, :FrameLayout, :TabWidget, 
   :Button, :EditText, :TextView, :ListView, :ScrollView
@@ -42,27 +39,27 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     @history = [""]
     @cursor = 0
 
-    @tabs = tab_host do
-      linear_layout(:orientation => LinearLayout::VERTICAL, :height => :fill_parent) do
-        tab_widget(:id => AndroidIds::tabs)
-        frame_layout(:id => AndroidIds::tabcontent, :height => :fill_parent) do
-          linear_layout(:id => 55555, :height => :fill_parent,
-                        :orientation => LinearLayout::VERTICAL) do
-            @irb_edit = edit_text :lines => 1, :on_key_listener => @on_key_listener
-            @irb_text = text_view :text => "#{explanation_text}\n\n>> ", :height => :fill_parent, 
-                            :gravity => (Gravity::BOTTOM | Gravity::CLIP_VERTICAL), 
-                            :text_color => 0xffffffff, 
-                            :movement_method => ScrollingMovementMethod.new;
-          end
-          linear_layout(:id => 55556, :orientation => LinearLayout::VERTICAL) do
-            @edit_name   = edit_text :text => "untitled.rb"
-            @edit_script = edit_text :height => :fill_parent, :hint => "Enter source code here.", 
-                                       :gravity => Gravity::TOP, :horizontally_scrolling=> true
-          end
-          @scripts = list_view :id => 55557, :list => []
-        end
+    @tabs = tab_host
+    @tab_container = linear_layout(:orientation => :vertical, :height => :fill_parent, :parent => @tabs)
+
+    tab_widget(:id => AndroidIds::tabs, :parent => @tab_container)
+    frame_layout(:id => AndroidIds::tabcontent, :height => :fill_parent, :parent => @tab_container) do
+      linear_layout(:id => 55555, :height => :fill_parent, :orientation => :vertical) do
+        @irb_edit = edit_text :lines => 1, :on_key_listener => @on_key_listener
+        @irb_text = text_view :text => "#{explanation_text}\n\n>> ", :height => :fill_parent, 
+                        :gravity => (Gravity::BOTTOM | Gravity::CLIP_VERTICAL), 
+                        :text_color => android.graphics.Color::WHITE,
+                        :movement_method => ScrollingMovementMethod.new;
       end
+      linear_layout(:id => 55556, :orientation => :vertical) do
+        @edit_name   = edit_text :text => "untitled.rb"
+        @edit_script = edit_text :height => :fill_parent, :hint => "Enter source code here.", 
+                                   :gravity => Gravity::TOP, :horizontally_scrolling=> true
+      end
+      @scripts = list_view :id => 55557, :list => [], 
+                            :on_item_click_listener =>   proc{|av, v, p, i| edit @scripts_list[p]}
     end
+
     registerForContextMenu(@scripts)
     load_script_list
     @tabs.setup
@@ -71,14 +68,6 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     @tabs.addTab(@tabs.newTabSpec("scripts").setContent(55557).setIndicator("Scripts"))
     @tabs.setOnTabChangedListener(@on_tab_change_listener)
     @tabs
-  end
-
-  #
-  # Script list item click
-  #
-
-  handle_item_click do |adapter_view, view, pos, item_id|
-    edit @scripts_list[pos]
   end
 
   #
@@ -161,8 +150,8 @@ $activity.start_ruboto_activity("$ruboto_irb") do
       AlertDialog::Builder.new(self).
               setMessage("Delete #{@confirm_delete}?").
               setCancelable(false).
-              setPositiveButton("Yes", self).
-              setNegativeButton("No", self).
+              setPositiveButton("Yes", @dialog_click).
+              setNegativeButton("No", @dialog_click).
               create.
               show
     end
@@ -174,7 +163,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   # Delete confirmation dialog buttons
   #
 
-  handle_click do |dialog, which|
+  @dialog_click = proc do |dialog, which|
     if @confirm_delete and which == DialogInterface::BUTTON_POSITIVE
       begin 
         File.delete @confirm_delete
@@ -191,7 +180,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   # Tab change
   #
 
-  @on_tab_change_listener = RubotoOnTabChangeListener.new.handle_tab_changed do |tab|
+  @on_tab_change_listener = proc do |tab|
     if tab == "scripts"
         getSystemService(Context::INPUT_METHOD_SERVICE).
            hideSoftInputFromWindow(@tabs.getWindowToken, 0)
@@ -202,7 +191,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   # Key actions for keeping the history of the IRB EditText
   #
 
-  @on_key_listener = RubotoOnKeyListener.new.handle_key do |view, key_code, event|
+  @on_key_listener = proc do |view, key_code, event|
     rv = false
     if [KeyEvent::ACTION_DOWN, KeyEvent::ACTION_MULTIPLE].include? event.getAction
       if (@cursor > 0 and key_code == KeyEvent::KEYCODE_DPAD_UP) or 
@@ -248,18 +237,18 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   # Support methods
   #
 
-  def self.load_script_list
+  def load_script_list
     @scripts_list = Dir.glob("*.rb").sort
     @scripts.reload_list(@scripts_list)
   end
 
-  def self.edit script
+  def edit script
     @edit_name.setText script
     @edit_script.setText IO.read(script).gsub("\r", "")
     @tabs.setCurrentTabByTag("editor")
   end
 
-  def self.execute source, display=nil
+  def execute source, display=nil
     @tabs.setCurrentTabByTag("irb")
 
     old_out, $stdout = $stdout, StringIO.new
@@ -274,7 +263,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     end
   end
 
-  def self.save name, source
+  def save name, source
     begin
       File.open(name, 'w') {|file| file.write(source)}
       @tabs.setCurrentTabByTag("scripts")
@@ -285,15 +274,15 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     end
   end
 
-  def self.explanation_text
-"This demo duplicates the functionality of Ruboto IRB (written in Java) with a ruboto script (written in Ruby). There are a few differences:
+  def explanation_text
+"This demo duplicates the functionality of an old verion (0.2) of Ruboto IRB (written in Java) with a ruboto script (written in Ruby). There are a few differences:
 
 1) We're not currently copying the demo scripts if the scripts directory doesn't exist. The main reason for this is because the very fact that you're running this demo means that the scripts directory exists.
 
-2) There is a bug that you can trigger by doing a \"require 'date'\". It causes a StackOverflow exception to be caught on the Java side. Most requires seem to work, but this one (actually another script that date requires) causes the exception. I haven't tracked it down yet."
+2) There is a bug that you can trigger by doing a \"require 'date'\". It causes a StackOverflow exception to be caught on the Java side. This is caused by a limitation placed on stack size by Android. To avoid stack limitation, surround the code with 'with_large_stack{<<code>>}'. This causes the code to be run in a separate thread. You can not execute any UI interactions in this separate thread (unless you force them to run on the UI thread using runOnUiThread(proc{<<ui_code>>}))"
   end
 
-  def self.about_text
+  def about_text
 "Ruboto IRB is a UI for scripting Android using the Ruby language through JRuby.
 
 Source code:
@@ -317,3 +306,4 @@ http://rubyidentity.org
 CC ShareAlike 2.5"
   end
 end
+

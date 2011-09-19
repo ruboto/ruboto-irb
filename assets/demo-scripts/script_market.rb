@@ -7,8 +7,8 @@
 #
 #######################################################
 
-require "ruboto.rb"
-confirm_ruboto_version(6, false)
+require 'ruboto'
+confirm_ruboto_version(10, false)
 
 ruboto_import_widgets :TableLayout, :TableRow, :TextView, :EditText, :ScrollView, :ListView
 
@@ -30,11 +30,7 @@ end
 
 class Activity
   def get_remote_page url
-    # Use Java classes until we compile Ruby
-    #  url.match /http:\/\/([^\/]*)(.*)/
-    #  r = Net::HTTP.get_response($1, $2)
-    #  r.code == "200" ? r.body : ""
-    DefaultHttpClient.new.execute(HttpGet.new(url), BasicResponseHandler.new)
+    with_large_stack{DefaultHttpClient.new.execute(HttpGet.new(url), BasicResponseHandler.new)}
   end
 
   def save_script name, contents
