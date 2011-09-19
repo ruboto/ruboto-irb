@@ -31,8 +31,9 @@ public class Script {
     private static String scriptsDir = "scripts";
     private static File scriptsDirFile = null;
 
-    private String name = null;
+    protected String name = null;
     private static Object ruby;
+    private static PrintStream output = null;
     private static boolean initialized = false;
 
     private static String localContextScope = "SINGLETON";
@@ -141,6 +142,7 @@ public class Script {
                     // callScriptingContainerMethod(Void.class, "setOutput", out);
         	        Method setOutputMethod = ruby.getClass().getMethod("setOutput", PrintStream.class);
         	        setOutputMethod.invoke(ruby, out);
+                  output = out;
 
                     // callScriptingContainerMethod(Void.class, "setError", out);
         	        Method setErrorMethod = ruby.getClass().getMethod("setError", PrintStream.class);
@@ -224,7 +226,11 @@ public class Script {
         } catch (IllegalAccessException iae) {
             throw new RuntimeException(iae);
         } catch (java.lang.reflect.InvocationTargetException ite) {
-            throw ((RuntimeException) ite.getCause());
+//            throw ((RuntimeException) ite.getCause());
+            for (java.lang.StackTraceElement ste : ite.getStackTrace()) {
+                output.append(ste.toString() + "\n");
+            }
+            return null;
         }
 	}
 
@@ -466,7 +472,10 @@ public class Script {
         } catch (IllegalAccessException iae) {
             throw new RuntimeException(iae);
         } catch (java.lang.reflect.InvocationTargetException ite) {
-            throw (RuntimeException)(ite.getCause());
+//            throw (RuntimeException) ite.getCause();
+            for (java.lang.StackTraceElement ste : ite.getStackTrace()) {
+                output.append(ste.toString() + "\n");
+            }
         }
     }
 
@@ -480,7 +489,6 @@ public class Script {
 
 	@SuppressWarnings("unchecked")
 	public static <T> T callMethod(Object receiver, String methodName, Object[] args, Class<T> returnType) {
-		// return callScriptingContainerMethod(returnType, "callMethod", receiver, methodName, args, returnType);
         try {
             Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object[].class, Class.class);
             return (T) callMethodMethod.invoke(ruby, receiver, methodName, args, returnType);
@@ -489,17 +497,19 @@ public class Script {
         } catch (IllegalAccessException iae) {
             throw new RuntimeException(iae);
         } catch (java.lang.reflect.InvocationTargetException ite) {
-            throw (RuntimeException) ite.getCause();
+//            throw (RuntimeException) ite.getCause();
+            for (java.lang.StackTraceElement ste : ite.getStackTrace()) {
+                output.append(ste.toString() + "\n");
+            }
+            return null;
         }
 	}
 
-	public static <T> T callMethod(Object receiver, String methodName,
-			Object arg, Class<T> returnType) {
+	public static <T> T callMethod(Object receiver, String methodName, Object arg, Class<T> returnType) {
 		return callMethod(receiver, methodName, new Object[]{arg}, returnType);
 	}
 
-	public static <T> T callMethod(Object receiver, String methodName,
-			Class<T> returnType) {
+	public static <T> T callMethod(Object receiver, String methodName, Class<T> returnType) {
 		return callMethod(receiver, methodName, new Object[]{}, returnType);
 	}
 
