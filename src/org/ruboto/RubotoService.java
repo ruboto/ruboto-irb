@@ -4,9 +4,8 @@ import org.ruboto.Script;
 import java.io.IOException;
 import android.app.ProgressDialog;
 
-public abstract class RubotoService extends android.app.Service {
+public class RubotoService extends android.app.Service {
   private String scriptName;
-  private String remoteVariable = "";
   public Object[] args;
 
   public static final int CB_BIND = 0;
@@ -23,11 +22,6 @@ public abstract class RubotoService extends android.app.Service {
     callbackProcs[id] = obj;
   }
 	
-  public RubotoService setRemoteVariable(String var) {
-    remoteVariable = ((var == null) ? "" : (var + "."));
-    return this;
-  }
-
   public void setScriptName(String name){
     scriptName = name;
   }
@@ -44,9 +38,16 @@ public abstract class RubotoService extends android.app.Service {
     super.onCreate();
 
     if (Script.setUpJRuby(this)) {
+        Script.defineGlobalVariable("$context", this);
         Script.defineGlobalVariable("$service", this);
+
         try {
-            new Script(scriptName).execute();
+            if (scriptName != null) {
+                new Script(scriptName).execute();
+            } else {
+                Script.execute("$service.initialize_ruboto");
+                Script.execute("$service.on_create");
+            }
         } catch(IOException e) {
             e.printStackTrace();
         }
