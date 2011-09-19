@@ -218,6 +218,7 @@ import android.widget.Toast;
 	    /* Called when jruby finishes loading */
 	    protected final Runnable notifyComplete = new Runnable() {
 	        public void run() {
+	            IRBScript.defineGlobalVariable("$context", IRB.this);
 	            IRBScript.defineGlobalVariable("$activity", IRB.this);
 	            irbOutput.append("Done\n>> ");
                 configScriptsDir();
@@ -479,7 +480,7 @@ import android.widget.Toast;
               irbOutput.append("=> ");
               irbOutput.append(new IRBScript(name).execute());
             } catch (IOException e) {
-	            Toast.makeText(this, "Could not open " + name, Toast.LENGTH_SHORT).show();
+              Toast.makeText(this, "Could not open " + name, Toast.LENGTH_SHORT).show();
             } catch (RuntimeException e) {
               reportExecption(e);
             }
@@ -631,25 +632,30 @@ import android.widget.Toast;
 	                
 	                Log.d(TAG, "copying file " + f);                    
 	                                
-	                InputStream is = getAssets().open(from+ "/" +f);                    
-	                OutputStream fos = new BufferedOutputStream(new FileOutputStream(dest));    
+                    if (getAssets().list(from + "/" + f).length == 0) {
+	                    InputStream is = getAssets().open(from+ "/" +f);                    
+	                    OutputStream fos = new BufferedOutputStream(new FileOutputStream(dest), 8192);    
 	
-	                int n;
-	                while ((n = is.read(buffer, 0, buffer.length)) != -1)
-	                    fos.write(buffer, 0, n);                
-	                
-	                is.close();
-	                fos.close();                
+	                    int n;
+	                    while ((n = is.read(buffer, 0, buffer.length)) != -1)
+	                        fos.write(buffer, 0, n);                
+	                    
+	                    is.close();
+	                    fos.close();                
+                    } else {
+                        dest.mkdir();
+                        copyDemoScripts(from + "/" + f, dest);
+                    }
 	            }
 
-              updateVersionString();
+                updateVersionString();
 	        } catch (IOException iox) {
 	            Log.e(TAG, "error copying demo scripts", iox);     
 	        }
 	    }    
 	
 	    public String recopyDemoScripts(String from, File to) {      
-	    	String rv = "Copied:";
+	    	String rv = "";
 	        try {
 	            byte[] buffer = new byte[8192];        
 	            for (String f : getAssets().list(from)) {
@@ -661,20 +667,24 @@ import android.widget.Toast;
 	                    Log.d(TAG, "copying file " + f);                    
 	                }
 	                
-	                                
-	                InputStream is = getAssets().open(from+ "/" +f);                    
-	                OutputStream fos = new BufferedOutputStream(new FileOutputStream(dest));    
+                    if (getAssets().list(from + "/" + f).length == 0) {
+	                    InputStream is = getAssets().open(from+ "/" +f);                    
+	                    OutputStream fos = new BufferedOutputStream(new FileOutputStream(dest), 8192);    
 	
-	                int n;
-	                while ((n = is.read(buffer, 0, buffer.length)) != -1)
-	                    fos.write(buffer, 0, n);                
-	                
-	                is.close();
-	                fos.close();   
-	                rv += "\n" + f;
+	                    int n;
+	                    while ((n = is.read(buffer, 0, buffer.length)) != -1)
+	                        fos.write(buffer, 0, n);                
+	                    
+	                    is.close();
+	                    fos.close();                
+    	                rv += "\nCopied:" + f;
+                    } else {
+                        dest.mkdir();
+    	                rv += "\n" + recopyDemoScripts(from + "/" + f, dest);
+                    }
 	            }
 
-              updateVersionString();
+                updateVersionString();
 	        } catch (IOException iox) {
 	            Log.e(TAG, "error copying demo scripts", iox);
 	            rv = "Copy failed";
