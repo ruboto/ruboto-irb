@@ -55,6 +55,7 @@ module Ruboto
   module Service
     def handle_create(&block)
       instance_exec &block
+      initialize_ruboto
       on_create
     end
   end

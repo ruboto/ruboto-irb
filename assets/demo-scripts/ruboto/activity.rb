@@ -76,6 +76,7 @@ module Ruboto
 
     def handle_create(&block)
       instance_exec &block
+      initialize_ruboto
       on_create nil
     end
   end
