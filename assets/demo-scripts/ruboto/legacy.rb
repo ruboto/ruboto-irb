@@ -1,12 +1,13 @@
 require 'ruboto/activity'
 
-####################################################################################
-####################################################################################
-##
-## ruboto/legacy.rb
-##
-####################################################################################
-####################################################################################
+#######################################################
+#
+# ruboto/legacy.rb
+#
+# Required for backwards compatibility. The goal
+# should be to run scripts without this.
+#
+#######################################################
 
 #
 # Old handle methods
@@ -88,6 +89,19 @@ module Ruboto
       instance_exec &block
       initialize_ruboto
       on_create
+    end
+  end
+end
+
+#
+# Legacy BroadcastReceiver Subclass Setup
+#
+
+module Ruboto
+  module BroadcastReceiver
+    def handle_receive(&block)
+      instance_exec &block
+      on_receive($context, nil)
     end
   end
 end

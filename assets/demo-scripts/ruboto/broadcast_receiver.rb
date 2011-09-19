@@ -1,29 +1,21 @@
 require 'ruboto/base'
 
-####################################################################################
-####################################################################################
-##
-## ruboto/broadcast_receiver.rb
-##
-####################################################################################
-####################################################################################
-
+#######################################################
 #
-# Legacy BroadcastReceiver Subclass Setup
+# ruboto/broadcast_receiver.rb
 #
-
-module Ruboto
-  module BroadcastReceiver
-    def handle_receive(&block)
-      instance_exec &block
-      on_receive($context, nil)
-    end
-  end
-end
+# Basic broadcast_receiver set up and callback configuration.
+#
+#######################################################
 
 #
 # Basic BroadcastReceiver Setup
 #
+
+module Ruboto
+  module BroadcastReceiver
+  end
+end
 
 def ruboto_configure_broadcast_receiver(klass)
   klass.class_eval do
