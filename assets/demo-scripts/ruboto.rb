@@ -1,15 +1,3 @@
-####################################################################################
-####################################################################################
-##
-## To Do
-##
-####################################################################################
-####################################################################################
-
-# Modify service startup
-# Remove abstract from service
-# Define $context
-
 #######################################################
 #
 # ruboto.rb
@@ -18,6 +6,9 @@
 #     RubotoBroadcastReceiver. 
 # - Provides interface for generating UI elements. 
 # - Imports and configures callback classes.
+#
+# require this script for legacy support or require
+# the individual script files.
 #
 #######################################################
 
