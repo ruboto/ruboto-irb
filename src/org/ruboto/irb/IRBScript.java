@@ -117,6 +117,7 @@ public class IRBScript extends Script {
     }
 
     public String execute() throws IOException {
+    	IRBScript.setScriptFilename(this.name);
         return Script.execute(getContents());
     }
 
