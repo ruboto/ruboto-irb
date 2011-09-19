@@ -36,6 +36,63 @@ module Ruboto
 end
 
 #
+# Old handle_create for Activities
+#
+
+module Ruboto
+  module Activity
+    def handle_finish_create &block
+      @finish_create_block = block
+    end
+  
+    def setup_content &block
+      @view_parent = nil
+      @content_view_block = block
+    end
+
+    def handle_create(&block)
+      instance_exec &block
+      initialize_ruboto
+      on_create nil
+    end
+  end
+end
+  
+RubotoActivity.class_eval do
+    def on_create(bundle)
+      @view_parent = nil
+      setContentView(instance_eval &@content_view_block) if @content_view_block
+      instance_eval { @finish_create_block.call } if @finish_create_block
+    end
+end
+
+#
+# Allow IRB legacy 
+#
+
+if $package_name == "org.ruboto.irb"
+  Java::org.ruboto.irb.IRB.class_eval do
+    def handle_create(&block)
+      start_ruboto_activity "$activity", RubotoActivity, nil, &block
+    end
+  end
+end
+
+#
+# Legacy Service Subclass Setup
+#
+
+module Ruboto
+  module Service
+    def handle_create(&block)
+      instance_exec &block
+      initialize_ruboto
+      on_create
+    end
+  end
+end
+
+#
 # Allows RubotoActivity to handle callbacks covering Class based handlers
 #
 

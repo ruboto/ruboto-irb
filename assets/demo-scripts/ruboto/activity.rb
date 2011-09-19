@@ -60,25 +60,11 @@ Context.class_eval do
 end
 
 #
-# Legacy Activity Subclass Setup
+# Basic Activity Setup
 #
 
 module Ruboto
   module Activity
-    def handle_finish_create &block
-      @finish_create_block = block
-    end
-  
-    def setup_content &block
-      @view_parent = nil
-      @content_view_block = block
-    end
-
-    def handle_create(&block)
-      instance_exec &block
-      initialize_ruboto
-      on_create nil
-    end
   end
 end
   
@@ -88,9 +74,6 @@ def ruboto_configure_activity(klass)
     
     # Can't be moved into the module
     def on_create(bundle)
-      @view_parent = nil
-      setContentView(instance_eval &@content_view_block) if @content_view_block
-      instance_eval { @finish_create_block.call } if @finish_create_block
     end
   end
 end

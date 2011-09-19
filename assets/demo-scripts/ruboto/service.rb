@@ -48,16 +48,11 @@ Context.class_eval do
 end
 
 #
-# Legacy Service Subclass Setup
+# Leave for legacy Service Subclass Setup
 #
 
 module Ruboto
   module Service
-    def handle_create(&block)
-      instance_exec &block
-      initialize_ruboto
-      on_create
-    end
   end
 end
 
