@@ -130,7 +130,7 @@ public class RubotoActivity extends android.app.Activity {
     protected void loadScript() {
         try {
             if (scriptName != null) {
-                new Script(scriptName).execute(); doesn't this work:
+                new Script(scriptName).execute();
             } else {
                 // TODO: Why doesn't this work? 
                 // Script.callMethod(this, "initialize_ruboto");
