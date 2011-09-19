@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Ruboto IRB</string>
     <string name="version_name">0.6dev</string>
-    <string name="ruboto_script_version">8</string>
+    <string name="ruboto_script_version">10</string>
 
     <string name="IRB_Tab">IRB</string>
     <string name="Editor_Tab">Editor</string>
