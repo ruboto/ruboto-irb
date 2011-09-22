@@ -1,3 +1,14 @@
+#######################################################
+#
+# demo-irb-server.rb (by Scott Moyer)
+# 
+# Creates a webrick server to allow you to edit the 
+# scripts on the device from your browser. You can also
+# send arbitrary code to execute on the device. This is 
+# an example of creating a Service.
+#
+#######################################################
+
 require "ruboto/service"
 require "ruboto/util/stack"
 
