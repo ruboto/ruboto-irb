@@ -7,7 +7,7 @@
 #######################################################
 
 # Only used needed for ruboto-core apps
-#require 'ruboto/version'
+require 'ruboto/version'
 $RUBOTO_VERSION = 10
 
 def confirm_ruboto_version(required_version, exact=true)
