@@ -52,6 +52,7 @@ module Ruboto
     end
 
     def handle_create(&block)
+      $new_context_global = "$activity"
       instance_exec &block
       initialize_ruboto
       on_create nil
@@ -86,6 +87,7 @@ end
 module Ruboto
   module Service
     def handle_create(&block)
+      $new_context_global = "$service"
       instance_exec &block
       initialize_ruboto
       on_create
