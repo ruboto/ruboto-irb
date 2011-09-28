@@ -29,7 +29,7 @@ That's it! Have fun!
 
 ##Screenshot
 
-![Ruboto-IRB screenshot](http://cloud.github.com/downloads/ruboto/ruboto-irb/ruboto-screenshot-landscape.png)
+![Ruboto-IRB screenshot](https://github.com/ruboto/ruboto-irb/raw/master/doc/ruboto-screenshot-landscape.png)
 
 ##Credits
 
