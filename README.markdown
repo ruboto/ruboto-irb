@@ -4,7 +4,7 @@
 
 ##Installation
 
-The simplest way to get started with ruboto-irb is to install a prebuilt binary package.  They can be found at [github.com/ruboto/ruboto-irb/downloads](http://github.com/ruboto/ruboto-irb/downloads).
+The simplest way to get started with ruboto-irb is to install a prebuilt binary package.  These packages can be found at [github.com/ruboto/ruboto-irb/downloads](http://github.com/ruboto/ruboto-irb/downloads).
 
 If you'd like more control over the build and installation process, you can do it manually using the following instructions.
 
