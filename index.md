@@ -13,7 +13,7 @@ Ruboto allows you to run Ruby scripts on Android devices.  Using Ruby code, you 
 
 <br clear="all"/>
 
-## ruboto
+## ruboto gem
 
 [ruboto on GitHub](http://github.com/ruboto/ruboto/)
 
