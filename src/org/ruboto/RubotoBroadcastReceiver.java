@@ -1,5 +1,7 @@
 package org.ruboto;
 
+import java.io.IOException;
+
 public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver {
     private String scriptName = null;
     private boolean initialized = false;
@@ -20,29 +22,37 @@ public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver {
     public RubotoBroadcastReceiver(String name) {
         super();
 
-        if (name != null)
+        if (name != null) {
             setScriptName(name);
-    }
-
-    public void onReceive(android.content.Context context, android.content.Intent intent) {
-        if (Script.setUpJRuby(context)) {
-            Script.defineGlobalVariable("$context", context);
-            Script.defineGlobalVariable("$broadcast_receiver", this);
-            Script.defineGlobalVariable("$intent", intent);
-
-            try {
-                if (scriptName != null && !initialized) {
-                    new Script(scriptName).execute();
-                    initialized = true;
-                } else {
-                    Script.execute("$broadcast_receiver.on_receive($context, $intent)");
-                }
-            } catch(Exception e) {
-                e.printStackTrace();
+        
+            if (Script.isInitialized()) {
+                loadScript();
             }
         }
     }
 
+    protected void loadScript() {
+        Script.put("$broadcast_receiver", this);
+        if (scriptName != null) {
+            try {
+                new Script(scriptName).execute();
+            } catch(IOException e) {
+                throw new RuntimeException("IOException loading broadcast receiver script", e);
+            }
+        }
+    }
+
+    public void onReceive(android.content.Context context, android.content.Intent intent) {
+        Script.put("$context", context);
+        Script.put("$broadcast_receiver", this);
+        Script.put("$intent", intent);
+
+        try {
+            Script.execute("$broadcast_receiver.on_receive($context, $intent)");
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 }	
 
 
