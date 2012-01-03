@@ -1,5 +1,5 @@
 if `ant -version` !~ /version (\d+)\.(\d+)\.(\d+)/ || $1.to_i < 1 || ($1.to_i == 1 && $2.to_i < 8)
-  puts "ANT version 1.8.1 or later required.  Version found: #{$1}.#{$2}.#{$3}"
+  puts "ANT version 1.8.0 or later required.  Version found: #{$1}.#{$2}.#{$3}"
   exit 1
 end
 
@@ -77,21 +77,24 @@ namespace :install do
   end
 end
 
+desc 'Build APK for release'
 task :release => RELEASE_APK_FILE
 
 file RELEASE_APK_FILE => APK_DEPENDENCIES do |t|
   build_apk(t, true)
 end
 
+desc 'Tag this working copy with the current version'
 task :tag => :release do
   unless `git branch` =~ /^\* master$/
     puts "You must be on the master branch to release!"
     exit!
   end
-  sh "git commit --allow-empty -a -m 'Release #{version}'"
+  # sh "git commit --allow-empty -a -m 'Release #{version}'"
+  output = `git status --porcelain`
+  raise "Workspace not clean!\n#{output}" unless output.empty?
   sh "git tag #{version}"
   sh "git push origin master --tags"
-  #sh "gem push pkg/#{name}-#{version}.gem"
 end
 
 task :sign => :release do
