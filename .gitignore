@@ -7,3 +7,5 @@ local.properties
 generated_libs
 .rvmrc
 .DS_Store
+.idea
+test/coverage.em
