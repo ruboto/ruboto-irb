@@ -7,8 +7,9 @@
 #
 #######################################################
 
-require 'ruboto'
-confirm_ruboto_version(10, false)
+require 'ruboto/activity'
+require 'ruboto/widget'
+require 'ruboto/util/toast'
 
 class RubotoActivity
   @@lists = {
@@ -75,13 +76,19 @@ class RubotoActivity
 
     context.start_ruboto_activity var do
       setTitle title
-      setup_content do
-        linear_layout :orientation => :vertical do
-          text_view(:text => extra_text) if extra_text
-          list_view :list => @@lists[list_id]
-        end
+
+      @list_id = list_id
+      @extra_text = extra_text
+
+      def on_create(bundle)
+        setContentView(
+          linear_layout :orientation => :vertical do
+            text_view(:text => @extra_text) if @extra_text
+            list_view :list => @@lists[@list_id], :on_item_click_listener => @handle_item_click 
+          end)
       end
-      handle_item_click do |adapter_view, view, pos, item_id| 
+
+      @handle_item_click = Proc.new do |adapter_view, view, pos, item_id| 
         RubotoActivity.resolve_click self, view.getText
       end
     end
@@ -106,20 +113,21 @@ class RubotoActivity
     context.start_ruboto_dialog "$custom_dialog" do
       setTitle "App/Activity/Custom Dialog"
 
-      setup_content do
+      def on_create(bundle)
+        getWindow.setLayout(ViewGroup::LayoutParams::FILL_PARENT,
+                            ViewGroup::LayoutParams::WRAP_CONTENT)
         cd = GradientDrawable.new
         cd.setColor(Color.argb(240,96,0,0))
         cd.setStroke(3, Color.argb(255,255,128,128))
         cd.setCornerRadius(3)
-        getWindow.setLayout(ViewGroup::LayoutParams::FILL_PARENT,
-                            ViewGroup::LayoutParams::WRAP_CONTENT)
         getWindow.setBackgroundDrawable(cd)
 
-        linear_layout(:orientation => :vertical, :padding => [10,0,10,10]) do
-          text_view :text => "Example of how you can use a custom Theme.Dialog theme to make an activity that looks like a customized dialog, here with an ugly frame.", 
+        setContentView(
+          linear_layout(:orientation => :vertical, :padding => [10,0,10,10]) do
+            text_view :text => "Example of how you can use a custom Theme.Dialog theme to make an activity that looks like a customized dialog, here with an ugly frame.", 
             :text_size => 14,
             :gravity => Gravity::CENTER_HORIZONTAL
-        end
+          end)
       end
     end
   end
@@ -138,20 +146,19 @@ class RubotoActivity
     context.start_ruboto_activity "$custom_title" do
       requestWindowFeature Window::FEATURE_CUSTOM_TITLE
 
-      setup_content do
-        linear_layout :orientation => :vertical do
-          linear_layout do
-            @etl = edit_text(:text => "Left is best", :min_ems => 10, :max_ems => 10)
-            button :text => "Change left", :on_click_listener => proc{@tvl.text = @etl.text}
-          end
-          linear_layout do
-            @etr = edit_text(:text => "Right is always right", :min_ems => 10, :max_ems => 10)
-            button :text => "Change right", :on_click_listener => proc{@tvr.text = @etr.text}
-          end
-        end
-      end
+      def on_create(bundle)
+        setContentView(
+          linear_layout :orientation => :vertical do
+            linear_layout do
+              @etl = edit_text(:text => "Left is best", :min_ems => 10, :max_ems => 10)
+              button :text => "Change left", :on_click_listener => (proc{@tvl.text = @etl.text})
+            end
+            linear_layout do
+              @etr = edit_text(:text => "Right is always right", :min_ems => 10, :max_ems => 10)
+              button :text => "Change right", :on_click_listener => (proc{@tvr.text = @etr.text})
+            end
+          end)
 
-      handle_finish_create do
         getWindow.setFeatureInt(Window::FEATURE_CUSTOM_TITLE, 
                                 Ruboto::R::layout::empty_relative_layout)
 
@@ -179,20 +186,22 @@ class RubotoActivity
     context.start_ruboto_activity "$forwarding" do
       setTitle "App/Activity/Forwarding"
 
-      setup_content do
-        linear_layout :orientation => :vertical do
-          text_view :text => "Press the button to go forward to the next activity.  This activity will stop, so you will no longer see it when going back."
-          linear_layout(:gravity => Gravity::CENTER_HORIZONTAL) do
-            button :text => "Go", :width => :wrap_content, :on_click_listener => @handle_click
-          end
-        end
+      def on_create(bundle)
+        setContentView(
+          linear_layout :orientation => :vertical do
+            text_view :text => "Press the button to go forward to the next activity.  This activity will stop, so you will no longer see it when going back."
+            linear_layout(:gravity => Gravity::CENTER_HORIZONTAL) do
+              button :text => "Go", :width => :wrap_content, :on_click_listener => @handle_click
+            end
+          end)
       end
 
       @handle_click = proc do |view|
         context.start_ruboto_activity "$forwarding2" do
           setTitle "App/Activity/Forwarding"
-          setup_content do
-            text_view :text => "Press back button and notice we don't see the previous activity."
+          def on_create (bundle)
+            setContentView(
+              text_view :text => "Press back button and notice we don't see the previous activity.")
           end
         end
         finish
@@ -212,9 +221,9 @@ class RubotoActivity
     context.start_ruboto_activity "$hello_world" do
       setTitle "App/Activity/Hello World"
 
-      setup_content do
-          text_view :text => "Hello, World!", 
-            :gravity => (Gravity::CENTER_HORIZONTAL | Gravity::CENTER_VERTICAL)
+      def on_create(bundle)
+        setContentView(text_view :text => "Hello, World!", 
+                                    :gravity => (Gravity::CENTER_HORIZONTAL | Gravity::CENTER_VERTICAL))
       end
     end
   end
@@ -234,20 +243,21 @@ class RubotoActivity
                  WindowManager::LayoutParams::SOFT_INPUT_STATE_VISIBLE | 
                  WindowManager::LayoutParams::SOFT_INPUT_ADJUST_RESIZE)
 
-      setup_content do
-        linear_layout :orientation => :vertical, :padding => [4,4,4,4] do
-          text_view :text => "Demonstration of persistent activity state with getPreferences(0).edit() and getPreferences(0).", :padding => [0,0,0,4]
-          text_view :text => "This text field saves its state:", :padding => [0,0,0,4]
-          @save = edit_text(:text => "Initial text.", :backgroundColor => 0x7700ff00, 
-                            :padding => [0,4,0,4], :layout => {:weight= => 1.0})
+      def on_create(bundle)
+        setContentView(
+          linear_layout :orientation => :vertical, :padding => [4,4,4,4] do
+            text_view :text => "Demonstration of persistent activity state with getPreferences(0).edit() and getPreferences(0).", :padding => [0,0,0,4]
+            text_view :text => "This text field saves its state:", :padding => [0,0,0,4]
+            @save = edit_text(:text => "Initial text.", :backgroundColor => 0x7700ff00, 
+                              :padding => [0,4,0,4], :layout => {:weight= => 1.0})
 
-          text_view :text => "This text field does not save its state:", :padding => [0,8,0,4]
-          edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000, 
-                            :padding => [0,4,0,4], :layout => {:weight= => 1.0}
-        end
+            text_view :text => "This text field does not save its state:", :padding => [0,8,0,4]
+            edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000, 
+                              :padding => [0,4,0,4], :layout => {:weight= => 1.0}
+          end)
       end
 
-      handle_pause do
+      def on_pause
         editor = getPreferences(0).edit
         editor.putString("text", @save.getText.toString)
         editor.putInt("selection-start", @save.getSelectionStart)
@@ -255,7 +265,7 @@ class RubotoActivity
         editor.commit
       end
 
-      handle_resume do
+      def on_resume
         prefs = getPreferences(0) 
         restoredText = prefs.getString("text", nil)
         if (restoredText != nil)
@@ -286,17 +296,18 @@ class RubotoActivity
                  WindowManager::LayoutParams::SOFT_INPUT_STATE_VISIBLE | 
                  WindowManager::LayoutParams::SOFT_INPUT_ADJUST_RESIZE)
 
-      setup_content do
-        linear_layout :orientation => :vertical, :padding => [4,4,4,4] do
-          text_view :text => "Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().", :padding => [0,0,0,4]
-          text_view :text => "This text field saves its state:", :padding => [0,0,0,4]
-          @save = edit_text(:text => "Initial text.", :backgroundColor => 0x7700ff00, :padding => [0,4,0,4], 
-                            :freezes_text => true, :id => 55555, :layout => {:weight= => 1.0})
+      def on_create(bundle)
+        setContentView(
+          linear_layout :orientation => :vertical, :padding => [4,4,4,4] do
+            text_view :text => "Demonstration of saving and restoring activity state in onSaveInstanceState() and onCreate().", :padding => [0,0,0,4]
+            text_view :text => "This text field saves its state:", :padding => [0,0,0,4]
+            @save = edit_text(:text => "Initial text.", :backgroundColor => 0x7700ff00, :padding => [0,4,0,4], 
+                              :freezes_text => true, :id => 55555, :layout => {:weight= => 1.0})
 
-          text_view :text => "This text field does not save its state:", :padding => [0,8,0,4]
-          edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000,
-                           :padding => [0,4,0,4], :layout => {:weight= => 1.0}
-        end
+            text_view :text => "This text field does not save its state:", :padding => [0,8,0,4]
+            edit_text :text => "Initial text.", :backgroundColor => 0x77ff0000,
+                             :padding => [0,4,0,4], :layout => {:weight= => 1.0}
+          end)
       end
     end
   end
@@ -320,9 +331,7 @@ class RubotoActivity
     context.start_ruboto_activity "$arcs" do
       setTitle "Graphics/Arcs"
 
-      @ruboto_view = RubotoView.new(self)
-
-      setup_content do
+      def on_create(bundle)
         @sweep_inc = 2
         @start_inc = 15
         @mStart = 0.0
@@ -364,10 +373,10 @@ class RubotoActivity
         @mFramePaint.setStyle(Paint::Style::STROKE)
         @mFramePaint.setStrokeWidth(0)
 
-        @ruboto_view
+        setContentView(@ruboto_view)
       end
 
-      def self.draw(canvas, oval, useCenters, paints, drawBig)
+      def draw(canvas, oval, useCenters, paints, drawBig)
         if drawBig
           canvas.drawRect(@mBigOval, @mFramePaint)
           canvas.drawArc(@mBigOval, @mStart, @mSweep, useCenters, paints)
@@ -376,8 +385,8 @@ class RubotoActivity
         canvas.drawRect(oval, @mFramePaint)
         canvas.drawArc(oval, @mStart, @mSweep, useCenters, paints)
       end
-
-      @ruboto_view.handle_draw do |canvas|
+      
+      def view_on_draw(canvas)
         canvas.drawColor(Color::WHITE)
 
         0.upto(3) {|i| draw(canvas, @mOvals[i], @mUseCenters[i], @mPaints[i], @mBigIndex == i)}
@@ -387,10 +396,17 @@ class RubotoActivity
           @mSweep -= 360
           @mStart += @start_inc
           @mStart -= 360 if @mStart >= 360 
-          @mBigIndex = (@mBigIndex + 1) % @mOvals.length
+         @mBigIndex = (@mBigIndex + 1) % @mOvals.length
         end
 
         @ruboto_view.invalidate
+      end
+
+      @ruboto_view = RubotoView.new(self)
+      @ruboto_view.initialize_ruboto_callbacks do 
+        def on_draw(canvas)
+          $arcs.view_on_draw(canvas)
+        end
       end
     end
   end
@@ -423,11 +439,12 @@ class RubotoActivity
                 "2" => "..---","3" => "...--","4" => "....-","5" => ".....",
                 "6" => "-....","7" => "--...","8" => "---..","9" => "----."}
       setTitle "OS/Morse Code"
-      setup_content do
-        linear_layout :orientation => :vertical do
-          @et = edit_text
-          button :text => "Vibrate", :width => :wrap_content, :on_click_listener => @handle_click
-        end
+      def on_create(bundle)
+        setContentView(
+          linear_layout :orientation => :vertical do
+            @et = edit_text
+            button :text => "Vibrate", :width => :wrap_content, :on_click_listener => @handle_click
+          end)
       end
       @handle_click = proc do |view|
         getSystemService(Context::VIBRATOR_SERVICE).vibrate(
@@ -602,15 +619,16 @@ class RubotoActivity
 
     context.start_ruboto_activity "$chronometer_demo" do
       setTitle "Views/Chronometer"
-      setup_content do
-        linear_layout(:orientation => :vertical, :gravity => Gravity::CENTER_HORIZONTAL) do
-          @c = chronometer :format => "Initial format: %s", :width => :wrap_content, :padding => [0,30,0,30] 
-          button :text => "Start", :width => :wrap_content, :on_click_listener => proc{@c.start}
-          button :text => "Stop", :width => :wrap_content, :on_click_listener => proc{@c.stop}
-          button :text => "Reset", :width => :wrap_content, :on_click_listener => proc{@c.setBase SystemClock.elapsedRealtime}
-          button :text => "Set format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat("Formatted time (%s)")}
-          button :text => "Clear format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat(nil)}
-        end
+      def on_create(bundle)
+        setContentView(
+          linear_layout(:orientation => :vertical, :gravity => Gravity::CENTER_HORIZONTAL) do
+            @c = chronometer :format => "Initial format: %s", :width => :wrap_content, :padding => [0,30,0,30] 
+            button :text => "Start", :width => :wrap_content, :on_click_listener => proc{@c.start}
+            button :text => "Stop", :width => :wrap_content, :on_click_listener => proc{@c.stop}
+            button :text => "Reset", :width => :wrap_content, :on_click_listener => proc{@c.setBase SystemClock.elapsedRealtime}
+            button :text => "Set format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat("Formatted time (%s)")}
+            button :text => "Clear format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat(nil)}
+          end)
       end
     end
   end
@@ -620,13 +638,14 @@ class RubotoActivity
 
     context.start_ruboto_activity "$buttons" do
       setTitle "Views/Buttons"
-      setup_content do
-        linear_layout :orientation => :vertical do
-          button :text => "Normal", :width => :wrap_content
-          button :text => "Small", :width => :wrap_content, 
+      def on_create(bundle)
+        setContentView(
+          linear_layout :orientation => :vertical do
+            button :text => "Normal", :width => :wrap_content
+            button :text => "Small", :width => :wrap_content, 
                     :default_style => JavaUtilities.get_proxy_class("android.R$attr")::buttonStyleSmall
-          toggle_button :width => :wrap_content
-        end
+            toggle_button :width => :wrap_content
+          end)
       end
     end
   end
@@ -639,14 +658,16 @@ class RubotoActivity
 
     context.start_ruboto_activity "$date_dialog" do
       setTitle "Views/Date Widgets/1. Dialog"
-      setup_content do
-        linear_layout :orientation => :vertical do
-          @time  = Time.now
 
-          @tv = text_view :text => @time.strftime("%m-%d-%Y %R")
-          button :text => "change the date", :width => :wrap_content, :on_click_listener => proc{date_picker.show}
-          button :text => "change the time", :width => :wrap_content, :on_click_listener => proc{time_picker.show}
-        end
+      def on_create(bundle)
+        @time  = Time.now
+
+        setContentView(
+          linear_layout :orientation => :vertical do
+            @tv = text_view :text => @time.strftime("%m-%d-%Y %R")
+            button :text => "change the date", :width => :wrap_content, :on_click_listener => proc{date_picker.show}
+            button :text => "change the time", :width => :wrap_content, :on_click_listener => proc{time_picker.show}
+          end)
       end
 
       def date_picker
@@ -672,12 +693,13 @@ class RubotoActivity
 
     context.start_ruboto_activity "$date_inline" do
       setTitle "Views/Date Widgets/#{title}"
-      setup_content do
-        linear_layout do
-          time_picker :on_time_changed_listener => proc{|v, h, m| @tv.setText("%02d:%02d" % [h, m]) if @tv}, 
-                      :current_hour => 12, :current_minute=> 15
-          @tv = text_view :text => "12:15"
-        end
+      def on_create(bundle)
+        setContentView(
+          linear_layout do
+            time_picker :on_time_changed_listener => proc{|v, h, m| @tv.setText("%02d:%02d" % [h, m]) if @tv}, 
+                        :current_hour => 12, :current_minute=> 15
+            @tv = text_view :text => "12:15"
+          end)
       end
     end
   end
