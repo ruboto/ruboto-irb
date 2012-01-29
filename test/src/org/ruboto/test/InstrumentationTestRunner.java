@@ -28,7 +28,6 @@ import java.util.HashSet;
 
 public class InstrumentationTestRunner extends android.test.InstrumentationTestRunner {
     private Class activityClass;
-    private String script;
     private Object setup;
     private TestSuite suite;
     
@@ -69,9 +68,8 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
         return suite;
     }
 
-    public void activity(Class activityClass, String script) {
+    public void activity(Class activityClass) {
         this.activityClass = activityClass;
-        this.script = script;
     }
 
     public void setup(Object block) {
@@ -82,7 +80,7 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
         if (android.os.Build.VERSION.SDK_INT <= 8) {
           name ="runTest";
         }
-        Test test = new ActivityTest(activityClass, script, Script.getScriptFilename(), setup, name, block);
+        Test test = new ActivityTest(activityClass, Script.getScriptFilename(), setup, name, block);
         suite.addTest(test);
         Log.d(getClass().getName(), "Made test instance: " + test);
     }

@@ -30,6 +30,8 @@ RESOURCE_FILES     = Dir[File.expand_path 'res/**/*']
 JAVA_SOURCE_FILES  = Dir[File.expand_path 'src/**/*.java']
 RUBY_SOURCE_FILES  = Dir[File.expand_path 'src/**/*.rb']
 APK_DEPENDENCIES   = [MANIFEST_FILE, RUBOTO_CONFIG_FILE, BUNDLE_JAR] + JRUBY_JARS + JAVA_SOURCE_FILES + RESOURCE_FILES + RUBY_SOURCE_FILES
+KEYSTORE_FILE      = (key_store = File.readlines('ant.properties').grep(/^key.store=/).first) ? key_store.chomp.sub(/^key.store=/, '') : "#{build_project_name}.keystore"
+KEYSTORE_ALIAS     = (key_alias = File.readlines('ant.properties').grep(/^key.alias=/).first) ? key_alias.chomp.sub(/^key.alias=/, '') : build_project_name
 
 CLEAN.include('bin')
 
@@ -80,8 +82,19 @@ end
 desc 'Build APK for release'
 task :release => RELEASE_APK_FILE
 
-file RELEASE_APK_FILE => APK_DEPENDENCIES do |t|
+file RELEASE_APK_FILE => [KEYSTORE_FILE] + APK_DEPENDENCIES do |t|
   build_apk(t, true)
+end
+
+desc 'Create a keystore for signing the release APK'
+file KEYSTORE_FILE do
+  unless File.read('ant.properties') =~ /^key.store=/
+    File.open('ant.properties', 'a'){|f| f << "\nkey.store=#{KEYSTORE_FILE}\n"}
+  end
+  unless File.read('ant.properties') =~ /^key.alias=/
+    File.open('ant.properties', 'a'){|f| f << "\nkey.alias=#{KEYSTORE_ALIAS}\n"}
+  end
+  sh "keytool -genkey -v -keystore #{KEYSTORE_FILE} -alias #{KEYSTORE_ALIAS} -keyalg RSA -keysize 2048 -validity 10000"
 end
 
 desc 'Tag this working copy with the current version'
@@ -144,11 +157,10 @@ end
 namespace :update_scripts do
   desc 'Copy scripts to emulator and restart the app'
   task :restart => APK_DEPENDENCIES do |t|
-    if stop_app
-      update_scripts
-    else
-      build_apk(t, false)
+    if build_apk(t, false) || !stop_app
       install_apk
+    else
+      update_scripts
     end
     start_app
   end
@@ -334,7 +346,7 @@ def build_apk(t, release)
     changed_prereqs = t.prerequisites.select do |p|
       File.file?(p) && !Dir[p].empty? && Dir[p].map { |f| File.mtime(f) }.max > File.mtime(APK_FILE)
     end
-    return if changed_prereqs.empty?
+    return false if changed_prereqs.empty?
     changed_prereqs.each { |f| puts "#{f} changed." }
     puts "Forcing rebuild of #{apk_file}."
   end
@@ -343,6 +355,7 @@ def build_apk(t, release)
   else
     sh 'ant debug'
   end
+  return true
 end
 
 def install_apk
