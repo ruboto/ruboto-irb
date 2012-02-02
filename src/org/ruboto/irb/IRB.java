@@ -53,6 +53,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	private TabHost tabs;
 	private TabWidget tabWidget;
 	private final Handler handler = new Handler();
+  private PrintStream printStream;
 
 	/* IRB_Tab Elements */
 	public static TextView currentIrbOutput;
@@ -102,9 +103,22 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		setScriptName("irb.rb");
 		super.onCreate(savedInstanceState);
+		IRBScript.setLocalVariableBehavior("PERSISTENT");
+		if (IRBScript.isInitialized()) uiSetup();
+	}
 
+  public boolean rubotoAttachable() {
+    return false;
+  }
+
+  protected void fireRubotoActivity() {
+    if(appStarted) return;
+    super.fireRubotoActivity();
+    uiSetup();
+  }
+
+  private void uiSetup() {
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
 		if (prefs.getBoolean("HideTitle", false))
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -122,11 +136,41 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				: View.VISIBLE);
 
 		irbSetUp();
+
+	  printStream = new PrintStream(
+		  new WriterOutputStream(new Writer() {
+			  @Override
+			  public void write(final char[] chars,
+					  final int start, final int length)
+					  throws IOException {
+				  IRB.this.runOnUiThread(new Runnable() {
+					  public void run() {
+						  IRB.appendToIRB(new String(chars,
+								  start, length));
+					  }
+				  });
+			  }
+
+			  @Override
+			  public void flush() throws IOException {
+				  // no buffer
+			  }
+
+			  @Override
+			  public void close() throws IOException {
+				  // meaningless
+			  }
+		  }));
+
+	  IRBScript.setOutputStream(printStream);
+    irbOutput.append(">> ");
+
 		configScriptsDir();
 		editorSetUp();
 		scriptsListSetUp();
-		// setUpJRuby();
-	}
+
+    autoLoadScript();
+  }
 
 	private void irbSetUp() {
 		tabs.addTab(tabs
@@ -148,6 +192,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 					irbOutput.append("=> ");
 					irbOutput.append(IRBScript.execute(rubyCode));
 				} catch (RuntimeException e) {
+          reportExecption(e);
 				}
 				irbOutput.append("\n>> ");
 				irbInput.setText("");
@@ -189,58 +234,6 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		registerForContextMenu(scriptsList);
 	}
 
-	/* Initializes jruby in its own thread */
-	private void setUpJRuby() {
-		if (!IRBScript.isInitialized()) {
-			IRBScript.setLocalVariableBehavior("PERSISTENT");
-			irbOutput.append("Initializing JRuby...");
-			new Thread("JRuby-init") {
-				public void run() {
-					// try to avoid ANR's
-					Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-					IRBScript.setUpJRuby(IRB.this, new PrintStream(
-							new WriterOutputStream(new Writer() {
-								@Override
-								public void write(final char[] chars,
-										final int start, final int length)
-										throws IOException {
-									IRB.this.runOnUiThread(new Runnable() {
-										public void run() {
-											IRB.appendToIRB(new String(chars,
-													start, length));
-										}
-									});
-								}
-
-								@Override
-								public void flush() throws IOException {
-									// no buffer
-								}
-
-								@Override
-								public void close() throws IOException {
-									// meaningless
-								}
-							})));
-					handler.post(notifyComplete);
-				}
-			}.start();
-		} else {
-			notifyComplete.run();
-		}
-	}
-
-	/* Called when jruby finishes loading */
-	protected final Runnable notifyComplete = new Runnable() {
-		public void run() {
-			IRBScript.defineGlobalVariable("$context", IRB.this);
-			IRBScript.defineGlobalVariable("$activity", IRB.this);
-			irbOutput.append("Done\n>> ");
-			configScriptsDir();
-			autoLoadScript();
-		}
-	};
-
 	/*
 	 * Static method needed to get to the current irbOutput after the Activity
 	 * reloads
@@ -265,34 +258,6 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		for (java.lang.StackTraceElement ste : e.getStackTrace()) {
 			irbOutput.append(ste.toString() + "\n");
 		}
-	}
-
-	/*********************************************************************************************
-	 *
-	 * Saving and recalling state
-	 */
-
-	@Override
-	public void onSaveInstanceState(Bundle savedInstanceState) {
-		super.onSaveInstanceState(savedInstanceState);
-		savedInstanceState.putCharSequence("irbOutput", irbOutput.getText());
-		irbInput.onSaveInstanceState(savedInstanceState);
-		savedInstanceState.putInt("tab", tabs.getCurrentTab());
-		savedInstanceState.putBoolean("lineNumbers",
-				sourceEditor.getShowLineNumbers());
-	}
-
-	@Override
-	public void onRestoreInstanceState(Bundle savedInstanceState) {
-		super.onRestoreInstanceState(savedInstanceState);
-		if (savedInstanceState.containsKey("irbOutput"))
-			irbOutput.setText(savedInstanceState.getCharSequence("irbOutput"));
-		irbInput.onRestoreInstanceState(savedInstanceState);
-		if (savedInstanceState.containsKey("tab"))
-			tabs.setCurrentTab(savedInstanceState.getInt("tab"));
-		if (savedInstanceState.containsKey("lineNumbers"))
-			sourceEditor.setShowLineNumbers(savedInstanceState
-					.getBoolean("lineNumbers"));
 	}
 
 	/*********************************************************************************************
@@ -328,7 +293,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				android.R.drawable.ic_menu_recent_history);
 		menu.add(0, ABOUT_MENU, 0, R.string.Menu_about).setIcon(
 				android.R.drawable.ic_menu_info_details);
-		menu.add(0, RESCAN_MENU, 0, R.string.Menu_rescan);
+//		menu.add(0, RESCAN_MENU, 0, R.string.Menu_rescan);
 		menu.add(0, RELOAD_DEMOS_MENU, 0, R.string.Menu_reload);
 		menu.add(0, CLEAR_IRB_MENU, 0, R.string.Menu_clear_irb);
 		menu.add(0, EDIT_IRB_MENU, 0, R.string.Menu_edit_irb);
