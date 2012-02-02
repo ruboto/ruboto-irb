@@ -57,8 +57,10 @@ s			</LinearLayout>
 					android:layout_width="fill_parent"
 					android:layout_height="fill_parent"
 					android:hint="@string/Enter_source"
+          android:inputType="textNoSuggestions|textMultiLine"
+          android:typeface="monospace"
 					android:gravity="top"
-                    android:maxLength="1000000"
+          android:maxLength="1000000"
 					android:scrollHorizontally="true"
 				/>
 				</ScrollView>
