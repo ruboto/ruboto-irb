@@ -48,8 +48,9 @@ public class LineNumberEditText extends EditText {
     */
    
 	public void init() {
-	    paint.setColor(0x880000FF);
-	    paint.setTextSize(12.0f);
+    setHorizontallyScrolling(true);
+	    paint.setColor(getTextColors().getDefaultColor() & 0xAAFFFFFF);
+        paint.setTextSize(getTextSize() * 0.6f);
         defaultLeftPadding = getPaddingLeft();
         lineHeight = getLineHeight();
 	}
@@ -112,7 +113,7 @@ public class LineNumberEditText extends EditText {
     	if (!showLineNumbers || lineCount == 0) {
     		return defaultLeftPadding;
     	} else {
-        	return defaultLeftPadding + (int)((Math.floor(Math.log10(lineCount)) + 1) * 10);
+        	return defaultLeftPadding + (int)((Math.floor(Math.log10(lineCount)) + 1) * paint.getTextSize());
     	}
     }
 }
