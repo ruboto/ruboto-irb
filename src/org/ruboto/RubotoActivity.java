@@ -17,7 +17,7 @@ public class RubotoActivity extends android.app.Activity {
     private String scriptName;
     private String remoteVariable = null;
     private Object[] args;
-    private Bundle configBundle;
+    private Bundle configBundle = null;
 
   public static final int CB_ACTIVITY_RESULT = 0;
   public static final int CB_CHILD_TITLE_CHANGED = 1;
@@ -132,7 +132,7 @@ public class RubotoActivity extends android.app.Activity {
             if (scriptName != null) {
     	        Script.setScriptFilename(getClass().getClassLoader().getResource(scriptName).getPath());
                 Script.execute(new Script(scriptName).getContents());
-            } else {
+            } else if (configBundle != null) {
                 // TODO: Why doesn't this work? 
                 // Script.callMethod(this, "initialize_ruboto");
                 Script.execute("$activity.initialize_ruboto");
@@ -144,6 +144,10 @@ public class RubotoActivity extends android.app.Activity {
             e.printStackTrace();
             ProgressDialog.show(this, "Script failed", "Something bad happened", true, true);
         }
+    }
+
+    public boolean rubotoAttachable() {
+      return true;
     }
 
   /****************************************************************************************
