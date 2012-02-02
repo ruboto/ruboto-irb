@@ -168,12 +168,8 @@ public class Script {
                 Log.d(TAG, "Setting JRuby current directory to " + defaultCurrentDir);
                 callScriptingContainerMethod(Void.class, "setCurrentDirectory", defaultCurrentDir);
 
-                if (out != null) {
-        	        Method setOutputMethod = ruby.getClass().getMethod("setOutput", PrintStream.class);
-        	        setOutputMethod.invoke(ruby, out);
-        	        Method setErrorMethod = ruby.getClass().getMethod("setError", PrintStream.class);
-        	        setErrorMethod.invoke(ruby, out);
-                }
+                if (out != null) 
+                  setOutputStream(out);
 
                 String jrubyHome = "file:" + apkName + "!";
                 Log.i(TAG, "Setting JRUBY_HOME: " + jrubyHome);
@@ -202,6 +198,25 @@ public class Script {
             }
         }
         return initialized;
+    }
+
+    public static void setOutputStream(PrintStream out) {
+      try {
+        Method setOutputMethod = ruby.getClass().getMethod("setOutput", PrintStream.class);
+        setOutputMethod.invoke(ruby, out);
+        Method setErrorMethod = ruby.getClass().getMethod("setError", PrintStream.class);
+        setErrorMethod.invoke(ruby, out);
+      } catch (IllegalArgumentException e) {
+          handleInitException(e);
+      } catch (SecurityException e) {
+          handleInitException(e);
+      } catch (IllegalAccessException e) {
+          handleInitException(e);
+      } catch (InvocationTargetException e) {
+          handleInitException(e);
+      } catch (NoSuchMethodException e) {
+          handleInitException(e);
+      }
     }
 
     private static void handleInitException(Exception e) {
