@@ -2,7 +2,6 @@ package org.ruboto.test;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 import java.io.BufferedReader;
@@ -17,14 +16,12 @@ import junit.framework.TestSuite;
 import org.ruboto.Script;
 
 public class ActivityTest extends ActivityInstrumentationTestCase2 {
-    private final String script;
     private final Object setup;
     private final Object block;
     private final String filename;
 
-    public ActivityTest(Class activityClass, String script, String filename, Object setup, String name, Object block) {
+    public ActivityTest(Class activityClass, String filename, Object setup, String name, Object block) {
         super(activityClass.getPackage().getName(), activityClass);
-        this.script = script;
         this.filename = filename;
         this.setup = setup;
         setName(filename + "#" + name);
@@ -35,9 +32,6 @@ public class ActivityTest extends ActivityInstrumentationTestCase2 {
     public void runTest() throws Exception {
         Log.i(getClass().getName(), "runTest");
         Log.i(getClass().getName(), "runTest: " + getName());
-        Intent i = new Intent();
-        i.putExtra("org.ruboto.extra.SCRIPT_NAME", script);
-        setActivityIntent(i);
         if (Script.setUpJRuby(getActivity())) {
             Log.i(getClass().getName(), "ruby ok");
             try {
