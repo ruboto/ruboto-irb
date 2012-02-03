@@ -45,13 +45,6 @@ s			</LinearLayout>
 					android:layout_width="fill_parent"
 	    			android:layout_height="wrap_content"
 					/>
-		    	<ScrollView
-					android:id="@+id/editor_scroll_view"
-					android:layout_width="fill_parent"
-	    			android:layout_height="fill_parent"
-	    			android:layout_weight="1"
-	    			android:fillViewport="true"
-		    	>
 				<view class="org.ruboto.irb.LineNumberEditText"
 					android:id="@+id/source_editor"
 					android:layout_width="fill_parent"
@@ -59,11 +52,12 @@ s			</LinearLayout>
 					android:hint="@string/Enter_source"
           android:inputType="textNoSuggestions|textMultiLine"
           android:typeface="monospace"
+    			android:layout_weight="1"
+    			android:isScrollContainer="true"
 					android:gravity="top"
           android:maxLength="1000000"
 					android:scrollHorizontally="true"
 				/>
-				</ScrollView>
 			</LinearLayout>
 			<LinearLayout
 				android:id="@+id/tab3"
