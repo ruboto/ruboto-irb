@@ -61,7 +61,6 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	private HistoryEditText irbInput;
 
 	/* Edit_Tab Elements */
-	private ScrollView scrollView;
 	private LineNumberEditText sourceEditor;
 	private TextView fnameTextView;
 	private IRBScript currentScript;
@@ -207,7 +206,6 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				.setIndicator(getString(R.string.Editor_Tab),
 						getResources().getDrawable(R.drawable.ic_tab_editor)));
 
-		scrollView = (ScrollView) findViewById(R.id.editor_scroll_view);
 		sourceEditor = (LineNumberEditText) findViewById(R.id.source_editor);
 		fnameTextView = (TextView) findViewById(R.id.fname_textview);
 
@@ -478,7 +476,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			fnameTextView.setText(script.getName());
 			sourceEditor.setText(script.getFile().exists() ? script
 					.getContents() : "");
-			scrollView.scrollTo(0, 0);
+			sourceEditor.scrollTo(0, 0);
 			if (switchTab)
 				tabs.setCurrentTab(EDITOR_TAB);
 		} catch (IOException e) {
@@ -597,8 +595,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			public void onClick(DialogInterface dialog, int id) {
 				try {
 					int i = Integer.valueOf(et.getText().toString());
-					scrollView.scrollTo(0,
-							(i - 1) * sourceEditor.getLineHeight());
+					sourceEditor.scrollTo(0, (i - 1) * sourceEditor.getLineHeight());
 				} catch (Exception e) {
 				}
 			}
@@ -647,9 +644,15 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		if (!IRBScript.getDirFile().exists()) {
 			// on first install init directory + copy sample scripts
 			copyDemoScripts(DEMO_SCRIPTS, IRBScript.getDirFile());
-		} else if (!checkVersionString()) {
-			// Scripts exist but need updating
-			confirmUpdate();
+		} else {
+      File from = new File(IRBScript.getDirFile(), "ruboto.rb");
+  		if (from.exists()) 
+        removeOldRubotoScripts();
+
+      if (!checkVersionString()) {
+			  // Scripts exist but need updating
+			  confirmUpdate();
+      }
 		}
 	}
 
@@ -752,6 +755,25 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 								IRB.this.recopyDemoScripts(DEMO_SCRIPTS,
 										IRBScript.getDirFile()),
 								Toast.LENGTH_SHORT).show();
+					}
+				}, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						dialog.cancel();
+					}
+				});
+	}
+
+	private void removeOldRubotoScripts() {
+		displayDialog("Remove Ruboto Scripts", getString(R.string.Ruboto_remove_text),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+            File from = new File(IRBScript.getDirFile(), "ruboto.rb");
+            if (from.exists())
+              from.renameTo(new File(IRBScript.getDirFile(), "old-ruboto.rb"));
+
+            from = new File(IRBScript.getDirFile(), "ruboto");
+            if (from.exists())
+              from.renameTo(new File(IRBScript.getDirFile(), "old-ruboto"));
 					}
 				}, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
