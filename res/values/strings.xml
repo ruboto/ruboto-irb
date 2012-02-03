@@ -31,7 +31,9 @@
     
     <string name="About_text">Ruboto IRB is a UI for scripting Android using the Ruby language through JRuby.\n\nSource code:\nhttp://github.com/ruboto/ruboto-irb\n\nJoin us or give feedback:\nhttp://groups.google.com/group/ruboto\n\nDevelopers:\nCharlie Nutter\nJan Berkel\nPascal Chatterjee (jruby-for-android project)\nScott Moyer\nDaniel Jackoway\n\nJRuby Project:\nhttp://jruby.org\n\nIcon:\nRuby Visual Identity Team\nhttp://rubyidentity.org\nCC ShareAlike 2.5</string>
 
-    <string name="Script_update_text">We have made modifications to the core ruboto.rb script and corresponding demos. Please update your scripts now, or click cancel to update manually (Menu -> More -> Reload demos from assets).</string>
+    <string name="Script_update_text">We have made modifications to the demos. Please update now or click cancel and update manually later.</string>
+
+    <string name="Ruboto_remove_text">We move the core ruboto scripts into the apk. Your old ruboto scripts need to be renamed to keep them from interfering with your scripts. Press ok to rename them now or cancel to rename them later.</string>
 
     <string name="Update_ok">Update</string>
 </resources>
