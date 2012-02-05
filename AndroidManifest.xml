@@ -2,7 +2,7 @@
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' android:versionName='@string/version_name' package='org.ruboto.irb' android:versionCode='9' android:installLocation='preferExternal'>
     <application android:hardwareAccelerated='true' android:label='@string/app_name' android:icon='@drawable/icon' android:largeHeap='true'>
         <activity android:name='IRB' android:label='@string/app_name' android:windowSoftInputMode='adjustResize' 
-              android:launchMode="singleTop" android:configChanges='orientation|screenSize'>
+              android:configChanges='orientation|screenSize' android:clearTaskOnLaunch="true">
             <intent-filter>
                 <action android:name='android.intent.action.MAIN'/>
                 <category android:name='android.intent.category.LAUNCHER'/>
