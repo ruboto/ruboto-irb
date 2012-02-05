@@ -104,17 +104,11 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		IRBScript.setLocalVariableBehavior("PERSISTENT");
-		if (IRBScript.isInitialized()) uiSetup();
+		uiSetup();
 	}
 
   public boolean rubotoAttachable() {
     return false;
-  }
-
-  protected void fireRubotoActivity() {
-    if(appStarted) return;
-    super.fireRubotoActivity();
-    uiSetup();
   }
 
   private void uiSetup() {
