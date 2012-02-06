@@ -107,6 +107,12 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		uiSetup();
 	}
 
+  protected void fireRubotoActivity() {
+    if(appStarted) return;
+    super.fireRubotoActivity();
+		configScriptsDir();
+  }
+
   public boolean rubotoAttachable() {
     return false;
   }
@@ -726,16 +732,16 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 
 	private boolean checkVersionString() {
 		return getPreferences(Context.MODE_PRIVATE).getString(
-				"Ruboto_script_version", "0").equals(
-				getString(R.string.ruboto_script_version));
+				"Demo_scripts_version", "0").equals(
+				getString(R.string.demo_scripts_version));
 	}
 
 	private void updateVersionString() {
 		if (!checkVersionString()) {
 			SharedPreferences.Editor prefsEditor = getPreferences(
 					Context.MODE_PRIVATE).edit();
-			prefsEditor.putString("Ruboto_script_version",
-					getString(R.string.ruboto_script_version));
+			prefsEditor.putString("Demo_scripts_version",
+					getString(R.string.demo_scripts_version));
 			prefsEditor.commit();
 		}
 	}
