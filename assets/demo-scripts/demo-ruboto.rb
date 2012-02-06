@@ -33,21 +33,22 @@ ruboto_import_widgets :LinearLayout, :EditText, :TextView, :ListView, :Button
 #
 $activity.start_ruboto_activity "$ruboto_demo" do
   #
-  # setup_content uses methods created through
+  # on_create uses methods created through
   # ruboto_import_widgets to build a UI. All
   # code is executed in the context of the 
   # activity.
   #
-  setup_content do
-    linear_layout(:orientation => LinearLayout::VERTICAL) do
-      @et = edit_text
-      linear_layout do
-        button :text => "Hello, World",  :on_click_listener => proc{|v| my_click(v.getText)}
-        button :text => "Hello, Ruboto", :on_click_listener => proc{|v| my_click(v.getText)}
-        button :text => "List",          :on_click_listener => proc{|v| launch_list}
-      end
-      @tv = text_view :text => "Click buttons or menu items:"
-    end
+  def on_create(bundle)
+    setContentView(
+      linear_layout(:orientation => LinearLayout::VERTICAL) do
+        @et = edit_text
+        linear_layout do
+          button :text => "Hello, World",  :on_click_listener => proc{|v| my_click(v.getText)}
+          button :text => "Hello, Ruboto", :on_click_listener => proc{|v| my_click(v.getText)}
+          button :text => "List",          :on_click_listener => proc{|v| launch_list}
+        end
+        @tv = text_view :text => "Click buttons or menu items:"
+      end)
   end
 
   #
@@ -83,8 +84,9 @@ $activity.start_ruboto_activity "$ruboto_demo" do
     self.start_ruboto_activity("$my_list") do
       setTitle "Pick Something"
       @list = ["Hello, World", "Hello, Ruboto"]
-      setup_content do
-        list_view :list => @list, :on_item_click_listener => proc{|av, v, pos, item_id| toast(@list[pos]); finish}
+      def on_create(bundle)
+        setContentView(list_view :list => @list, 
+          :on_item_click_listener => proc{|av, v, pos, item_id| toast(@list[pos]); finish})
       end
     end
   end
