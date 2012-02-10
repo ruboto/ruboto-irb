@@ -11,6 +11,7 @@
 require 'ruboto/activity'
 require 'ruboto/widget'
 require "ruboto/util/stack"
+require 'ruboto/service'
 
 SERVER_PORT = 8005
 
@@ -80,6 +81,25 @@ Thread.with_large_stack do
       not @server.nil?
     end
     
+    def __start
+      title = "IRB server running on #{Server.ip_address}:#{SERVER_PORT}"
+      text = "Rerun the script to stop the server."
+      ticker = "IRB server running on #{Server.ip_address}:#{SERVER_PORT}"
+      icon = android.R::drawable::stat_sys_upload
+
+      notification = android.app.Notification.new(icon, ticker, java.lang.System.currentTimeMillis)
+      intent = android.content.Intent.new
+      intent.setAction("org.ruboto.intent.action.LAUNCH_SCRIPT")
+      intent.addCategory("android.intent.category.DEFAULT")
+      intent.putExtra("org.ruboto.extra.SCRIPT_NAME", "demo-irb-server.rb")
+      pending = android.app.PendingIntent.getActivity($irb_activity, 0, intent, 0)
+      notification.setLatestEventInfo($irb_activity.getApplicationContext, title, text, pending)
+      $irb_service.startForeground(1, notification)
+
+      @server.start
+      @after_stop.call if @after_stop
+    end
+
     def start
       unless @server
         @before_start.call if @before_start
@@ -91,10 +111,16 @@ Thread.with_large_stack do
           @server.mount("/", EvalServlet, nil)
 
           @after_start.call if @after_start
-
-          @server.start
-
-          @after_stop.call if @after_stop
+          $irb_activity.start_ruboto_service("$irb_service") do
+            def on_start_command(intent, flags, startId)
+              Thread.with_large_stack do 
+                java.lang.Thread.currentThread.setUncaughtExceptionHandler($default_exception_handler)
+                $server.__start
+              end        
+              
+              self.class::START_NOT_STICKY
+            end
+          end
         end
       end
     end
@@ -105,6 +131,8 @@ Thread.with_large_stack do
 
         @server.shutdown
         @server = nil
+        $irb_activity.stop_service android.content.Intent.new($irb_activity, RubotoService.java_class)
+        $irb_service = nil
       end
     end
     
@@ -342,20 +370,6 @@ Thread.with_large_stack do
       status = "Server started!\n\nConnection instructions:\n\nTo connect through adb:\n'adb forward tcp:#{SERVER_PORT} tcp:#{SERVER_PORT}'\nthen browse #to\n'http://localhost:8005'"
       status += "\n\nOr use 'http://#{Server.ip_address}:#{SERVER_PORT}'" if Server.wifi_connected?
       $irb_activity.runOnUiThread(proc{$irb_activity.set_status(status, true)})
-
-      title = "IRB server running on #{Server.ip_address}:#{SERVER_PORT}"
-      text = "Rerun the script to stop the server."
-      ticker = "IRB server running on #{Server.ip_address}:#{SERVER_PORT}"
-      icon = android.R::drawable::stat_sys_upload
-
-      notification = android.app.Notification.new(icon, ticker, java.lang.System.currentTimeMillis)
-      intent = android.content.Intent.new
-      intent.setAction("org.ruboto.intent.action.LAUNCH_SCRIPT")
-      intent.addCategory("android.intent.category.DEFAULT")
-      intent.putExtra("org.ruboto.extra.SCRIPT_NAME", "demo-irb-server.rb")
-      pending = android.app.PendingIntent.getActivity($irb_activity, 0, intent, 0)
-      notification.setLatestEventInfo($irb_activity.getApplicationContext, title, text, pending)
-      $irb_activity.getSystemService(android.content.Context::NOTIFICATION_SERVICE).notify(1, notification)
     end
   
     $server.before_stop do
