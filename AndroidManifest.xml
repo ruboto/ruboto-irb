@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?> 
-<manifest xmlns:android='http://schemas.android.com/apk/res/android' android:versionName='@string/version_name' package='org.ruboto.irb' android:versionCode='9' android:installLocation='preferExternal'>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android' android:versionName='@string/version_name' package='org.ruboto.irb' 
+      android:versionCode='9'  android:installLocation='preferExternal'>
     <application android:hardwareAccelerated='true' android:label='@string/app_name' android:icon='@drawable/icon' android:largeHeap='true'>
         <activity android:name='IRB' android:label='@string/app_name' android:windowSoftInputMode='adjustResize' 
-              android:configChanges='orientation|screenSize' android:clearTaskOnLaunch="true">
+              android:configChanges='orientation|screenSize' android:alwaysRetainTaskState="true">
             <intent-filter>
                 <action android:name='android.intent.action.MAIN'/>
                 <category android:name='android.intent.category.LAUNCHER'/>
@@ -28,7 +29,7 @@
                 <category android:name='android.intent.category.DEFAULT'/>
             </intent-filter>
         </activity>
-        <activity android:name='org.ruboto.RubotoActivity' android:configChanges='orientation|screenSize'/>
+        <activity android:name='org.ruboto.RubotoActivity' android:configChanges='orientation|screenSize' android:alwaysRetainTaskState="true"/>
         <activity android:name='org.ruboto.RubotoDialog' android:theme='@android:style/Theme.Dialog' android:configChanges='orientation|screenSize'/>
         <activity android:name='org.ruboto.RubotoPreferenceActivity'/>
         <service android:name='org.ruboto.RubotoService' android:exported='false'/>
