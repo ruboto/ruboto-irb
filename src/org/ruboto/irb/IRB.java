@@ -189,6 +189,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				irbOutput.append(rubyCode + "\n");
 				try {
 					irbOutput.append("=> ");
+         	IRBScript.setScriptFilename("eval");
 					irbOutput.append(IRBScript.execute(rubyCode));
 				} catch (RuntimeException e) {
           reportExecption(e);
@@ -443,6 +444,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				+ ")]\n");
 		try {
 			irbOutput.append("=> ");
+     	IRBScript.setScriptFilename(currentScript.getName());
 			irbOutput.append(IRBScript.execute(sourceEditor.getText()
 					.toString()));
 		} catch (RuntimeException e) {
