@@ -1,4 +1,4 @@
-# These are callbacks that have been remove in case we need them again
+# These are single method callbacks that have been removed in case we need them again
 task :removed_callbacks do
   [
     %w(android.opengl.GLSurfaceView.EGLConfigChooser),
@@ -67,8 +67,6 @@ task :removed_callbacks do
 end
 
 # Generate callbacks
-# Make sure to set package to org.ruboto.callbacks
-# TODO: add --package option to gen interface and gen subclass
 task :callbacks do
   [
     %w(android.opengl.GLSurfaceView.EGLContextFactory), #
@@ -100,31 +98,36 @@ task :callbacks do
 
     %w(android.hardware.SensorEventListener),
   ].each do |c, n|
-    puts `ruboto gen interface #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --force include`
+    puts `ruboto gen interface #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --force include --package org.ruboto.callbacks`
   end
 
+  # Subclasses with methods added after minSDK
   [
     %w(android.telephony.PhoneStateListener),
     %w(android.database.sqlite.SQLiteOpenHelper),
     %w(android.view.GestureDetector.SimpleOnGestureListener),
+  ].each do |c, n|
+    puts `ruboto gen subclass #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base on --force exclude --package org.ruboto.callbacks`
+  end
+
+  # Subclasses added after minSDK
+  [
     %w(android.view.ScaleGestureDetector.SimpleOnScaleGestureListener),
   ].each do |c, n|
-    puts `ruboto gen subclass #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base on --force include`
+    puts `ruboto gen subclass #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base on --force include --package org.ruboto.callbacks`
   end
 
   [
     %w(android.content.ContentProvider),
   ].each do |c, n|
-    puts `ruboto gen subclass #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base abstract --force include`
+    puts `ruboto gen subclass #{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base abstract --force exclude --package org.ruboto.callbacks`
   end
 end
 
 # Generate callback subclasses for widgets
-# Make sure to set package to org.ruboto.widget
-# TODO: add --package option to gen subclass
 task :widgets do
   ruboto_dir = "../ruboto-core/bin/"
   %w(EditText TextView Button ListView ScrollView SeekBar).each do |c, n|
-    puts `ruboto gen subclass android.widget.#{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base on --force include`
+    puts `ruboto gen subclass android.widget.#{c} --name Ruboto#{n ? n : c.split(".")[-1]} --method_base on --force exclude --package org.ruboto.widget`
   end
 end
