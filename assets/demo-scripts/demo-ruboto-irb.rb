@@ -22,6 +22,7 @@ java_import "android.text.method.ScrollingMovementMethod"
 
 ruboto_import_widgets :TabHost, :LinearLayout, :FrameLayout, :TabWidget, 
   :Button, :EditText, :TextView, :ListView, :ScrollView
+ruboto_import_widget :RubotoEditText, "org.ruboto.widget"
 
 require 'stringio'
 $main_binding = self.instance_eval{binding}
@@ -39,7 +40,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     @history = [""]
     @cursor = 0
 
-    @tabs = tab_host
+    @tabs = TabHost.new(self, nil) # Needs to be created this way to avoid bug introduced Android >= 3.0
     @tab_container = linear_layout(:orientation => :vertical, :height => :fill_parent, :parent => @tabs)
 
     tab_widget(:id => AndroidIds::tabs, :parent => @tab_container)
@@ -53,12 +54,19 @@ $activity.start_ruboto_activity("$ruboto_irb") do
       end
       linear_layout(:id => 55556, :orientation => :vertical) do
         @edit_name   = edit_text :text => "untitled.rb"
-        @edit_script = edit_text :height => :fill_parent, :hint => "Enter source code here.", 
-                                   :gravity => Gravity::TOP, :horizontally_scrolling=> true
+        @edit_script = ruboto_edit_text(:hint => "Enter source code here.", #:text => script_code,
+                                          :gravity => Gravity::TOP, :horizontally_scrolling=> true,
+                                          :raw_input_type => (android.text.InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS | 
+                                                              android.text.InputType::TYPE_TEXT_FLAG_MULTI_LINE),
+                                          :typeface => android.graphics.Typeface::MONOSPACE, :scroll_container => true, 
+                                          :filters => [android.text.InputFilter::LengthFilter.new(1000000)].to_java(android.text.InputFilter),
+                                          :layout => ({:height= => :fill_parent, :width= => :fill_parent, :weight= => 1}))
       end
       @scripts = list_view :id => 55557, :list => [], 
                             :on_item_click_listener =>   proc{|av, v, p, i| edit @scripts_list[p]}
     end
+
+    @edit_script.initialize_ruboto_callbacks &@line_number_draw
 
     registerForContextMenu(@scripts)
     load_script_list
@@ -97,14 +105,18 @@ $activity.start_ruboto_activity("$ruboto_irb") do
       @tabs.setCurrentTabByTag("editor")
     end
 
+    add_menu("Toggle Line Numbers") do
+       @edit_script.toggle_show_line_numbers
+    end
+    
     add_menu("About", R::drawable::ic_menu_info_details) do
       AlertDialog::Builder.new(self).
-        setTitle("About Ruboto IRB v0.2").
+        setTitle("About Ruboto IRB (demo script)").
         setView(scroll_view do
                   tv = text_view :padding => [5,5,5,5], :text => about_text
                   Linkify.addLinks(tv, Linkify::ALL)
                 end).
-        setPositiveButton("Ok", self).
+        setPositiveButton("Ok", nil).
         create.
         show
     end
@@ -184,6 +196,71 @@ $activity.start_ruboto_activity("$ruboto_irb") do
     if tab == "scripts"
         getSystemService(Context::INPUT_METHOD_SERVICE).
            hideSoftInputFromWindow(@tabs.getWindowToken, 0)
+    end
+  end
+
+  #
+  # Line number EditText
+  #
+
+  def set_script_padding(l, t, r, b)
+    @edit_script.setPadding(l, t, r, b)
+  end
+
+  @line_number_draw = Proc.new do 
+    @show_line_numbers = context.getPreferences(Context::MODE_PRIVATE).getBoolean("LineNumbers", true)
+    @line_rect = android.graphics.Rect.new
+    @paint = android.graphics.Paint.new
+    @paint.color = (text_colors.default_color & android.graphics.Color.argb(0xAA, 0xFF, 0xFF, 0xFF))
+    @paint.text_size = (text_size * 0.6)  
+    @current_left = @default_left = padding_left
+    
+    def toggle_show_line_numbers
+      @show_line_numbers = !@show_line_numbers
+      prefs_editor = context.getPreferences(Context::MODE_PRIVATE).edit
+      prefs_editor.putBoolean("LineNumbers", @show_line_numbers)
+      prefs_editor.commit
+      invalidate
+    end
+    
+    def min(a, b)
+      a > b ? b : a
+    end
+    
+    def max(a, b)
+      a > b ? a : b
+    end
+
+    def calculate_padding
+      new_padding = @default_left + ((!@show_line_numbers || line_count == 0) ? 0 :
+                                    ((Math.log10(line_count).to_i + 1) * @paint.text_size))
+
+      unless new_padding == @current_left
+        @current_left = new_padding
+        set_padding(new_padding, padding_top, padding_right, padding_bottom)
+      end
+    end
+
+    def on_draw(canvas)
+      if (@show_line_numbers)
+        topLineNumber = max(1, ((scroll_y - extended_padding_top) / line_height))
+        bottomLineNumber = min(line_count, topLineNumber + (height / line_height).to_i)
+        
+        canvas.save
+
+        canvas.clipRect(0, 
+                        extended_padding_top + scroll_y, 
+                        padding_left + scroll_x,
+                        bottom - top - extended_padding_bottom + scroll_y)
+                        
+        topLineNumber.upto(bottomLineNumber) do |i|
+          getLineBounds(i - 1, @line_rect)
+          canvas.drawText(i.to_s, @default_left + scroll_x, @line_rect.bottom - 8, @paint)
+        end
+
+        canvas.restore
+      end
+      calculate_padding
     end
   end
 
@@ -275,11 +352,7 @@ $activity.start_ruboto_activity("$ruboto_irb") do
   end
 
   def explanation_text
-"This demo duplicates the functionality of an old verion (0.2) of Ruboto IRB (written in Java) with a ruboto script (written in Ruby). There are a few differences:
-
-1) We're not currently copying the demo scripts if the scripts directory doesn't exist. The main reason for this is because the very fact that you're running this demo means that the scripts directory exists.
-
-2) There is a bug that you can trigger by doing a \"require 'date'\". It causes a StackOverflow exception to be caught on the Java side. This is caused by a limitation placed on stack size by Android. To avoid stack limitation, surround the code with 'with_large_stack{<<code>>}'. This causes the code to be run in a separate thread. You can not execute any UI interactions in this separate thread (unless you force them to run on the UI thread using runOnUiThread(proc{<<ui_code>>}))"
+"This demo begins to duplicate (i.e., not all features are implemented) the functionality of Ruboto IRB (written in Java) with a ruboto script (written in Ruby). There main difference is that it is easier to trigger the stack overflow (based on the stack limitations imposed by Android). This can be avoided by either reducing stack requirements (e.g., reducing the layout hierarchy) or using the stack utilities (e.g., wrapping \"require 'date'\" in a with_large_stack block). You can not execute any UI interactions in this separate thread (unless you force them to run on the UI thread using runOnUiThread(proc{<<ui_code>>}))"
   end
 
   def about_text
@@ -296,6 +369,7 @@ Charlie Nutter
 Jan Berkel
 Pascal Chatterjee (jruby-for-android project)
 Scott Moyer
+Uwe Kubosch
 
 JRuby Project:
 http://jruby.org
