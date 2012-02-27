@@ -17,19 +17,19 @@ public class RubotoSurfaceHolderCallback implements android.view.SurfaceHolder.C
   }
 	
   public void surfaceChanged(android.view.SurfaceHolder holder, int format, int width, int height) {
-    if (callbackProcs[CB_SURFACE_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SURFACE_CHANGED] != null) {
       Script.callMethod(callbackProcs[CB_SURFACE_CHANGED], "call" , new Object[]{holder, format, width, height});
     }
   }
 
   public void surfaceCreated(android.view.SurfaceHolder holder) {
-    if (callbackProcs[CB_SURFACE_CREATED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SURFACE_CREATED] != null) {
       Script.callMethod(callbackProcs[CB_SURFACE_CREATED], "call" , holder);
     }
   }
 
   public void surfaceDestroyed(android.view.SurfaceHolder holder) {
-    if (callbackProcs[CB_SURFACE_DESTROYED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SURFACE_DESTROYED] != null) {
       Script.callMethod(callbackProcs[CB_SURFACE_DESTROYED], "call" , holder);
     }
   }

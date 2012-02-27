@@ -18,25 +18,25 @@ public class RubotoOnJetEventListener implements android.media.JetPlayer.OnJetEv
   }
 	
   public void onJetEvent(android.media.JetPlayer player, short segment, byte track, byte channel, byte controller, byte value) {
-    if (callbackProcs[CB_JET_EVENT] != null) {
+    if (callbackProcs != null && callbackProcs[CB_JET_EVENT] != null) {
       Script.callMethod(callbackProcs[CB_JET_EVENT], "call" , new Object[]{player, segment, track, channel, controller, value});
     }
   }
 
   public void onJetNumQueuedSegmentUpdate(android.media.JetPlayer player, int nbSegments) {
-    if (callbackProcs[CB_JET_NUM_QUEUED_SEGMENT_UPDATE] != null) {
+    if (callbackProcs != null && callbackProcs[CB_JET_NUM_QUEUED_SEGMENT_UPDATE] != null) {
       Script.callMethod(callbackProcs[CB_JET_NUM_QUEUED_SEGMENT_UPDATE], "call" , new Object[]{player, nbSegments});
     }
   }
 
   public void onJetPauseUpdate(android.media.JetPlayer player, int paused) {
-    if (callbackProcs[CB_JET_PAUSE_UPDATE] != null) {
+    if (callbackProcs != null && callbackProcs[CB_JET_PAUSE_UPDATE] != null) {
       Script.callMethod(callbackProcs[CB_JET_PAUSE_UPDATE], "call" , new Object[]{player, paused});
     }
   }
 
   public void onJetUserIdUpdate(android.media.JetPlayer player, int userId, int repeatCount) {
-    if (callbackProcs[CB_JET_USER_ID_UPDATE] != null) {
+    if (callbackProcs != null && callbackProcs[CB_JET_USER_ID_UPDATE] != null) {
       Script.callMethod(callbackProcs[CB_JET_USER_ID_UPDATE], "call" , new Object[]{player, userId, repeatCount});
     }
   }

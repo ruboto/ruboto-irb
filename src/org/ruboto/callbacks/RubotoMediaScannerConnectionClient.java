@@ -16,13 +16,13 @@ public class RubotoMediaScannerConnectionClient implements android.media.MediaSc
   }
 	
   public void onMediaScannerConnected() {
-    if (callbackProcs[CB_MEDIA_SCANNER_CONNECTED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_MEDIA_SCANNER_CONNECTED] != null) {
       Script.callMethod(callbackProcs[CB_MEDIA_SCANNER_CONNECTED], "call" );
     }
   }
 
   public void onScanCompleted(java.lang.String path, android.net.Uri uri) {
-    if (callbackProcs[CB_SCAN_COMPLETED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SCAN_COMPLETED] != null) {
       Script.callMethod(callbackProcs[CB_SCAN_COMPLETED], "call" , new Object[]{path, uri});
     }
   }

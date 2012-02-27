@@ -17,7 +17,7 @@ public class RubotoOnScaleGestureListener implements android.view.ScaleGestureDe
   }
 	
   public boolean onScale(android.view.ScaleGestureDetector detector) {
-    if (callbackProcs[CB_SCALE] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SCALE] != null) {
       return (Boolean) Script.callMethod(callbackProcs[CB_SCALE], "call" , detector, Boolean.class);
     } else {
       return false;
@@ -25,7 +25,7 @@ public class RubotoOnScaleGestureListener implements android.view.ScaleGestureDe
   }
 
   public boolean onScaleBegin(android.view.ScaleGestureDetector detector) {
-    if (callbackProcs[CB_SCALE_BEGIN] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SCALE_BEGIN] != null) {
       return (Boolean) Script.callMethod(callbackProcs[CB_SCALE_BEGIN], "call" , detector, Boolean.class);
     } else {
       return false;
@@ -33,7 +33,7 @@ public class RubotoOnScaleGestureListener implements android.view.ScaleGestureDe
   }
 
   public void onScaleEnd(android.view.ScaleGestureDetector detector) {
-    if (callbackProcs[CB_SCALE_END] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SCALE_END] != null) {
       Script.callMethod(callbackProcs[CB_SCALE_END], "call" , detector);
     }
   }

@@ -16,13 +16,13 @@ public class RubotoOnItemSelectedListener implements android.widget.AdapterView.
   }
 	
   public void onItemSelected(android.widget.AdapterView<?> parent, android.view.View view, int position, long id) {
-    if (callbackProcs[CB_ITEM_SELECTED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_ITEM_SELECTED] != null) {
       Script.callMethod(callbackProcs[CB_ITEM_SELECTED], "call" , new Object[]{parent, view, position, id});
     }
   }
 
   public void onNothingSelected(android.widget.AdapterView<?> parent) {
-    if (callbackProcs[CB_NOTHING_SELECTED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_NOTHING_SELECTED] != null) {
       Script.callMethod(callbackProcs[CB_NOTHING_SELECTED], "call" , parent);
     }
   }

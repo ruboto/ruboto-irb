@@ -16,13 +16,13 @@ public class RubotoSensorEventListener implements android.hardware.SensorEventLi
   }
 	
   public void onAccuracyChanged(android.hardware.Sensor sensor, int accuracy) {
-    if (callbackProcs[CB_ACCURACY_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_ACCURACY_CHANGED] != null) {
       Script.callMethod(callbackProcs[CB_ACCURACY_CHANGED], "call" , new Object[]{sensor, accuracy});
     }
   }
 
   public void onSensorChanged(android.hardware.SensorEvent event) {
-    if (callbackProcs[CB_SENSOR_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SENSOR_CHANGED] != null) {
       Script.callMethod(callbackProcs[CB_SENSOR_CHANGED], "call" , event);
     }
   }

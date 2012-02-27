@@ -17,19 +17,19 @@ public class RubotoSQLiteTransactionListener implements android.database.sqlite.
   }
 	
   public void onBegin() {
-    if (callbackProcs[CB_BEGIN] != null) {
+    if (callbackProcs != null && callbackProcs[CB_BEGIN] != null) {
       Script.callMethod(callbackProcs[CB_BEGIN], "call" );
     }
   }
 
   public void onCommit() {
-    if (callbackProcs[CB_COMMIT] != null) {
+    if (callbackProcs != null && callbackProcs[CB_COMMIT] != null) {
       Script.callMethod(callbackProcs[CB_COMMIT], "call" );
     }
   }
 
   public void onRollback() {
-    if (callbackProcs[CB_ROLLBACK] != null) {
+    if (callbackProcs != null && callbackProcs[CB_ROLLBACK] != null) {
       Script.callMethod(callbackProcs[CB_ROLLBACK], "call" );
     }
   }

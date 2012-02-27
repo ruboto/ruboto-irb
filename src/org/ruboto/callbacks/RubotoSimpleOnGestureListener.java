@@ -25,7 +25,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 	
   public boolean onDown(android.view.MotionEvent e) {
-    if (callbackProcs[CB_DOWN] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DOWN] != null) {
       super.onDown(e);
       return (Boolean) Script.callMethod(callbackProcs[CB_DOWN], "call" , e, Boolean.class);
     } else {
@@ -34,7 +34,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public boolean onFling(android.view.MotionEvent e1, android.view.MotionEvent e2, float velocityX, float velocityY) {
-    if (callbackProcs[CB_FLING] != null) {
+    if (callbackProcs != null && callbackProcs[CB_FLING] != null) {
       super.onFling(e1, e2, velocityX, velocityY);
       return (Boolean) Script.callMethod(callbackProcs[CB_FLING], "call" , new Object[]{e1, e2, velocityX, velocityY}, Boolean.class);
     } else {
@@ -43,7 +43,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public void onLongPress(android.view.MotionEvent e) {
-    if (callbackProcs[CB_LONG_PRESS] != null) {
+    if (callbackProcs != null && callbackProcs[CB_LONG_PRESS] != null) {
       super.onLongPress(e);
       Script.callMethod(callbackProcs[CB_LONG_PRESS], "call" , e);
     } else {
@@ -52,7 +52,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public boolean onScroll(android.view.MotionEvent e1, android.view.MotionEvent e2, float distanceX, float distanceY) {
-    if (callbackProcs[CB_SCROLL] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SCROLL] != null) {
       super.onScroll(e1, e2, distanceX, distanceY);
       return (Boolean) Script.callMethod(callbackProcs[CB_SCROLL], "call" , new Object[]{e1, e2, distanceX, distanceY}, Boolean.class);
     } else {
@@ -61,7 +61,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public void onShowPress(android.view.MotionEvent e) {
-    if (callbackProcs[CB_SHOW_PRESS] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SHOW_PRESS] != null) {
       super.onShowPress(e);
       Script.callMethod(callbackProcs[CB_SHOW_PRESS], "call" , e);
     } else {
@@ -70,7 +70,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public boolean onSingleTapUp(android.view.MotionEvent e) {
-    if (callbackProcs[CB_SINGLE_TAP_UP] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SINGLE_TAP_UP] != null) {
       super.onSingleTapUp(e);
       return (Boolean) Script.callMethod(callbackProcs[CB_SINGLE_TAP_UP], "call" , e, Boolean.class);
     } else {
@@ -79,7 +79,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public boolean onDoubleTap(android.view.MotionEvent e) {
-    if (callbackProcs[CB_DOUBLE_TAP] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DOUBLE_TAP] != null) {
       super.onDoubleTap(e);
       return (Boolean) Script.callMethod(callbackProcs[CB_DOUBLE_TAP], "call" , e, Boolean.class);
     } else {
@@ -88,7 +88,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public boolean onDoubleTapEvent(android.view.MotionEvent e) {
-    if (callbackProcs[CB_DOUBLE_TAP_EVENT] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DOUBLE_TAP_EVENT] != null) {
       super.onDoubleTapEvent(e);
       return (Boolean) Script.callMethod(callbackProcs[CB_DOUBLE_TAP_EVENT], "call" , e, Boolean.class);
     } else {
@@ -97,7 +97,7 @@ public class RubotoSimpleOnGestureListener extends android.view.GestureDetector.
   }
 
   public boolean onSingleTapConfirmed(android.view.MotionEvent e) {
-    if (callbackProcs[CB_SINGLE_TAP_CONFIRMED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SINGLE_TAP_CONFIRMED] != null) {
       super.onSingleTapConfirmed(e);
       return (Boolean) Script.callMethod(callbackProcs[CB_SINGLE_TAP_CONFIRMED], "call" , e, Boolean.class);
     } else {

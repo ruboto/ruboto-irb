@@ -16,7 +16,7 @@ public class RubotoEGLWindowSurfaceFactory implements android.opengl.GLSurfaceVi
   }
 	
   public javax.microedition.khronos.egl.EGLSurface createWindowSurface(javax.microedition.khronos.egl.EGL10 egl, javax.microedition.khronos.egl.EGLDisplay display, javax.microedition.khronos.egl.EGLConfig config, java.lang.Object nativeWindow) {
-    if (callbackProcs[CB_CREATE_WINDOW_SURFACE] != null) {
+    if (callbackProcs != null && callbackProcs[CB_CREATE_WINDOW_SURFACE] != null) {
       return (javax.microedition.khronos.egl.EGLSurface) Script.callMethod(callbackProcs[CB_CREATE_WINDOW_SURFACE], "call" , new Object[]{egl, display, config, nativeWindow}, javax.microedition.khronos.egl.EGLSurface.class);
     } else {
       return null;
@@ -24,7 +24,7 @@ public class RubotoEGLWindowSurfaceFactory implements android.opengl.GLSurfaceVi
   }
 
   public void destroySurface(javax.microedition.khronos.egl.EGL10 egl, javax.microedition.khronos.egl.EGLDisplay display, javax.microedition.khronos.egl.EGLSurface surface) {
-    if (callbackProcs[CB_DESTROY_SURFACE] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DESTROY_SURFACE] != null) {
       Script.callMethod(callbackProcs[CB_DESTROY_SURFACE], "call" , new Object[]{egl, display, surface});
     }
   }

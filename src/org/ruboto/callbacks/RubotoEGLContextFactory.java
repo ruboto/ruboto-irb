@@ -16,7 +16,7 @@ public class RubotoEGLContextFactory implements android.opengl.GLSurfaceView.EGL
   }
 	
   public javax.microedition.khronos.egl.EGLContext createContext(javax.microedition.khronos.egl.EGL10 egl, javax.microedition.khronos.egl.EGLDisplay display, javax.microedition.khronos.egl.EGLConfig eglConfig) {
-    if (callbackProcs[CB_CREATE_CONTEXT] != null) {
+    if (callbackProcs != null && callbackProcs[CB_CREATE_CONTEXT] != null) {
       return (javax.microedition.khronos.egl.EGLContext) Script.callMethod(callbackProcs[CB_CREATE_CONTEXT], "call" , new Object[]{egl, display, eglConfig}, javax.microedition.khronos.egl.EGLContext.class);
     } else {
       return null;
@@ -24,7 +24,7 @@ public class RubotoEGLContextFactory implements android.opengl.GLSurfaceView.EGL
   }
 
   public void destroyContext(javax.microedition.khronos.egl.EGL10 egl, javax.microedition.khronos.egl.EGLDisplay display, javax.microedition.khronos.egl.EGLContext context) {
-    if (callbackProcs[CB_DESTROY_CONTEXT] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DESTROY_CONTEXT] != null) {
       Script.callMethod(callbackProcs[CB_DESTROY_CONTEXT], "call" , new Object[]{egl, display, context});
     }
   }

@@ -16,13 +16,13 @@ public class RubotoOnGesturingListener implements android.gesture.GestureOverlay
   }
 	
   public void onGesturingEnded(android.gesture.GestureOverlayView overlay) {
-    if (callbackProcs[CB_GESTURING_ENDED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_GESTURING_ENDED] != null) {
       Script.callMethod(callbackProcs[CB_GESTURING_ENDED], "call" , overlay);
     }
   }
 
   public void onGesturingStarted(android.gesture.GestureOverlayView overlay) {
-    if (callbackProcs[CB_GESTURING_STARTED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_GESTURING_STARTED] != null) {
       Script.callMethod(callbackProcs[CB_GESTURING_STARTED], "call" , overlay);
     }
   }

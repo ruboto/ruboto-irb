@@ -17,7 +17,7 @@ public class RubotoOnDoubleTapListener implements android.view.GestureDetector.O
   }
 	
   public boolean onDoubleTap(android.view.MotionEvent e) {
-    if (callbackProcs[CB_DOUBLE_TAP] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DOUBLE_TAP] != null) {
       return (Boolean) Script.callMethod(callbackProcs[CB_DOUBLE_TAP], "call" , e, Boolean.class);
     } else {
       return false;
@@ -25,7 +25,7 @@ public class RubotoOnDoubleTapListener implements android.view.GestureDetector.O
   }
 
   public boolean onDoubleTapEvent(android.view.MotionEvent e) {
-    if (callbackProcs[CB_DOUBLE_TAP_EVENT] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DOUBLE_TAP_EVENT] != null) {
       return (Boolean) Script.callMethod(callbackProcs[CB_DOUBLE_TAP_EVENT], "call" , e, Boolean.class);
     } else {
       return false;
@@ -33,7 +33,7 @@ public class RubotoOnDoubleTapListener implements android.view.GestureDetector.O
   }
 
   public boolean onSingleTapConfirmed(android.view.MotionEvent e) {
-    if (callbackProcs[CB_SINGLE_TAP_CONFIRMED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SINGLE_TAP_CONFIRMED] != null) {
       return (Boolean) Script.callMethod(callbackProcs[CB_SINGLE_TAP_CONFIRMED], "call" , e, Boolean.class);
     } else {
       return false;

@@ -16,13 +16,13 @@ public class RubotoOnPlaybackPositionUpdateListener implements android.media.Aud
   }
 	
   public void onMarkerReached(android.media.AudioTrack track) {
-    if (callbackProcs[CB_MARKER_REACHED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_MARKER_REACHED] != null) {
       Script.callMethod(callbackProcs[CB_MARKER_REACHED], "call" , track);
     }
   }
 
   public void onPeriodicNotification(android.media.AudioTrack track) {
-    if (callbackProcs[CB_PERIODIC_NOTIFICATION] != null) {
+    if (callbackProcs != null && callbackProcs[CB_PERIODIC_NOTIFICATION] != null) {
       Script.callMethod(callbackProcs[CB_PERIODIC_NOTIFICATION], "call" , track);
     }
   }

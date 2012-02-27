@@ -11,10 +11,8 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   public static final int CB_DATA_CONNECTION_STATE_CHANGED = 4;
   public static final int CB_MESSAGE_WAITING_INDICATOR_CHANGED = 5;
   public static final int CB_SERVICE_STATE_CHANGED = 6;
-  public static final int CB_SIGNAL_STRENGTH_CHANGED = 7;
-  public static final int CB_SIGNAL_STRENGTHS_CHANGED = 8;
 
-    private Object[] callbackProcs = new Object[10];
+    private Object[] callbackProcs = new Object[7];
 
   public  RubotoPhoneStateListener() {
     super();
@@ -25,7 +23,7 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   }
 	
   public void onCallForwardingIndicatorChanged(boolean cfi) {
-    if (callbackProcs[CB_CALL_FORWARDING_INDICATOR_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_CALL_FORWARDING_INDICATOR_CHANGED] != null) {
       super.onCallForwardingIndicatorChanged(cfi);
       Script.callMethod(callbackProcs[CB_CALL_FORWARDING_INDICATOR_CHANGED], "call" , cfi);
     } else {
@@ -34,7 +32,7 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   }
 
   public void onCallStateChanged(int state, java.lang.String incomingNumber) {
-    if (callbackProcs[CB_CALL_STATE_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_CALL_STATE_CHANGED] != null) {
       super.onCallStateChanged(state, incomingNumber);
       Script.callMethod(callbackProcs[CB_CALL_STATE_CHANGED], "call" , new Object[]{state, incomingNumber});
     } else {
@@ -43,7 +41,7 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   }
 
   public void onCellLocationChanged(android.telephony.CellLocation location) {
-    if (callbackProcs[CB_CELL_LOCATION_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_CELL_LOCATION_CHANGED] != null) {
       super.onCellLocationChanged(location);
       Script.callMethod(callbackProcs[CB_CELL_LOCATION_CHANGED], "call" , location);
     } else {
@@ -52,7 +50,7 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   }
 
   public void onDataActivity(int direction) {
-    if (callbackProcs[CB_DATA_ACTIVITY] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DATA_ACTIVITY] != null) {
       super.onDataActivity(direction);
       Script.callMethod(callbackProcs[CB_DATA_ACTIVITY], "call" , direction);
     } else {
@@ -61,7 +59,7 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   }
 
   public void onDataConnectionStateChanged(int state) {
-    if (callbackProcs[CB_DATA_CONNECTION_STATE_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DATA_CONNECTION_STATE_CHANGED] != null) {
       super.onDataConnectionStateChanged(state);
       Script.callMethod(callbackProcs[CB_DATA_CONNECTION_STATE_CHANGED], "call" , state);
     } else {
@@ -70,7 +68,7 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   }
 
   public void onMessageWaitingIndicatorChanged(boolean mwi) {
-    if (callbackProcs[CB_MESSAGE_WAITING_INDICATOR_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_MESSAGE_WAITING_INDICATOR_CHANGED] != null) {
       super.onMessageWaitingIndicatorChanged(mwi);
       Script.callMethod(callbackProcs[CB_MESSAGE_WAITING_INDICATOR_CHANGED], "call" , mwi);
     } else {
@@ -79,32 +77,11 @@ public class RubotoPhoneStateListener extends android.telephony.PhoneStateListen
   }
 
   public void onServiceStateChanged(android.telephony.ServiceState serviceState) {
-    if (callbackProcs[CB_SERVICE_STATE_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SERVICE_STATE_CHANGED] != null) {
       super.onServiceStateChanged(serviceState);
       Script.callMethod(callbackProcs[CB_SERVICE_STATE_CHANGED], "call" , serviceState);
     } else {
       super.onServiceStateChanged(serviceState);
-    }
-  }
-
-  public void onSignalStrengthChanged(int asu) {
-    if (callbackProcs[CB_SIGNAL_STRENGTH_CHANGED] != null) {
-      super.onSignalStrengthChanged(asu);
-      Script.callMethod(callbackProcs[CB_SIGNAL_STRENGTH_CHANGED], "call" , asu);
-    } else {
-      super.onSignalStrengthChanged(asu);
-    }
-  }
-
-  public void onDataConnectionStateChanged(int state, int networkType) {
-    if (callbackProcs[CB_DATA_CONNECTION_STATE_CHANGED] != null) {
-      Script.callMethod(callbackProcs[CB_DATA_CONNECTION_STATE_CHANGED], "call" , new Object[]{state, networkType});
-    }
-  }
-
-  public void onSignalStrengthsChanged(android.telephony.SignalStrength signalStrength) {
-    if (callbackProcs[CB_SIGNAL_STRENGTHS_CHANGED] != null) {
-      Script.callMethod(callbackProcs[CB_SIGNAL_STRENGTHS_CHANGED], "call" , signalStrength);
     }
   }
 

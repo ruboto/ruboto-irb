@@ -17,19 +17,19 @@ public class RubotoGLSurfaceViewRenderer implements android.opengl.GLSurfaceView
   }
 	
   public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl) {
-    if (callbackProcs[CB_DRAW_FRAME] != null) {
+    if (callbackProcs != null && callbackProcs[CB_DRAW_FRAME] != null) {
       Script.callMethod(callbackProcs[CB_DRAW_FRAME], "call" , gl);
     }
   }
 
   public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl, int width, int height) {
-    if (callbackProcs[CB_SURFACE_CHANGED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SURFACE_CHANGED] != null) {
       Script.callMethod(callbackProcs[CB_SURFACE_CHANGED], "call" , new Object[]{gl, width, height});
     }
   }
 
   public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig config) {
-    if (callbackProcs[CB_SURFACE_CREATED] != null) {
+    if (callbackProcs != null && callbackProcs[CB_SURFACE_CREATED] != null) {
       Script.callMethod(callbackProcs[CB_SURFACE_CREATED], "call" , new Object[]{gl, config});
     }
   }
