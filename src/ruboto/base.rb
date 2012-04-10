@@ -77,7 +77,12 @@ end
 #
 
 def ruboto_import(package_class)
-  klass = java_import(package_class) || eval("Java::#{package_class}")
+  if package_class.is_a?(String) or package_class.is_a?(Symbol)
+    klass = java_import(package_class) || eval("Java::#{package_class}")
+  else
+    klass = package_class
+  end
+
   return nil unless klass
 
   klass.class_eval do
