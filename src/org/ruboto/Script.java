@@ -534,27 +534,45 @@ public class Script {
 
 	@SuppressWarnings("unchecked")
 	public static <T> T callMethod(Object receiver, String methodName, Object[] args, Class<T> returnType) {
-        try {
-            Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object[].class, Class.class);
-            return (T) callMethodMethod.invoke(ruby, receiver, methodName, args, returnType);
-        } catch (NoSuchMethodException nsme) {
-            throw new RuntimeException(nsme);
-        } catch (IllegalAccessException iae) {
-            throw new RuntimeException(iae);
-        } catch (java.lang.reflect.InvocationTargetException ite) {
-            printStackTrace(ite);
-        }
-        return null;
+    try {
+      Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object[].class, Class.class);
+      return (T) callMethodMethod.invoke(ruby, receiver, methodName, args, returnType);
+    } catch (NoSuchMethodException nsme) {
+      throw new RuntimeException(nsme);
+    } catch (IllegalAccessException iae) {
+      throw new RuntimeException(iae);
+    } catch (java.lang.reflect.InvocationTargetException ite) {
+      printStackTrace(ite);
+    }
+    return null;
 	}
 
-	public static <T> T callMethod(Object receiver, String methodName,
-			Object arg, Class<T> returnType) {
-		return callMethod(receiver, methodName, new Object[]{arg}, returnType);
+	public static <T> T callMethod(Object receiver, String methodName, Object arg, Class<T> returnType) {
+    try {
+      Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object.class, Class.class);
+      return (T) callMethodMethod.invoke(ruby, receiver, methodName, arg, returnType);
+    } catch (NoSuchMethodException nsme) {
+      throw new RuntimeException(nsme);
+    } catch (IllegalAccessException iae) {
+      throw new RuntimeException(iae);
+    } catch (java.lang.reflect.InvocationTargetException ite) {
+      printStackTrace(ite);
+    }
+    return null;
 	}
 
-	public static <T> T callMethod(Object receiver, String methodName,
-			Class<T> returnType) {
-		return callMethod(receiver, methodName, new Object[]{}, returnType);
+	public static <T> T callMethod(Object receiver, String methodName, Class<T> returnType) {
+    try {
+      Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Class.class);
+      return (T) callMethodMethod.invoke(ruby, receiver, methodName, returnType);
+    } catch (NoSuchMethodException nsme) {
+      throw new RuntimeException(nsme);
+    } catch (IllegalAccessException iae) {
+      throw new RuntimeException(iae);
+    } catch (java.lang.reflect.InvocationTargetException ite) {
+      printStackTrace(ite);
+    }
+    return null;
 	}
 
 	private static void printStackTrace(Throwable t) {
