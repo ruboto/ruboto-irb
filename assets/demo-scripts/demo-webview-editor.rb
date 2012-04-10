@@ -1,11 +1,12 @@
 require 'ruboto/activity'
 require 'ruboto/widget'
 require 'ruboto/util/toast'
+require 'ruboto/generate'
 require 'webrick/htmlutils'
 require 'webrick/httputils'
 
 ruboto_import_widget :WebView, "android.webkit"
-ruboto_import "org.ruboto.callbacks.RubotoWebViewClient"
+ruboto_generate("org.ruboto.callbacks.RubotoWebViewClient", android.webkit.WebViewClient)
 ruboto_import_widgets :ListView
 
 $activity.start_ruboto_activity("$script_list") do

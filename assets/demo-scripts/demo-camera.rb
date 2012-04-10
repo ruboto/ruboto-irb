@@ -10,11 +10,12 @@
 
 require 'ruboto/activity'
 require 'ruboto/util/toast'
+require 'ruboto/generate'
 
 java_import "android.view.SurfaceView"
 java_import "android.hardware.Camera"
 
-ruboto_import "org.ruboto.callbacks.RubotoSurfaceHolderCallback"
+ruboto_generate("org.ruboto.callbacks.RubotoSurfaceHolderCallback", "android.view.SurfaceHolder$Callback")
 
 class Camera
   def picture_id

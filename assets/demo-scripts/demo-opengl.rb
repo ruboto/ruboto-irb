@@ -8,6 +8,7 @@
 #######################################################
 
 require 'ruboto/activity'
+require 'ruboto/generate'
 confirm_ruboto_version(10, false)
 
 java_import "android.opengl.GLSurfaceView"
@@ -21,7 +22,7 @@ java_import "java.nio.ByteOrder"
 java_import "java.nio.IntBuffer"
 
 # A class implementing GLSurfaceView.Renderer
-ruboto_import "org.ruboto.callbacks.RubotoGLSurfaceViewRenderer"
+ruboto_generate("org.ruboto.callbacks.RubotoGLSurfaceViewRenderer", "android.opengl.GLSurfaceView$Renderer")
 
 #######################################################
 #

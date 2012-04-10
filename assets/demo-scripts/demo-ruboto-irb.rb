@@ -9,6 +9,7 @@
 #######################################################
 
 require 'ruboto'
+require 'ruboto/generate'
 confirm_ruboto_version(10, false)
 
 java_import "android.view.WindowManager"
@@ -22,7 +23,7 @@ java_import "android.text.method.ScrollingMovementMethod"
 
 ruboto_import_widgets :TabHost, :LinearLayout, :FrameLayout, :TabWidget, 
   :Button, :EditText, :TextView, :ListView, :ScrollView
-ruboto_import_widget :RubotoEditText, "org.ruboto.widget"
+ruboto_generate_widget("org.ruboto.widget.RubotoEditText", android.widget.EditText)
 
 require 'stringio'
 $main_binding = self.instance_eval{binding}
