@@ -11,6 +11,7 @@
 require 'ruboto/base'
 require 'fileutils'
 
+######################################################
 #
 # Expand the functionality of TypeId
 #
@@ -92,42 +93,57 @@ end
 
 ######################################################
 #
-# Generate a new class for an interface
+# Generate a new classes for an interface or class
+#   Takes a hash
+#     :use_cache (default true) or regenerate
+#     :reload (default false) or use existing constant
+#     :dex_file - where to put the generated jar
+#        -- for single classes default to use package as path
+#        -- for multiple classes default to classes.jar
+#     The remaining key/value pairs represent source => new_class
+#        -- source is either a string or the actual class/interface
+#        -- new_class is a string "package.class"
 #
 
-def ruboto_clear_dex_cache
-  FileUtils.remove_dir "#{$activity.files_dir.absolute_path}/dx"
-end
-
-def ruboto_generate(package_class_name, interface_or_class_name, options={})
-  options = {
-    :use_cache => true,
-    :reload => false
-  }.merge(options)
+def ruboto_generate(options)
+  use_cache = options.key?(:use_cache) ? options.delete(:use_cache) : true
+  reload = options.key?(:reload) ? options.delete(:reload) : false
+  dex_file = options.delete(:dex_file)
   
   #
-  # Already loaded?
+  # Already loaded? Just check the first one.
   #
 
-  class_name = package_class_name.split('.')[-1]
-  return Object.const_get(class_name) if Object.const_defined?(class_name) and not options[:reload]
+  class_name = options.values[0].split('.')[-1]
+  return Object.const_get(class_name) if Object.const_defined?(class_name) and not reload
   
   #
   # Set up directory
   #
 
   base_dir = "#{$activity.files_dir.absolute_path}/dx"
-  package_dir = "#{base_dir}/#{package_class_name.split('.')[0..-2].join('/')}"
-  FileUtils.mkpath package_dir unless File.exists?(package_dir)
-  jar_file = java.io.File.new("#{package_dir}/#{class_name}.jar")
+  if dex_file
+    components = dex_file.split('/')
+    components.unshift(base_dir) unless components[0] == ""
+    dex_dir = components[0..-2].join('/')
+    dex_file = components[-1]
+  elsif options.size == 1
+    dex_dir = "#{base_dir}/#{options.values[0].split('.')[0..-2].join('/')}"
+    dex_file = "#{options.values[0].split('.')[-1]}.jar"
+  else
+    dex_dir = base_dir
+    dex_file = "classes.jar"
+  end
+  FileUtils.mkpath dex_dir unless File.exists?(dex_dir)
+  jar_file = java.io.File.new("#{dex_dir}/#{dex_file}")
   puts "Exists: #{jar_file}" if File.exists?(jar_file.to_s)
 
   #
   # Already generated?
   #
 
-  if options[:use_cache]
-    rv = ruboto_load_class(jar_file.path, package_class_name)
+  if use_cache
+    rv = ruboto_load_class(jar_file.path, *options.values)
     return rv if rv
   end
 
@@ -138,11 +154,58 @@ def ruboto_generate(package_class_name, interface_or_class_name, options={})
 
   puts "Generating: #{jar_file.path}"
 
+  dex_maker = com.google.dexmaker.DexMaker.new
+  options.each{|k, v| ruboto_generate_class(dex_maker, k, v)}
+
+  #
+  # Generate and save
+  #
+
+  dex = dex_maker.generate
+  jar_file.createNewFile
+  jarOut = java.util.jar.JarOutputStream.new(java.io.FileOutputStream.new(jar_file))
+  jarOut.putNextEntry(java.util.jar.JarEntry.new("classes.dex"))
+  jarOut.write(dex)
+  jarOut.closeEntry
+  jarOut.close
+
+  return ruboto_load_class(jar_file.path, *options.values)
+end
+
+######################################################
+#
+# Open a dex jar and load the class(es)
+#
+
+def ruboto_load_class(file_name, *package_class_names)
+  return nil unless File.exists? file_name
+
+  loader = Java::dalvik.system.DexClassLoader.new(file_name, file_name.split('/')[0..-2].join('/'), nil,
+              com.google.dexmaker.DexMaker.java_class.class_loader)
+
+  runtime = org.jruby.Ruby.getGlobalRuntime
+
+  rv = []
+  package_class_names.each do |i|
+    tmp = org.jruby.javasupport.Java.getProxyClass(runtime,
+            org.jruby.javasupport.JavaClass.get(runtime, loader.loadClass(i)))
+    Object.const_set(i.split('.')[-1], tmp)
+    ruboto_import tmp
+    rv << tmp
+  end
+
+  rv.length == 1 ? rv[0] : rv
+end
+
+######################################################
+#
+# Does the hard work of generating one class
+#
+
+def ruboto_generate_class(dex_maker, interface_or_class_name, package_class_name)
   #
   # Basic set up
   #
-
-  dex_maker = com.google.dexmaker.DexMaker.new
 
   if interface_or_class_name.is_a?(String)
     interface_or_class = eval("Java::#{interface_or_class_name.gsub('$', '::')}")
@@ -363,38 +426,33 @@ def ruboto_generate(package_class_name, interface_or_class_name, options={})
       ret ? returnValue(ret) : returnVoid
     end
   end
-
-  #
-  # Generate and save
-  #
-
-  dex = dex_maker.generate
-  jar_file.createNewFile
-  jarOut = java.util.jar.JarOutputStream.new(java.io.FileOutputStream.new(jar_file))
-  jarOut.putNextEntry(java.util.jar.JarEntry.new("classes.dex"))
-  jarOut.write(dex)
-  jarOut.closeEntry
-  jarOut.close
-
-  return ruboto_load_class(jar_file.path, package_class_name)
 end
 
-def ruboto_load_class(file_name, package_class_name)
-  return nil unless File.exists? file_name
+######################################################
+#
+# Clear all generated dex jars
+#
 
-  loader = Java::dalvik.system.DexClassLoader.new(file_name, file_name.split('/')[0..-2].join('/'), nil,
-              com.google.dexmaker.DexMaker.java_class.class_loader)
+def ruboto_clear_dex_cache
+  FileUtils.remove_dir "#{$activity.files_dir.absolute_path}/dx"
+end
 
-  runtime = org.jruby.Ruby.getGlobalRuntime
-  rv = org.jruby.javasupport.Java.getProxyClass(runtime,
-          org.jruby.javasupport.JavaClass.get(runtime, loader.loadClass(package_class_name)))
-  Object.const_set(package_class_name.split('.')[-1], rv)
-  ruboto_import rv
+######################################################
+#
+# Generate classes and configure any widgets
+#
+
+def ruboto_generate_widget(options)
+  ruboto_generate_widgets(options)
+end
+
+def ruboto_generate_widgets(options)
+  rv = ruboto_generate(options)
+  if rv.is_a?(Array)
+    rv.each{|i| ruboto_import_widget i if i < android.view.View}
+  else
+    ruboto_import_widget rv
+  end
   rv
-end
-
-def ruboto_generate_widget(package_class_name, interface_or_class_name, options={})
-  rv = ruboto_generate(package_class_name, interface_or_class_name, options)
-  ruboto_import_widget rv
 end
 
