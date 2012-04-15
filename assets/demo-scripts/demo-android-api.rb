@@ -327,7 +327,7 @@ class RubotoActivity
     java_import "android.graphics.Paint"
     java_import "android.graphics.RectF"
 
-    ruboto_generate("org.ruboto.RubotoView", android.view.View)
+    ruboto_generate(android.view.View => "org.ruboto.RubotoView")
 
     context.start_ruboto_activity "$arcs" do
       setTitle "Graphics/Arcs"
@@ -471,8 +471,8 @@ class RubotoActivity
     java_import "android.graphics.Canvas"
     java_import "android.content.Context"
 
-    ruboto_generate("org.ruboto.RubotoView", android.view.View)
-    ruboto_generate("org.ruboto.callbacks.RubotoSensorEventListener", android.hardware.SensorEventListener)
+    ruboto_generate(android.view.View => "org.ruboto.RubotoView")
+    ruboto_generate(android.hardware.SensorEventListener => "org.ruboto.callbacks.RubotoSensorEventListener")
 
     context.start_ruboto_activity "$sensors" do
        setTitle "OS/Sensors"

@@ -6,7 +6,7 @@ require 'webrick/htmlutils'
 require 'webrick/httputils'
 
 ruboto_import_widget :WebView, "android.webkit"
-ruboto_generate("org.ruboto.callbacks.RubotoWebViewClient", android.webkit.WebViewClient)
+ruboto_generate(android.webkit.WebViewClient => "org.ruboto.callbacks.RubotoWebViewClient")
 ruboto_import_widgets :ListView
 
 $activity.start_ruboto_activity("$script_list") do

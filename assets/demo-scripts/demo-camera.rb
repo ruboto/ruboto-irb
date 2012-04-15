@@ -15,7 +15,7 @@ require 'ruboto/generate'
 java_import "android.view.SurfaceView"
 java_import "android.hardware.Camera"
 
-ruboto_generate("org.ruboto.callbacks.RubotoSurfaceHolderCallback", "android.view.SurfaceHolder$Callback")
+ruboto_generate("android.view.SurfaceHolder$Callback" => "org.ruboto.callbacks.RubotoSurfaceHolderCallback")
 
 class Camera
   def picture_id
@@ -50,7 +50,7 @@ $activity.start_ruboto_activity "$camera_demo", RubotoActivity, R.style::Theme_N
   
   def take_picture
     picture_file = "#{Dir.pwd}/picture#{$camera.picture_id}.jpg"
-    $camera.take_picture(proc{toast "Piture taken"}, nil) do |data, camera|
+    $camera.take_picture(proc{toast "Picture taken"}, nil) do |data, camera|
       fos = java.io.FileOutputStream.new(picture_file)
       fos.write(data)
       fos.close

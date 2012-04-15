@@ -22,7 +22,7 @@ java_import "java.nio.ByteOrder"
 java_import "java.nio.IntBuffer"
 
 # A class implementing GLSurfaceView.Renderer
-ruboto_generate("org.ruboto.callbacks.RubotoGLSurfaceViewRenderer", "android.opengl.GLSurfaceView$Renderer")
+ruboto_generate("android.opengl.GLSurfaceView$Renderer" => "org.ruboto.callbacks.RubotoGLSurfaceViewRenderer")
 
 #######################################################
 #
