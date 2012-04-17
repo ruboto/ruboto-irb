@@ -185,8 +185,8 @@ $activity.start_ruboto_activity "$craps" do
 
   handle_click do |view|
     case view.getText
-    when "Roll" : roll
-    when "Place a Bet"  : launch_bets
+    when "Roll" then roll
+    when "Place a Bet" then launch_bets
     else toast "foo"
     end
   end

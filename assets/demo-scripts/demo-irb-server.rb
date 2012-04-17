@@ -261,11 +261,11 @@ Thread.with_large_stack do
           raise WEBrick::HTTPStatus::TemporaryRedirect
         elsif File.exists?(req.path[1..-1])
           resp.content_type = case req.path.split(".")[-1]
-          when "jpg" : "image/jpg"
-          when "ico" : "image/ico"
-          when "html" : "text/html"
-          when "css" : "text/css"
-          when "js" : "application/javascript"
+          when "jpg" then "image/jpg"
+          when "ico" then "image/ico"
+          when "html" then "text/html"
+          when "css" then "text/css"
+          when "js" then "application/javascript"
           else
             puts req.path
             raise WEBrick::HTTPStatus::NotFound

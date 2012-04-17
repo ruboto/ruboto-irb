@@ -53,19 +53,19 @@ class RubotoActivity
       RubotoActivity.launch_list context, "$sl_#{title.downcase.gsub(' ', '_')}", "Api Demos", title
     else
       case title
-      when "Custom Dialog"         : custom_dialog(context)
-      when "Custom Title"          : custom_title(context)
-      when "Forwarding"            : forwarding(context)
-      when "Hello World"           : hello_world(context)
-      when "Persistent State"      : persistent_state(context)
-      when "Save & Restore State"  : save_and_restore_state(context)
-      when "Arcs"                  : arcs(context)
-      when "Morse Code"            : morse_code(context)
-      when "Sensors"               : sensors(context)
-      when "Buttons"               : buttons(context)
-      when "Chronometer"           : chronometer_demo(context)
-      when "1. Dialog"             : date_dialog(context)
-      when "2. Inline"             : date_inline(context)
+      when "Custom Dialog"      then custom_dialog(context)
+      when "Custom Title"       then custom_title(context)
+      when "Forwarding"         then forwarding(context)
+      when "Hello World"        then hello_world(context)
+      when "Persistent State"   then persistent_state(context)
+      when "Save & Restore State" then save_and_restore_state(context)
+      when "Arcs"               then arcs(context)
+      when "Morse Code"         then morse_code(context)
+      when "Sensors"            then sensors(context)
+      when "Buttons"            then buttons(context)
+      when "Chronometer"        then chronometer_demo(context)
+      when "1. Dialog"          then date_dialog(context)
+      when "2. Inline"          then date_inline(context)
       else
         context.toast "Not Implemented Yet"
       end
