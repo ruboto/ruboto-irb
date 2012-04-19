@@ -8,8 +8,6 @@
 #######################################################
 
 require 'ruboto/activity'
-require 'ruboto/generate'
-confirm_ruboto_version(10, false)
 
 java_import "android.opengl.GLSurfaceView"
 
@@ -20,9 +18,6 @@ java_import "javax.microedition.khronos.opengles.GL10"
 java_import "java.nio.ByteBuffer"
 java_import "java.nio.ByteOrder"
 java_import "java.nio.IntBuffer"
-
-# A class implementing GLSurfaceView.Renderer
-ruboto_generate("android.opengl.GLSurfaceView$Renderer" => "org.ruboto.callbacks.RubotoGLSurfaceViewRenderer")
 
 #######################################################
 #
@@ -92,6 +87,66 @@ end
 
 #######################################################
 #
+# RubotoGLSurfaceViewRenderer
+#
+#   The interface android.opengl.GLSurfaceView$Renderer
+#
+
+class RubotoGLSurfaceViewRenderer
+  def initialize
+    @translucent_background = false
+    @cube = Cube.new
+    @angle = 0.0
+  end
+  
+  def onDrawFrame(gl)
+    gl.glClear(GL10::GL_COLOR_BUFFER_BIT | GL10::GL_DEPTH_BUFFER_BIT)
+
+    gl.glMatrixMode(GL10::GL_MODELVIEW)
+    gl.glLoadIdentity
+    gl.glTranslatef(0, 0, -3.0)
+    gl.glRotatef(@angle,       0, 1, 0)
+    gl.glRotatef(@angle*0.25,  1, 0, 0)
+
+    gl.glEnableClientState(GL10::GL_VERTEX_ARRAY)
+    gl.glEnableClientState(GL10::GL_COLOR_ARRAY)
+
+    @cube.draw(gl)
+
+    gl.glRotatef(@angle*2.0, 0, 1, 1)
+    gl.glTranslatef(0.5, 0.5, 0.5)
+
+    @cube.draw(gl)
+
+    @angle += 1.2
+  end
+
+  def onSurfaceChanged(gl, width, height)
+    gl.glViewport(0, 0, width, height)
+    ratio = width.to_f / height.to_f
+    gl.glMatrixMode(GL10::GL_PROJECTION)
+    gl.glLoadIdentity
+    gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10)
+  end
+
+  def onSurfaceCreated(gl, config)
+    gl.glDisable(GL10::GL_DITHER)
+
+    gl.glHint(GL10::GL_PERSPECTIVE_CORRECTION_HINT, GL10::GL_FASTEST)
+
+    if (@translucent_background)
+      gl.glClearColor(0,0,0,0)
+    else
+      gl.glClearColor(1,1,1,1)
+    end
+    gl.glEnable(GL10::GL_CULL_FACE)
+    gl.glShadeModel(GL10::GL_SMOOTH)
+    gl.glEnable(GL10::GL_DEPTH_TEST)
+  end
+end
+
+#######################################################
+#
 # Activity
 #
 #   Start a new activity or connect to $activity
@@ -102,7 +157,7 @@ $activity.start_ruboto_activity "$glsurface" do
 
   def on_create(bundle)
     @surface_view = GLSurfaceView.new(self)
-    @surface_view.renderer = @renderer
+    @surface_view.renderer = RubotoGLSurfaceViewRenderer.new
     self.content_view = @surface_view
   end
   
@@ -112,57 +167,6 @@ $activity.start_ruboto_activity "$glsurface" do
 
   def on_pause
     @surface_view.on_pause
-  end
-
-  @renderer = RubotoGLSurfaceViewRenderer.new_with_callbacks do
-    @translucent_background = false
-    @cube = Cube.new
-    @angle = 0.0
-    
-    def on_draw_frame(gl)
-      gl.glClear(GL10::GL_COLOR_BUFFER_BIT | GL10::GL_DEPTH_BUFFER_BIT)
-  
-      gl.glMatrixMode(GL10::GL_MODELVIEW)
-      gl.glLoadIdentity
-      gl.glTranslatef(0, 0, -3.0)
-      gl.glRotatef(@angle,       0, 1, 0)
-      gl.glRotatef(@angle*0.25,  1, 0, 0)
-  
-      gl.glEnableClientState(GL10::GL_VERTEX_ARRAY)
-      gl.glEnableClientState(GL10::GL_COLOR_ARRAY)
-  
-      @cube.draw(gl)
-  
-      gl.glRotatef(@angle*2.0, 0, 1, 1)
-      gl.glTranslatef(0.5, 0.5, 0.5)
-  
-      @cube.draw(gl)
-
-      @angle += 1.2
-    end
-  
-    def on_surface_changed(gl, width, height)
-      gl.glViewport(0, 0, width, height)
-      ratio = width.to_f / height.to_f
-      gl.glMatrixMode(GL10::GL_PROJECTION)
-      gl.glLoadIdentity
-      gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10)
-    end
-  
-    def on_surface_created(gl, config)
-      gl.glDisable(GL10::GL_DITHER)
-  
-      gl.glHint(GL10::GL_PERSPECTIVE_CORRECTION_HINT, GL10::GL_FASTEST)
-  
-      if (@translucent_background)
-        gl.glClearColor(0,0,0,0)
-      else
-        gl.glClearColor(1,1,1,1)
-      end
-      gl.glEnable(GL10::GL_CULL_FACE)
-      gl.glShadeModel(GL10::GL_SMOOTH)
-      gl.glEnable(GL10::GL_DEPTH_TEST)
-    end
   end
 end
 

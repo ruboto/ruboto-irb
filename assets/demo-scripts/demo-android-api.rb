@@ -472,7 +472,6 @@ class RubotoActivity
     java_import "android.content.Context"
 
     ruboto_generate(android.view.View => "org.ruboto.RubotoView")
-    ruboto_generate(android.hardware.SensorEventListener => "org.ruboto.callbacks.RubotoSensorEventListener")
 
     context.start_ruboto_activity "$sensors" do
        setTitle "OS/Sensors"
@@ -599,10 +598,14 @@ class RubotoActivity
         end
       end
 
-      @sensor_event_listener = RubotoSensorEventListener.new_with_callbacks do
-         def on_sensor_changed(event)
-           $sensors.view.sensor_changed(event)
-         end
+      @sensor_event_listener = Object.new
+      class << @sensor_event_listener
+        def onSensorChanged(event)
+          $sensors.view.sensor_changed(event)
+        end
+
+        def onAccuracyChanged(sensor, accuracy)
+        end
       end
     end
   end

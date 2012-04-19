@@ -10,12 +10,8 @@
 
 require 'ruboto/activity'
 require 'ruboto/util/toast'
-require 'ruboto/generate'
 
-java_import "android.view.SurfaceView"
 java_import "android.hardware.Camera"
-
-ruboto_generate("android.view.SurfaceHolder$Callback" => "org.ruboto.callbacks.RubotoSurfaceHolderCallback")
 
 class Camera
   def picture_id
@@ -24,30 +20,33 @@ class Camera
   end
 end
 
+class RubotoSurfaceHolderCallback
+  def surfaceCreated(holder)
+    $camera = Camera.open # Add (1) for front camera
+    $camera.preview_display = holder
+    $camera.start_preview
+  end
+
+  def surfaceChanged(holder, format, width, height)
+  end
+
+  def surfaceDestroyed(holder)
+    $camera.stop_preview
+    $camera.release
+    $camera = nil
+  end
+end
+  
 $activity.start_ruboto_activity "$camera_demo", RubotoActivity, R.style::Theme_NoTitleBar_Fullscreen do
   def on_create(bundle)
-    @surface_view = SurfaceView.new(self)
-    @surface_view.set_on_click_listener(proc{|v| take_picture})
-    @surface_view.holder.add_callback @holder_callback
+    @surface_view = android.view.SurfaceView.new(self)
+    @surface_view.set_on_click_listener{|v| take_picture}
+    @surface_view.holder.add_callback RubotoSurfaceHolderCallback.new
     # Deprecated, but still required for older API version
     @surface_view.holder.set_type android.view.SurfaceHolder::SURFACE_TYPE_PUSH_BUFFERS
     self.content_view = @surface_view
   end
 
-  @holder_callback = RubotoSurfaceHolderCallback.new_with_callbacks do
-    def on_surface_created(holder)
-      $camera = Camera.open # Add (1) for front camera
-      $camera.preview_display = holder
-      $camera.start_preview
-    end
-
-    def on_surface_destroyed(holder)
-      $camera.stop_preview
-      $camera.release
-      $camera = nil
-    end
-  end
-  
   def take_picture
     picture_file = "#{Dir.pwd}/picture#{$camera.picture_id}.jpg"
     $camera.take_picture(proc{toast "Picture taken"}, nil) do |data, camera|
