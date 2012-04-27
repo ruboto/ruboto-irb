@@ -222,7 +222,7 @@ Thread.with_large_stack do
         <form action='/' method='post'>
           <input type='submit' value='Eval' />
           <input name='ui-thread' type='checkbox' /> Run on UI Thread
-          <textarea id='code' name='code' rows='#{rows}' cols='100'>#{code}</textarea>
+          <textarea id='code' name='code' rows='#{rows}' cols='100'>#{WEBrick::HTMLUtils.escape(code)}</textarea>
         </form><p/>
       ]
     end
@@ -317,7 +317,7 @@ Thread.with_large_stack do
   
     def evaluate(code, ui_thread)  
       p = Proc.new do
-        java.lang.Thread.currentThread.setUncaughtExceptionHandler(@@exception_handler) if ui_thread
+        java.lang.Thread.currentThread.setUncaughtExceptionHandler(@@exception_handler)
   
         if @@string_io.length > 0
           s = @@string_io.string.clone
@@ -329,7 +329,7 @@ Thread.with_large_stack do
         puts code.length < 100 ? ">> #{code}\n" : ">> {code not echoed due to size}\n"
   
         begin
-          puts "=> #{$main_binding.eval(code).inspect}\n"
+          puts "=> #{eval(code, $main_binding, "eval", 1).inspect}\n"
         rescue => e
           puts e.message
           puts e.backtrace.join("\n")
