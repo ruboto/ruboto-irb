@@ -123,7 +123,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
         super.onCreate(bundle);
     
-        if (Script.isInitialized()) {
+        if (JRubyAdapter.isInitialized()) {
             prepareJRuby();
     	    loadScript();
         }
@@ -131,8 +131,8 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
     // This causes JRuby to initialize and takes while
     protected void prepareJRuby() {
-        Script.put("$activity", this);
-        Script.put("$bundle", args[0]);
+        JRubyAdapter.put("$activity", this);
+        JRubyAdapter.put("$bundle", args[0]);
     }
 
     protected void loadScript() {
@@ -142,12 +142,12 @@ public class RubotoTabActivity extends android.app.TabActivity {
             } else if (configBundle != null && configBundle.getString("Remote Variable") != null) {
                 setRemoteVariable(configBundle.getString("Remote Variable"));
                 if (configBundle.getBoolean("Define Remote Variable")) {
-                    Script.put(remoteVariable, this);
+                    JRubyAdapter.put(remoteVariable, this);
                 }
                 if (configBundle.getString("Initialize Script") != null) {
-                    Script.execute(configBundle.getString("Initialize Script"));
+                    JRubyAdapter.execute(configBundle.getString("Initialize Script"));
                 }
-                Script.execute(getRemoteVariableCall("on_create($bundle)"));
+                JRubyAdapter.execute(getRemoteVariableCall("on_create($bundle)"));
             } else {
                 throw new RuntimeException("Neither script name nor remote variable was set.");
             }
@@ -164,62 +164,62 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
   public void onContentChanged() {
     if (callbackProcs[CB_CONTENT_CHANGED] != null) {
-      Script.callMethod(callbackProcs[CB_CONTENT_CHANGED], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_CONTENT_CHANGED], "call" );
     }
   }
 
   public void onSaveInstanceState(android.os.Bundle arg0) {
     if (callbackProcs[CB_SAVE_INSTANCE_STATE] != null) {
-      Script.callMethod(callbackProcs[CB_SAVE_INSTANCE_STATE], "call" , arg0);
+      JRubyAdapter.callMethod(callbackProcs[CB_SAVE_INSTANCE_STATE], "call" , arg0);
     }
   }
 
   public void onRestoreInstanceState(android.os.Bundle arg0) {
     if (callbackProcs[CB_RESTORE_INSTANCE_STATE] != null) {
-      Script.callMethod(callbackProcs[CB_RESTORE_INSTANCE_STATE], "call" , arg0);
+      JRubyAdapter.callMethod(callbackProcs[CB_RESTORE_INSTANCE_STATE], "call" , arg0);
     }
   }
 
   public void onPostCreate(android.os.Bundle arg0) {
     if (callbackProcs[CB_POST_CREATE] != null) {
-      Script.callMethod(callbackProcs[CB_POST_CREATE], "call" , arg0);
+      JRubyAdapter.callMethod(callbackProcs[CB_POST_CREATE], "call" , arg0);
     }
   }
 
   public void onChildTitleChanged(android.app.Activity arg0, java.lang.CharSequence arg1) {
     if (callbackProcs[CB_CHILD_TITLE_CHANGED] != null) {
-      Script.callMethod(callbackProcs[CB_CHILD_TITLE_CHANGED], "call" , new Object[]{arg0, arg1});
+      JRubyAdapter.callMethod(callbackProcs[CB_CHILD_TITLE_CHANGED], "call" , new Object[]{arg0, arg1});
     }
   }
 
   public void onDestroy() {
     if (callbackProcs[CB_DESTROY] != null) {
-      Script.callMethod(callbackProcs[CB_DESTROY], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_DESTROY], "call" );
     }
   }
 
   public void onResume() {
     if (callbackProcs[CB_RESUME] != null) {
-      Script.callMethod(callbackProcs[CB_RESUME], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_RESUME], "call" );
     }
   }
 
   public void onPause() {
     if (callbackProcs[CB_PAUSE] != null) {
-      Script.callMethod(callbackProcs[CB_PAUSE], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_PAUSE], "call" );
     }
   }
 
   public void onStop() {
     if (callbackProcs[CB_STOP] != null) {
-      Script.callMethod(callbackProcs[CB_STOP], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_STOP], "call" );
     }
   }
 
   public void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
     if (callbackProcs[CB_ACTIVITY_RESULT] != null) {
       super.onActivityResult(requestCode, resultCode, data);
-      Script.callMethod(callbackProcs[CB_ACTIVITY_RESULT], "call" , new Object[]{requestCode, resultCode, data});
+      JRubyAdapter.callMethod(callbackProcs[CB_ACTIVITY_RESULT], "call" , new Object[]{requestCode, resultCode, data});
     } else {
       super.onActivityResult(requestCode, resultCode, data);
     }
@@ -228,7 +228,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onConfigurationChanged(android.content.res.Configuration newConfig) {
     if (callbackProcs[CB_CONFIGURATION_CHANGED] != null) {
       super.onConfigurationChanged(newConfig);
-      Script.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
+      JRubyAdapter.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
     } else {
       super.onConfigurationChanged(newConfig);
     }
@@ -237,7 +237,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onContextItemSelected(android.view.MenuItem item) {
     if (callbackProcs[CB_CONTEXT_ITEM_SELECTED] != null) {
       super.onContextItemSelected(item);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CONTEXT_ITEM_SELECTED], "call" , item, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CONTEXT_ITEM_SELECTED], "call" , item, Boolean.class);
     } else {
       return super.onContextItemSelected(item);
     }
@@ -246,7 +246,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onContextMenuClosed(android.view.Menu menu) {
     if (callbackProcs[CB_CONTEXT_MENU_CLOSED] != null) {
       super.onContextMenuClosed(menu);
-      Script.callMethod(callbackProcs[CB_CONTEXT_MENU_CLOSED], "call" , menu);
+      JRubyAdapter.callMethod(callbackProcs[CB_CONTEXT_MENU_CLOSED], "call" , menu);
     } else {
       super.onContextMenuClosed(menu);
     }
@@ -255,7 +255,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onCreateContextMenu(android.view.ContextMenu menu, android.view.View v, android.view.ContextMenu.ContextMenuInfo menuInfo) {
     if (callbackProcs[CB_CREATE_CONTEXT_MENU] != null) {
       super.onCreateContextMenu(menu, v, menuInfo);
-      Script.callMethod(callbackProcs[CB_CREATE_CONTEXT_MENU], "call" , new Object[]{menu, v, menuInfo});
+      JRubyAdapter.callMethod(callbackProcs[CB_CREATE_CONTEXT_MENU], "call" , new Object[]{menu, v, menuInfo});
     } else {
       super.onCreateContextMenu(menu, v, menuInfo);
     }
@@ -264,7 +264,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public java.lang.CharSequence onCreateDescription() {
     if (callbackProcs[CB_CREATE_DESCRIPTION] != null) {
       super.onCreateDescription();
-      return (java.lang.CharSequence) Script.callMethod(callbackProcs[CB_CREATE_DESCRIPTION], "call" , java.lang.CharSequence.class);
+      return (java.lang.CharSequence) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_DESCRIPTION], "call" , java.lang.CharSequence.class);
     } else {
       return super.onCreateDescription();
     }
@@ -273,7 +273,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public android.app.Dialog onCreateDialog(int id) {
     if (callbackProcs[CB_CREATE_DIALOG] != null) {
       super.onCreateDialog(id);
-      return (android.app.Dialog) Script.callMethod(callbackProcs[CB_CREATE_DIALOG], "call" , id, android.app.Dialog.class);
+      return (android.app.Dialog) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_DIALOG], "call" , id, android.app.Dialog.class);
     } else {
       return super.onCreateDialog(id);
     }
@@ -282,7 +282,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onCreateOptionsMenu(android.view.Menu menu) {
     if (callbackProcs[CB_CREATE_OPTIONS_MENU] != null) {
       super.onCreateOptionsMenu(menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_OPTIONS_MENU], "call" , menu, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_OPTIONS_MENU], "call" , menu, Boolean.class);
     } else {
       return super.onCreateOptionsMenu(menu);
     }
@@ -291,7 +291,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onCreatePanelMenu(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_CREATE_PANEL_MENU] != null) {
       super.onCreatePanelMenu(featureId, menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_PANEL_MENU], "call" , new Object[]{featureId, menu}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_PANEL_MENU], "call" , new Object[]{featureId, menu}, Boolean.class);
     } else {
       return super.onCreatePanelMenu(featureId, menu);
     }
@@ -300,7 +300,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public android.view.View onCreatePanelView(int featureId) {
     if (callbackProcs[CB_CREATE_PANEL_VIEW] != null) {
       super.onCreatePanelView(featureId);
-      return (android.view.View) Script.callMethod(callbackProcs[CB_CREATE_PANEL_VIEW], "call" , featureId, android.view.View.class);
+      return (android.view.View) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_PANEL_VIEW], "call" , featureId, android.view.View.class);
     } else {
       return super.onCreatePanelView(featureId);
     }
@@ -309,7 +309,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onCreateThumbnail(android.graphics.Bitmap outBitmap, android.graphics.Canvas canvas) {
     if (callbackProcs[CB_CREATE_THUMBNAIL] != null) {
       super.onCreateThumbnail(outBitmap, canvas);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_THUMBNAIL], "call" , new Object[]{outBitmap, canvas}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_THUMBNAIL], "call" , new Object[]{outBitmap, canvas}, Boolean.class);
     } else {
       return super.onCreateThumbnail(outBitmap, canvas);
     }
@@ -318,7 +318,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public android.view.View onCreateView(java.lang.String name, android.content.Context context, android.util.AttributeSet attrs) {
     if (callbackProcs[CB_CREATE_VIEW] != null) {
       super.onCreateView(name, context, attrs);
-      return (android.view.View) Script.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{name, context, attrs}, android.view.View.class);
+      return (android.view.View) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{name, context, attrs}, android.view.View.class);
     } else {
       return super.onCreateView(name, context, attrs);
     }
@@ -327,7 +327,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_DOWN] != null) {
       super.onKeyDown(keyCode, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_DOWN], "call" , new Object[]{keyCode, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_DOWN], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyDown(keyCode, event);
     }
@@ -336,7 +336,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onKeyMultiple(int keyCode, int repeatCount, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_MULTIPLE] != null) {
       super.onKeyMultiple(keyCode, repeatCount, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_MULTIPLE], "call" , new Object[]{keyCode, repeatCount, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_MULTIPLE], "call" , new Object[]{keyCode, repeatCount, event}, Boolean.class);
     } else {
       return super.onKeyMultiple(keyCode, repeatCount, event);
     }
@@ -345,7 +345,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_UP] != null) {
       super.onKeyUp(keyCode, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_UP], "call" , new Object[]{keyCode, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_UP], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyUp(keyCode, event);
     }
@@ -354,7 +354,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onLowMemory() {
     if (callbackProcs[CB_LOW_MEMORY] != null) {
       super.onLowMemory();
-      Script.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
     } else {
       super.onLowMemory();
     }
@@ -363,7 +363,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onMenuItemSelected(int featureId, android.view.MenuItem item) {
     if (callbackProcs[CB_MENU_ITEM_SELECTED] != null) {
       super.onMenuItemSelected(featureId, item);
-      return (Boolean) Script.callMethod(callbackProcs[CB_MENU_ITEM_SELECTED], "call" , new Object[]{featureId, item}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_MENU_ITEM_SELECTED], "call" , new Object[]{featureId, item}, Boolean.class);
     } else {
       return super.onMenuItemSelected(featureId, item);
     }
@@ -372,7 +372,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onMenuOpened(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_MENU_OPENED] != null) {
       super.onMenuOpened(featureId, menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_MENU_OPENED], "call" , new Object[]{featureId, menu}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_MENU_OPENED], "call" , new Object[]{featureId, menu}, Boolean.class);
     } else {
       return super.onMenuOpened(featureId, menu);
     }
@@ -381,7 +381,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onNewIntent(android.content.Intent intent) {
     if (callbackProcs[CB_NEW_INTENT] != null) {
       super.onNewIntent(intent);
-      Script.callMethod(callbackProcs[CB_NEW_INTENT], "call" , intent);
+      JRubyAdapter.callMethod(callbackProcs[CB_NEW_INTENT], "call" , intent);
     } else {
       super.onNewIntent(intent);
     }
@@ -390,7 +390,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onOptionsItemSelected(android.view.MenuItem item) {
     if (callbackProcs[CB_OPTIONS_ITEM_SELECTED] != null) {
       super.onOptionsItemSelected(item);
-      return (Boolean) Script.callMethod(callbackProcs[CB_OPTIONS_ITEM_SELECTED], "call" , item, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_OPTIONS_ITEM_SELECTED], "call" , item, Boolean.class);
     } else {
       return super.onOptionsItemSelected(item);
     }
@@ -399,7 +399,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onOptionsMenuClosed(android.view.Menu menu) {
     if (callbackProcs[CB_OPTIONS_MENU_CLOSED] != null) {
       super.onOptionsMenuClosed(menu);
-      Script.callMethod(callbackProcs[CB_OPTIONS_MENU_CLOSED], "call" , menu);
+      JRubyAdapter.callMethod(callbackProcs[CB_OPTIONS_MENU_CLOSED], "call" , menu);
     } else {
       super.onOptionsMenuClosed(menu);
     }
@@ -408,7 +408,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onPanelClosed(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_PANEL_CLOSED] != null) {
       super.onPanelClosed(featureId, menu);
-      Script.callMethod(callbackProcs[CB_PANEL_CLOSED], "call" , new Object[]{featureId, menu});
+      JRubyAdapter.callMethod(callbackProcs[CB_PANEL_CLOSED], "call" , new Object[]{featureId, menu});
     } else {
       super.onPanelClosed(featureId, menu);
     }
@@ -417,7 +417,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onPostResume() {
     if (callbackProcs[CB_POST_RESUME] != null) {
       super.onPostResume();
-      Script.callMethod(callbackProcs[CB_POST_RESUME], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_POST_RESUME], "call" );
     } else {
       super.onPostResume();
     }
@@ -426,7 +426,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onPrepareDialog(int id, android.app.Dialog dialog) {
     if (callbackProcs[CB_PREPARE_DIALOG] != null) {
       super.onPrepareDialog(id, dialog);
-      Script.callMethod(callbackProcs[CB_PREPARE_DIALOG], "call" , new Object[]{id, dialog});
+      JRubyAdapter.callMethod(callbackProcs[CB_PREPARE_DIALOG], "call" , new Object[]{id, dialog});
     } else {
       super.onPrepareDialog(id, dialog);
     }
@@ -435,7 +435,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onPrepareOptionsMenu(android.view.Menu menu) {
     if (callbackProcs[CB_PREPARE_OPTIONS_MENU] != null) {
       super.onPrepareOptionsMenu(menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_PREPARE_OPTIONS_MENU], "call" , menu, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_PREPARE_OPTIONS_MENU], "call" , menu, Boolean.class);
     } else {
       return super.onPrepareOptionsMenu(menu);
     }
@@ -444,7 +444,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onPreparePanel(int featureId, android.view.View view, android.view.Menu menu) {
     if (callbackProcs[CB_PREPARE_PANEL] != null) {
       super.onPreparePanel(featureId, view, menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_PREPARE_PANEL], "call" , new Object[]{featureId, view, menu}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_PREPARE_PANEL], "call" , new Object[]{featureId, view, menu}, Boolean.class);
     } else {
       return super.onPreparePanel(featureId, view, menu);
     }
@@ -453,7 +453,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onRestart() {
     if (callbackProcs[CB_RESTART] != null) {
       super.onRestart();
-      Script.callMethod(callbackProcs[CB_RESTART], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_RESTART], "call" );
     } else {
       super.onRestart();
     }
@@ -462,7 +462,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public java.lang.Object onRetainNonConfigurationInstance() {
     if (callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE] != null) {
       super.onRetainNonConfigurationInstance();
-      return (java.lang.Object) Script.callMethod(callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE], "call" , java.lang.Object.class);
+      return (java.lang.Object) JRubyAdapter.callMethod(callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE], "call" , java.lang.Object.class);
     } else {
       return super.onRetainNonConfigurationInstance();
     }
@@ -471,7 +471,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onSearchRequested() {
     if (callbackProcs[CB_SEARCH_REQUESTED] != null) {
       super.onSearchRequested();
-      return (Boolean) Script.callMethod(callbackProcs[CB_SEARCH_REQUESTED], "call" , Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_SEARCH_REQUESTED], "call" , Boolean.class);
     } else {
       return super.onSearchRequested();
     }
@@ -480,7 +480,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onStart() {
     if (callbackProcs[CB_START] != null) {
       super.onStart();
-      Script.callMethod(callbackProcs[CB_START], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_START], "call" );
     } else {
       super.onStart();
     }
@@ -489,7 +489,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onTitleChanged(java.lang.CharSequence title, int color) {
     if (callbackProcs[CB_TITLE_CHANGED] != null) {
       super.onTitleChanged(title, color);
-      Script.callMethod(callbackProcs[CB_TITLE_CHANGED], "call" , new Object[]{title, color});
+      JRubyAdapter.callMethod(callbackProcs[CB_TITLE_CHANGED], "call" , new Object[]{title, color});
     } else {
       super.onTitleChanged(title, color);
     }
@@ -498,7 +498,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onTouchEvent(android.view.MotionEvent event) {
     if (callbackProcs[CB_TOUCH_EVENT] != null) {
       super.onTouchEvent(event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_TOUCH_EVENT], "call" , event, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_TOUCH_EVENT], "call" , event, Boolean.class);
     } else {
       return super.onTouchEvent(event);
     }
@@ -507,7 +507,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onTrackballEvent(android.view.MotionEvent event) {
     if (callbackProcs[CB_TRACKBALL_EVENT] != null) {
       super.onTrackballEvent(event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_TRACKBALL_EVENT], "call" , event, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_TRACKBALL_EVENT], "call" , event, Boolean.class);
     } else {
       return super.onTrackballEvent(event);
     }
@@ -516,7 +516,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onWindowAttributesChanged(android.view.WindowManager.LayoutParams params) {
     if (callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED] != null) {
       super.onWindowAttributesChanged(params);
-      Script.callMethod(callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED], "call" , params);
+      JRubyAdapter.callMethod(callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED], "call" , params);
     } else {
       super.onWindowAttributesChanged(params);
     }
@@ -525,7 +525,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onWindowFocusChanged(boolean hasFocus) {
     if (callbackProcs[CB_WINDOW_FOCUS_CHANGED] != null) {
       super.onWindowFocusChanged(hasFocus);
-      Script.callMethod(callbackProcs[CB_WINDOW_FOCUS_CHANGED], "call" , hasFocus);
+      JRubyAdapter.callMethod(callbackProcs[CB_WINDOW_FOCUS_CHANGED], "call" , hasFocus);
     } else {
       super.onWindowFocusChanged(hasFocus);
     }
@@ -534,7 +534,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onUserInteraction() {
     if (callbackProcs[CB_USER_INTERACTION] != null) {
       super.onUserInteraction();
-      Script.callMethod(callbackProcs[CB_USER_INTERACTION], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_USER_INTERACTION], "call" );
     } else {
       super.onUserInteraction();
     }
@@ -543,7 +543,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onUserLeaveHint() {
     if (callbackProcs[CB_USER_LEAVE_HINT] != null) {
       super.onUserLeaveHint();
-      Script.callMethod(callbackProcs[CB_USER_LEAVE_HINT], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_USER_LEAVE_HINT], "call" );
     } else {
       super.onUserLeaveHint();
     }
@@ -552,7 +552,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onAttachedToWindow() {
     if (callbackProcs[CB_ATTACHED_TO_WINDOW] != null) {
       super.onAttachedToWindow();
-      Script.callMethod(callbackProcs[CB_ATTACHED_TO_WINDOW], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_ATTACHED_TO_WINDOW], "call" );
     } else {
       super.onAttachedToWindow();
     }
@@ -561,7 +561,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onBackPressed() {
     if (callbackProcs[CB_BACK_PRESSED] != null) {
       super.onBackPressed();
-      Script.callMethod(callbackProcs[CB_BACK_PRESSED], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_BACK_PRESSED], "call" );
     } else {
       super.onBackPressed();
     }
@@ -570,7 +570,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public void onDetachedFromWindow() {
     if (callbackProcs[CB_DETACHED_FROM_WINDOW] != null) {
       super.onDetachedFromWindow();
-      Script.callMethod(callbackProcs[CB_DETACHED_FROM_WINDOW], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_DETACHED_FROM_WINDOW], "call" );
     } else {
       super.onDetachedFromWindow();
     }
@@ -579,7 +579,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
   public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_LONG_PRESS] != null) {
       super.onKeyLongPress(keyCode, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_LONG_PRESS], "call" , new Object[]{keyCode, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_LONG_PRESS], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyLongPress(keyCode, event);
     }
@@ -587,7 +587,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
   public android.app.Dialog onCreateDialog(int id, android.os.Bundle args) {
     if (callbackProcs[CB_CREATE_DIALOG] != null) {
-      return (android.app.Dialog) Script.callMethod(callbackProcs[CB_CREATE_DIALOG], "call" , new Object[]{id, args}, android.app.Dialog.class);
+      return (android.app.Dialog) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_DIALOG], "call" , new Object[]{id, args}, android.app.Dialog.class);
     } else {
       return null;
     }
@@ -595,13 +595,13 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
   public void onPrepareDialog(int id, android.app.Dialog dialog, android.os.Bundle args) {
     if (callbackProcs[CB_PREPARE_DIALOG] != null) {
-      Script.callMethod(callbackProcs[CB_PREPARE_DIALOG], "call" , new Object[]{id, dialog, args});
+      JRubyAdapter.callMethod(callbackProcs[CB_PREPARE_DIALOG], "call" , new Object[]{id, dialog, args});
     }
   }
 
   public boolean onKeyShortcut(int arg0, android.view.KeyEvent arg1) {
     if (callbackProcs[CB_KEY_SHORTCUT] != null) {
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_SHORTCUT], "call" , new Object[]{arg0, arg1}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_SHORTCUT], "call" , new Object[]{arg0, arg1}, Boolean.class);
     } else {
       return false;
     }
@@ -609,7 +609,7 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
   public android.view.View onCreateView(android.view.View arg0, java.lang.String arg1, android.content.Context arg2, android.util.AttributeSet arg3) {
     if (callbackProcs[CB_CREATE_VIEW] != null) {
-      return (android.view.View) Script.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{arg0, arg1, arg2, arg3}, android.view.View.class);
+      return (android.view.View) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{arg0, arg1, arg2, arg3}, android.view.View.class);
     } else {
       return null;
     }
@@ -617,19 +617,19 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
   public void onAttachFragment(android.app.Fragment arg0) {
     if (callbackProcs[CB_ATTACH_FRAGMENT] != null) {
-      Script.callMethod(callbackProcs[CB_ATTACH_FRAGMENT], "call" , arg0);
+      JRubyAdapter.callMethod(callbackProcs[CB_ATTACH_FRAGMENT], "call" , arg0);
     }
   }
 
   public void onApplyThemeResource(android.content.res.Resources.Theme arg0, int arg1, boolean arg2) {
     if (callbackProcs[CB_APPLY_THEME_RESOURCE] != null) {
-      Script.callMethod(callbackProcs[CB_APPLY_THEME_RESOURCE], "call" , new Object[]{arg0, arg1, arg2});
+      JRubyAdapter.callMethod(callbackProcs[CB_APPLY_THEME_RESOURCE], "call" , new Object[]{arg0, arg1, arg2});
     }
   }
 
   public android.view.ActionMode onWindowStartingActionMode(android.view.ActionMode.Callback arg0) {
     if (callbackProcs[CB_WINDOW_STARTING_ACTION_MODE] != null) {
-      return (android.view.ActionMode) Script.callMethod(callbackProcs[CB_WINDOW_STARTING_ACTION_MODE], "call" , arg0, android.view.ActionMode.class);
+      return (android.view.ActionMode) JRubyAdapter.callMethod(callbackProcs[CB_WINDOW_STARTING_ACTION_MODE], "call" , arg0, android.view.ActionMode.class);
     } else {
       return null;
     }
@@ -637,19 +637,19 @@ public class RubotoTabActivity extends android.app.TabActivity {
 
   public void onActionModeStarted(android.view.ActionMode arg0) {
     if (callbackProcs[CB_ACTION_MODE_STARTED] != null) {
-      Script.callMethod(callbackProcs[CB_ACTION_MODE_STARTED], "call" , arg0);
+      JRubyAdapter.callMethod(callbackProcs[CB_ACTION_MODE_STARTED], "call" , arg0);
     }
   }
 
   public void onActionModeFinished(android.view.ActionMode arg0) {
     if (callbackProcs[CB_ACTION_MODE_FINISHED] != null) {
-      Script.callMethod(callbackProcs[CB_ACTION_MODE_FINISHED], "call" , arg0);
+      JRubyAdapter.callMethod(callbackProcs[CB_ACTION_MODE_FINISHED], "call" , arg0);
     }
   }
 
   public boolean onGenericMotionEvent(android.view.MotionEvent arg0) {
     if (callbackProcs[CB_GENERIC_MOTION_EVENT] != null) {
-      return (Boolean) Script.callMethod(callbackProcs[CB_GENERIC_MOTION_EVENT], "call" , arg0, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_GENERIC_MOTION_EVENT], "call" , arg0, Boolean.class);
     } else {
       return false;
     }

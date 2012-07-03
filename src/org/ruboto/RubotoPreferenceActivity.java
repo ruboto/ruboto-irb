@@ -108,7 +108,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
 
         super.onCreate(bundle);
     
-        if (Script.isInitialized()) {
+        if (JRubyAdapter.isInitialized()) {
             prepareJRuby();
     	    loadScript();
         }
@@ -116,8 +116,8 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
 
     // This causes JRuby to initialize and takes while
     protected void prepareJRuby() {
-        Script.put("$activity", this);
-        Script.put("$bundle", args[0]);
+        JRubyAdapter.put("$activity", this);
+        JRubyAdapter.put("$bundle", args[0]);
     }
 
     protected void loadScript() {
@@ -127,12 +127,12 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
             } else if (configBundle != null && configBundle.getString("Remote Variable") != null) {
                 setRemoteVariable(configBundle.getString("Remote Variable"));
                 if (configBundle.getBoolean("Define Remote Variable")) {
-                    Script.put(remoteVariable, this);
+                    JRubyAdapter.put(remoteVariable, this);
                 }
                 if (configBundle.getString("Initialize Script") != null) {
-                    Script.execute(configBundle.getString("Initialize Script"));
+                    JRubyAdapter.execute(configBundle.getString("Initialize Script"));
                 }
-                Script.execute(getRemoteVariableCall("on_create($bundle)"));
+                JRubyAdapter.execute(getRemoteVariableCall("on_create($bundle)"));
             } else {
                 throw new RuntimeException("Neither script name nor remote variable was set.");
             }
@@ -150,7 +150,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onPreferenceTreeClick(android.preference.PreferenceScreen preferenceScreen, android.preference.Preference preference) {
     if (callbackProcs[CB_PREFERENCE_TREE_CLICK] != null) {
       super.onPreferenceTreeClick(preferenceScreen, preference);
-      return (Boolean) Script.callMethod(callbackProcs[CB_PREFERENCE_TREE_CLICK], "call" , new Object[]{preferenceScreen, preference}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_PREFERENCE_TREE_CLICK], "call" , new Object[]{preferenceScreen, preference}, Boolean.class);
     } else {
       return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
@@ -159,7 +159,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onChildTitleChanged(android.app.Activity childActivity, java.lang.CharSequence title) {
     if (callbackProcs[CB_CHILD_TITLE_CHANGED] != null) {
       super.onChildTitleChanged(childActivity, title);
-      Script.callMethod(callbackProcs[CB_CHILD_TITLE_CHANGED], "call" , new Object[]{childActivity, title});
+      JRubyAdapter.callMethod(callbackProcs[CB_CHILD_TITLE_CHANGED], "call" , new Object[]{childActivity, title});
     } else {
       super.onChildTitleChanged(childActivity, title);
     }
@@ -168,7 +168,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onConfigurationChanged(android.content.res.Configuration newConfig) {
     if (callbackProcs[CB_CONFIGURATION_CHANGED] != null) {
       super.onConfigurationChanged(newConfig);
-      Script.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
+      JRubyAdapter.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
     } else {
       super.onConfigurationChanged(newConfig);
     }
@@ -177,7 +177,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onContextItemSelected(android.view.MenuItem item) {
     if (callbackProcs[CB_CONTEXT_ITEM_SELECTED] != null) {
       super.onContextItemSelected(item);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CONTEXT_ITEM_SELECTED], "call" , item, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CONTEXT_ITEM_SELECTED], "call" , item, Boolean.class);
     } else {
       return super.onContextItemSelected(item);
     }
@@ -186,7 +186,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onContextMenuClosed(android.view.Menu menu) {
     if (callbackProcs[CB_CONTEXT_MENU_CLOSED] != null) {
       super.onContextMenuClosed(menu);
-      Script.callMethod(callbackProcs[CB_CONTEXT_MENU_CLOSED], "call" , menu);
+      JRubyAdapter.callMethod(callbackProcs[CB_CONTEXT_MENU_CLOSED], "call" , menu);
     } else {
       super.onContextMenuClosed(menu);
     }
@@ -195,7 +195,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onCreateContextMenu(android.view.ContextMenu menu, android.view.View v, android.view.ContextMenu.ContextMenuInfo menuInfo) {
     if (callbackProcs[CB_CREATE_CONTEXT_MENU] != null) {
       super.onCreateContextMenu(menu, v, menuInfo);
-      Script.callMethod(callbackProcs[CB_CREATE_CONTEXT_MENU], "call" , new Object[]{menu, v, menuInfo});
+      JRubyAdapter.callMethod(callbackProcs[CB_CREATE_CONTEXT_MENU], "call" , new Object[]{menu, v, menuInfo});
     } else {
       super.onCreateContextMenu(menu, v, menuInfo);
     }
@@ -204,7 +204,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public java.lang.CharSequence onCreateDescription() {
     if (callbackProcs[CB_CREATE_DESCRIPTION] != null) {
       super.onCreateDescription();
-      return (java.lang.CharSequence) Script.callMethod(callbackProcs[CB_CREATE_DESCRIPTION], "call" , java.lang.CharSequence.class);
+      return (java.lang.CharSequence) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_DESCRIPTION], "call" , java.lang.CharSequence.class);
     } else {
       return super.onCreateDescription();
     }
@@ -213,7 +213,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onCreateOptionsMenu(android.view.Menu menu) {
     if (callbackProcs[CB_CREATE_OPTIONS_MENU] != null) {
       super.onCreateOptionsMenu(menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_OPTIONS_MENU], "call" , menu, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_OPTIONS_MENU], "call" , menu, Boolean.class);
     } else {
       return super.onCreateOptionsMenu(menu);
     }
@@ -222,7 +222,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onCreatePanelMenu(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_CREATE_PANEL_MENU] != null) {
       super.onCreatePanelMenu(featureId, menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_PANEL_MENU], "call" , new Object[]{featureId, menu}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_PANEL_MENU], "call" , new Object[]{featureId, menu}, Boolean.class);
     } else {
       return super.onCreatePanelMenu(featureId, menu);
     }
@@ -231,7 +231,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public android.view.View onCreatePanelView(int featureId) {
     if (callbackProcs[CB_CREATE_PANEL_VIEW] != null) {
       super.onCreatePanelView(featureId);
-      return (android.view.View) Script.callMethod(callbackProcs[CB_CREATE_PANEL_VIEW], "call" , featureId, android.view.View.class);
+      return (android.view.View) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_PANEL_VIEW], "call" , featureId, android.view.View.class);
     } else {
       return super.onCreatePanelView(featureId);
     }
@@ -240,7 +240,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onCreateThumbnail(android.graphics.Bitmap outBitmap, android.graphics.Canvas canvas) {
     if (callbackProcs[CB_CREATE_THUMBNAIL] != null) {
       super.onCreateThumbnail(outBitmap, canvas);
-      return (Boolean) Script.callMethod(callbackProcs[CB_CREATE_THUMBNAIL], "call" , new Object[]{outBitmap, canvas}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_THUMBNAIL], "call" , new Object[]{outBitmap, canvas}, Boolean.class);
     } else {
       return super.onCreateThumbnail(outBitmap, canvas);
     }
@@ -249,7 +249,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public android.view.View onCreateView(java.lang.String name, android.content.Context context, android.util.AttributeSet attrs) {
     if (callbackProcs[CB_CREATE_VIEW] != null) {
       super.onCreateView(name, context, attrs);
-      return (android.view.View) Script.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{name, context, attrs}, android.view.View.class);
+      return (android.view.View) JRubyAdapter.callMethod(callbackProcs[CB_CREATE_VIEW], "call" , new Object[]{name, context, attrs}, android.view.View.class);
     } else {
       return super.onCreateView(name, context, attrs);
     }
@@ -258,7 +258,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_DOWN] != null) {
       super.onKeyDown(keyCode, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_DOWN], "call" , new Object[]{keyCode, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_DOWN], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyDown(keyCode, event);
     }
@@ -267,7 +267,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onKeyMultiple(int keyCode, int repeatCount, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_MULTIPLE] != null) {
       super.onKeyMultiple(keyCode, repeatCount, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_MULTIPLE], "call" , new Object[]{keyCode, repeatCount, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_MULTIPLE], "call" , new Object[]{keyCode, repeatCount, event}, Boolean.class);
     } else {
       return super.onKeyMultiple(keyCode, repeatCount, event);
     }
@@ -276,7 +276,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_UP] != null) {
       super.onKeyUp(keyCode, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_UP], "call" , new Object[]{keyCode, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_UP], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyUp(keyCode, event);
     }
@@ -285,7 +285,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onLowMemory() {
     if (callbackProcs[CB_LOW_MEMORY] != null) {
       super.onLowMemory();
-      Script.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
     } else {
       super.onLowMemory();
     }
@@ -294,7 +294,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onMenuItemSelected(int featureId, android.view.MenuItem item) {
     if (callbackProcs[CB_MENU_ITEM_SELECTED] != null) {
       super.onMenuItemSelected(featureId, item);
-      return (Boolean) Script.callMethod(callbackProcs[CB_MENU_ITEM_SELECTED], "call" , new Object[]{featureId, item}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_MENU_ITEM_SELECTED], "call" , new Object[]{featureId, item}, Boolean.class);
     } else {
       return super.onMenuItemSelected(featureId, item);
     }
@@ -303,7 +303,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onMenuOpened(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_MENU_OPENED] != null) {
       super.onMenuOpened(featureId, menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_MENU_OPENED], "call" , new Object[]{featureId, menu}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_MENU_OPENED], "call" , new Object[]{featureId, menu}, Boolean.class);
     } else {
       return super.onMenuOpened(featureId, menu);
     }
@@ -312,7 +312,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onOptionsItemSelected(android.view.MenuItem item) {
     if (callbackProcs[CB_OPTIONS_ITEM_SELECTED] != null) {
       super.onOptionsItemSelected(item);
-      return (Boolean) Script.callMethod(callbackProcs[CB_OPTIONS_ITEM_SELECTED], "call" , item, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_OPTIONS_ITEM_SELECTED], "call" , item, Boolean.class);
     } else {
       return super.onOptionsItemSelected(item);
     }
@@ -321,7 +321,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onOptionsMenuClosed(android.view.Menu menu) {
     if (callbackProcs[CB_OPTIONS_MENU_CLOSED] != null) {
       super.onOptionsMenuClosed(menu);
-      Script.callMethod(callbackProcs[CB_OPTIONS_MENU_CLOSED], "call" , menu);
+      JRubyAdapter.callMethod(callbackProcs[CB_OPTIONS_MENU_CLOSED], "call" , menu);
     } else {
       super.onOptionsMenuClosed(menu);
     }
@@ -330,7 +330,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onPanelClosed(int featureId, android.view.Menu menu) {
     if (callbackProcs[CB_PANEL_CLOSED] != null) {
       super.onPanelClosed(featureId, menu);
-      Script.callMethod(callbackProcs[CB_PANEL_CLOSED], "call" , new Object[]{featureId, menu});
+      JRubyAdapter.callMethod(callbackProcs[CB_PANEL_CLOSED], "call" , new Object[]{featureId, menu});
     } else {
       super.onPanelClosed(featureId, menu);
     }
@@ -339,7 +339,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onPause() {
     if (callbackProcs[CB_PAUSE] != null) {
       super.onPause();
-      Script.callMethod(callbackProcs[CB_PAUSE], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_PAUSE], "call" );
     } else {
       super.onPause();
     }
@@ -348,7 +348,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onPostCreate(android.os.Bundle savedInstanceState) {
     if (callbackProcs[CB_POST_CREATE] != null) {
       super.onPostCreate(savedInstanceState);
-      Script.callMethod(callbackProcs[CB_POST_CREATE], "call" , savedInstanceState);
+      JRubyAdapter.callMethod(callbackProcs[CB_POST_CREATE], "call" , savedInstanceState);
     } else {
       super.onPostCreate(savedInstanceState);
     }
@@ -357,7 +357,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onPostResume() {
     if (callbackProcs[CB_POST_RESUME] != null) {
       super.onPostResume();
-      Script.callMethod(callbackProcs[CB_POST_RESUME], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_POST_RESUME], "call" );
     } else {
       super.onPostResume();
     }
@@ -366,7 +366,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onPrepareOptionsMenu(android.view.Menu menu) {
     if (callbackProcs[CB_PREPARE_OPTIONS_MENU] != null) {
       super.onPrepareOptionsMenu(menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_PREPARE_OPTIONS_MENU], "call" , menu, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_PREPARE_OPTIONS_MENU], "call" , menu, Boolean.class);
     } else {
       return super.onPrepareOptionsMenu(menu);
     }
@@ -375,7 +375,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onPreparePanel(int featureId, android.view.View view, android.view.Menu menu) {
     if (callbackProcs[CB_PREPARE_PANEL] != null) {
       super.onPreparePanel(featureId, view, menu);
-      return (Boolean) Script.callMethod(callbackProcs[CB_PREPARE_PANEL], "call" , new Object[]{featureId, view, menu}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_PREPARE_PANEL], "call" , new Object[]{featureId, view, menu}, Boolean.class);
     } else {
       return super.onPreparePanel(featureId, view, menu);
     }
@@ -384,7 +384,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onRestart() {
     if (callbackProcs[CB_RESTART] != null) {
       super.onRestart();
-      Script.callMethod(callbackProcs[CB_RESTART], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_RESTART], "call" );
     } else {
       super.onRestart();
     }
@@ -393,7 +393,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onResume() {
     if (callbackProcs[CB_RESUME] != null) {
       super.onResume();
-      Script.callMethod(callbackProcs[CB_RESUME], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_RESUME], "call" );
     } else {
       super.onResume();
     }
@@ -402,7 +402,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public java.lang.Object onRetainNonConfigurationInstance() {
     if (callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE] != null) {
       super.onRetainNonConfigurationInstance();
-      return (java.lang.Object) Script.callMethod(callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE], "call" , java.lang.Object.class);
+      return (java.lang.Object) JRubyAdapter.callMethod(callbackProcs[CB_RETAIN_NON_CONFIGURATION_INSTANCE], "call" , java.lang.Object.class);
     } else {
       return super.onRetainNonConfigurationInstance();
     }
@@ -411,7 +411,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onSearchRequested() {
     if (callbackProcs[CB_SEARCH_REQUESTED] != null) {
       super.onSearchRequested();
-      return (Boolean) Script.callMethod(callbackProcs[CB_SEARCH_REQUESTED], "call" , Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_SEARCH_REQUESTED], "call" , Boolean.class);
     } else {
       return super.onSearchRequested();
     }
@@ -420,7 +420,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onStart() {
     if (callbackProcs[CB_START] != null) {
       super.onStart();
-      Script.callMethod(callbackProcs[CB_START], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_START], "call" );
     } else {
       super.onStart();
     }
@@ -429,7 +429,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onTitleChanged(java.lang.CharSequence title, int color) {
     if (callbackProcs[CB_TITLE_CHANGED] != null) {
       super.onTitleChanged(title, color);
-      Script.callMethod(callbackProcs[CB_TITLE_CHANGED], "call" , new Object[]{title, color});
+      JRubyAdapter.callMethod(callbackProcs[CB_TITLE_CHANGED], "call" , new Object[]{title, color});
     } else {
       super.onTitleChanged(title, color);
     }
@@ -438,7 +438,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onTouchEvent(android.view.MotionEvent event) {
     if (callbackProcs[CB_TOUCH_EVENT] != null) {
       super.onTouchEvent(event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_TOUCH_EVENT], "call" , event, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_TOUCH_EVENT], "call" , event, Boolean.class);
     } else {
       return super.onTouchEvent(event);
     }
@@ -447,7 +447,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onTrackballEvent(android.view.MotionEvent event) {
     if (callbackProcs[CB_TRACKBALL_EVENT] != null) {
       super.onTrackballEvent(event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_TRACKBALL_EVENT], "call" , event, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_TRACKBALL_EVENT], "call" , event, Boolean.class);
     } else {
       return super.onTrackballEvent(event);
     }
@@ -456,7 +456,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onWindowAttributesChanged(android.view.WindowManager.LayoutParams params) {
     if (callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED] != null) {
       super.onWindowAttributesChanged(params);
-      Script.callMethod(callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED], "call" , params);
+      JRubyAdapter.callMethod(callbackProcs[CB_WINDOW_ATTRIBUTES_CHANGED], "call" , params);
     } else {
       super.onWindowAttributesChanged(params);
     }
@@ -465,7 +465,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onWindowFocusChanged(boolean hasFocus) {
     if (callbackProcs[CB_WINDOW_FOCUS_CHANGED] != null) {
       super.onWindowFocusChanged(hasFocus);
-      Script.callMethod(callbackProcs[CB_WINDOW_FOCUS_CHANGED], "call" , hasFocus);
+      JRubyAdapter.callMethod(callbackProcs[CB_WINDOW_FOCUS_CHANGED], "call" , hasFocus);
     } else {
       super.onWindowFocusChanged(hasFocus);
     }
@@ -474,7 +474,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onUserInteraction() {
     if (callbackProcs[CB_USER_INTERACTION] != null) {
       super.onUserInteraction();
-      Script.callMethod(callbackProcs[CB_USER_INTERACTION], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_USER_INTERACTION], "call" );
     } else {
       super.onUserInteraction();
     }
@@ -483,7 +483,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onUserLeaveHint() {
     if (callbackProcs[CB_USER_LEAVE_HINT] != null) {
       super.onUserLeaveHint();
-      Script.callMethod(callbackProcs[CB_USER_LEAVE_HINT], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_USER_LEAVE_HINT], "call" );
     } else {
       super.onUserLeaveHint();
     }
@@ -492,7 +492,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onAttachedToWindow() {
     if (callbackProcs[CB_ATTACHED_TO_WINDOW] != null) {
       super.onAttachedToWindow();
-      Script.callMethod(callbackProcs[CB_ATTACHED_TO_WINDOW], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_ATTACHED_TO_WINDOW], "call" );
     } else {
       super.onAttachedToWindow();
     }
@@ -501,7 +501,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onBackPressed() {
     if (callbackProcs[CB_BACK_PRESSED] != null) {
       super.onBackPressed();
-      Script.callMethod(callbackProcs[CB_BACK_PRESSED], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_BACK_PRESSED], "call" );
     } else {
       super.onBackPressed();
     }
@@ -510,7 +510,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public void onDetachedFromWindow() {
     if (callbackProcs[CB_DETACHED_FROM_WINDOW] != null) {
       super.onDetachedFromWindow();
-      Script.callMethod(callbackProcs[CB_DETACHED_FROM_WINDOW], "call" );
+      JRubyAdapter.callMethod(callbackProcs[CB_DETACHED_FROM_WINDOW], "call" );
     } else {
       super.onDetachedFromWindow();
     }
@@ -519,7 +519,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
   public boolean onKeyLongPress(int keyCode, android.view.KeyEvent event) {
     if (callbackProcs[CB_KEY_LONG_PRESS] != null) {
       super.onKeyLongPress(keyCode, event);
-      return (Boolean) Script.callMethod(callbackProcs[CB_KEY_LONG_PRESS], "call" , new Object[]{keyCode, event}, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_KEY_LONG_PRESS], "call" , new Object[]{keyCode, event}, Boolean.class);
     } else {
       return super.onKeyLongPress(keyCode, event);
     }
