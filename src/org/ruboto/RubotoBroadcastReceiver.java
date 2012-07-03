@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver {
     private String scriptName = null;
-    private boolean initialized = false;
+    private Object rubyInstance;
 
     public void setCallbackProc(int id, Object obj) {
         // Error: no callbacks
@@ -25,17 +25,33 @@ public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver {
         if (name != null) {
             setScriptName(name);
         
-            if (Script.isInitialized()) {
+            if (JRubyAdapter.isInitialized()) {
                 loadScript();
             }
         }
     }
 
     protected void loadScript() {
-        Script.put("$broadcast_receiver", this);
+
+        // TODO(uwe):  Only needed for non-class-based definitions
+        // Can be removed if we stop supporting non-class-based definitions
+    	JRubyAdapter.put("$broadcast_receiver", this);
+    	// TODO end
+
         if (scriptName != null) {
             try {
-                new Script(scriptName).execute();
+                String rubyClassName = Script.toCamelCase(scriptName);
+                System.out.println("Looking for Ruby class: " + rubyClassName);
+                Object rubyClass = JRubyAdapter.get(rubyClassName);
+                if (rubyClass == null) {
+                    System.out.println("Loading script: " + scriptName);
+                    JRubyAdapter.exec(new Script(scriptName).getContents());
+                    rubyClass = JRubyAdapter.get(rubyClassName);
+                }
+                if (rubyClass != null) {
+                    System.out.println("Instanciating Ruby class: " + rubyClassName);
+                    rubyInstance = JRubyAdapter.callMethod(rubyClass, "new", this, Object.class);
+                }
             } catch(IOException e) {
                 throw new RuntimeException("IOException loading broadcast receiver script", e);
             }
@@ -43,16 +59,21 @@ public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver {
     }
 
     public void onReceive(android.content.Context context, android.content.Intent intent) {
-        Script.put("$context", context);
-        Script.put("$broadcast_receiver", this);
-        Script.put("$intent", intent);
-
         try {
-            Script.execute("$broadcast_receiver.on_receive($context, $intent)");
+            System.out.println("onReceive: " + rubyInstance);
+            if (rubyInstance != null) {
+            	JRubyAdapter.callMethod(rubyInstance, "on_receive", new Object[]{context, intent});
+            } else {
+                // TODO(uwe):  Only needed for non-class-based definitions
+                // Can be removed if we stop supporting non-class-based definitions
+                JRubyAdapter.put("$context", context);
+                JRubyAdapter.put("$broadcast_receiver", this);
+                JRubyAdapter.put("$intent", intent);
+            	JRubyAdapter.execute("$broadcast_receiver.on_receive($context, $intent)");
+            	// TODO end
+            }
         } catch(Exception e) {
             e.printStackTrace();
         }
     }
 }	
-
-
