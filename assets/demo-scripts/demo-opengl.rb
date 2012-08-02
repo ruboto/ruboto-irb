@@ -153,29 +153,19 @@ end
 
 #######################################################
 #
-# Activity
+# TouchGLSurfaceView
 #
-# Start a new activity or connect to $activity
+# A surface view that reacts to touch events
 #
 
 ruboto_generate(android.opengl.GLSurfaceView => "TouchSurfaceView")
       
 class TouchSurfaceView
-  def renderer= renderer
-    @renderer = renderer
-    super renderer
-  end
-end
-   
-$activity.start_ruboto_activity "$glsurface" do
-  setTitle "GLSurfaceView"
 
-  def on_create(bundle)
-    @surface_view = TouchSurfaceView.new(self)
-    @surface_view.renderer = RubotoGLSurfaceViewRenderer.new 
-    self.content_view = @surface_view  
-      
-    @surface_view.initialize_ruboto_callbacks do
+  def initialize(context)
+    super context
+    
+    self.initialize_ruboto_callbacks do
       def on_touch_event(event)
         if event.getAction == MotionEvent::ACTION_DOWN
           @renderer.changeAngle
@@ -183,7 +173,28 @@ $activity.start_ruboto_activity "$glsurface" do
         end      
         return true 
       end
-    end
+    end    
+  end
+  
+  def renderer= renderer
+    @renderer = renderer
+    super renderer
+  end
+end
+   
+#######################################################
+#
+# Activity
+#
+# Start a new activity or connect to $activity
+#   
+$activity.start_ruboto_activity "$glsurface" do
+  setTitle "GLSurfaceView"
+
+  def on_create(bundle)
+    @surface_view = TouchSurfaceView.new(self)
+    @surface_view.renderer = RubotoGLSurfaceViewRenderer.new 
+    self.content_view = @surface_view  
   end 
     
   def on_resume
