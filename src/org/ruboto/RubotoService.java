@@ -2,12 +2,11 @@ package org.ruboto;
 
 import org.ruboto.Script;
 import java.io.IOException;
-import android.app.ProgressDialog;
 
 public class RubotoService extends android.app.Service {
   private String scriptName;
-  private String remoteVariable = "";
   public Object[] args;
+  private Object rubyInstance;
 
   public static final int CB_BIND = 0;
   public static final int CB_CONFIGURATION_CHANGED = 1;
@@ -23,11 +22,6 @@ public class RubotoService extends android.app.Service {
     callbackProcs[id] = obj;
   }
 	
-  public RubotoService setRemoteVariable(String var) {
-    remoteVariable = ((var == null) ? "" : (var + "."));
-    return this;
-  }
-
   public void setScriptName(String name){
     scriptName = name;
   }
@@ -39,20 +33,36 @@ public class RubotoService extends android.app.Service {
 	
   @Override
   public void onCreate() {
+	System.out.println("RubotoService.onCreate()");
     args = new Object[0];
 
     super.onCreate();
 
-    if (Script.setUpJRuby(this)) {
-        Script.defineGlobalVariable("$context", this);
-        Script.defineGlobalVariable("$service", this);
+    if (JRubyAdapter.setUpJRuby(this)) {
+        // TODO(uwe):  Only needed for non-class-based definitions
+        // Can be removed if we stop supporting non-class-based definitions
+    	JRubyAdapter.defineGlobalVariable("$context", this);
+    	JRubyAdapter.defineGlobalVariable("$service", this);
+    	// TODO end
 
         try {
             if (scriptName != null) {
-                new Script(scriptName).execute();
+                String rubyClassName = Script.toCamelCase(scriptName);
+                System.out.println("Looking for Ruby class: " + rubyClassName);
+                Object rubyClass = JRubyAdapter.get(rubyClassName);
+                if (rubyClass == null) {
+                    System.out.println("Loading script: " + scriptName);
+                    JRubyAdapter.exec(new Script(scriptName).getContents());
+                    rubyClass = JRubyAdapter.get(rubyClassName);
+                }
+                if (rubyClass != null) {
+                    System.out.println("Instanciating Ruby class: " + rubyClassName);
+                    rubyInstance = JRubyAdapter.callMethod(rubyClass, "new", this, Object.class);
+                    JRubyAdapter.callMethod(rubyInstance, "on_create");
+                }
             } else {
-                Script.execute("$service.initialize_ruboto");
-                Script.execute("$service.on_create");
+            	JRubyAdapter.execute("$service.initialize_ruboto");
+            	JRubyAdapter.execute("$service.on_create");
             }
         } catch(IOException e) {
             e.printStackTrace();
@@ -68,64 +78,132 @@ public class RubotoService extends android.app.Service {
    */
 
   public android.os.IBinder onBind(android.content.Intent intent) {
-    if (callbackProcs[CB_BIND] != null) {
-      return (android.os.IBinder) Script.callMethod(callbackProcs[CB_BIND], "call" , intent, android.os.IBinder.class);
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_bind"}, Boolean.class)) {
+      return (android.os.IBinder) JRubyAdapter.callMethod(rubyInstance, "on_bind" , intent, android.os.IBinder.class);
     } else {
-      return null;
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onBind"}, Boolean.class)) {
+        return (android.os.IBinder) JRubyAdapter.callMethod(rubyInstance, "onBind" , intent, android.os.IBinder.class);
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_BIND] != null) {
+          return (android.os.IBinder) JRubyAdapter.callMethod(callbackProcs[CB_BIND], "call" , intent, android.os.IBinder.class);
+        } else {
+          return null;
+        }
+      }
     }
   }
 
   public void onConfigurationChanged(android.content.res.Configuration newConfig) {
-    if (callbackProcs[CB_CONFIGURATION_CHANGED] != null) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_configuration_changed"}, Boolean.class)) {
       super.onConfigurationChanged(newConfig);
-      Script.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
+      JRubyAdapter.callMethod(rubyInstance, "on_configuration_changed" , newConfig);
     } else {
-      super.onConfigurationChanged(newConfig);
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onConfigurationChanged"}, Boolean.class)) {
+        super.onConfigurationChanged(newConfig);
+        JRubyAdapter.callMethod(rubyInstance, "onConfigurationChanged" , newConfig);
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_CONFIGURATION_CHANGED] != null) {
+          super.onConfigurationChanged(newConfig);
+          JRubyAdapter.callMethod(callbackProcs[CB_CONFIGURATION_CHANGED], "call" , newConfig);
+        } else {
+          super.onConfigurationChanged(newConfig);
+        }
+      }
     }
   }
 
   public void onDestroy() {
-    if (callbackProcs[CB_DESTROY] != null) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_destroy"}, Boolean.class)) {
       super.onDestroy();
-      Script.callMethod(callbackProcs[CB_DESTROY], "call" );
+      JRubyAdapter.callMethod(rubyInstance, "on_destroy" );
     } else {
-      super.onDestroy();
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onDestroy"}, Boolean.class)) {
+        super.onDestroy();
+        JRubyAdapter.callMethod(rubyInstance, "onDestroy" );
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_DESTROY] != null) {
+          super.onDestroy();
+          JRubyAdapter.callMethod(callbackProcs[CB_DESTROY], "call" );
+        } else {
+          super.onDestroy();
+        }
+      }
     }
   }
 
   public void onLowMemory() {
-    if (callbackProcs[CB_LOW_MEMORY] != null) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_low_memory"}, Boolean.class)) {
       super.onLowMemory();
-      Script.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
+      JRubyAdapter.callMethod(rubyInstance, "on_low_memory" );
     } else {
-      super.onLowMemory();
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onLowMemory"}, Boolean.class)) {
+        super.onLowMemory();
+        JRubyAdapter.callMethod(rubyInstance, "onLowMemory" );
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_LOW_MEMORY] != null) {
+          super.onLowMemory();
+          JRubyAdapter.callMethod(callbackProcs[CB_LOW_MEMORY], "call" );
+        } else {
+          super.onLowMemory();
+        }
+      }
     }
   }
 
   public void onRebind(android.content.Intent intent) {
-    if (callbackProcs[CB_REBIND] != null) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_rebind"}, Boolean.class)) {
       super.onRebind(intent);
-      Script.callMethod(callbackProcs[CB_REBIND], "call" , intent);
+      JRubyAdapter.callMethod(rubyInstance, "on_rebind" , intent);
     } else {
-      super.onRebind(intent);
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onRebind"}, Boolean.class)) {
+        super.onRebind(intent);
+        JRubyAdapter.callMethod(rubyInstance, "onRebind" , intent);
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_REBIND] != null) {
+          super.onRebind(intent);
+          JRubyAdapter.callMethod(callbackProcs[CB_REBIND], "call" , intent);
+        } else {
+          super.onRebind(intent);
+        }
+      }
     }
   }
 
   public boolean onUnbind(android.content.Intent intent) {
-    if (callbackProcs[CB_UNBIND] != null) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_unbind"}, Boolean.class)) {
       super.onUnbind(intent);
-      return (Boolean) Script.callMethod(callbackProcs[CB_UNBIND], "call" , intent, Boolean.class);
+      return (Boolean) JRubyAdapter.callMethod(rubyInstance, "on_unbind" , intent, Boolean.class);
     } else {
-      return super.onUnbind(intent);
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onUnbind"}, Boolean.class)) {
+        super.onUnbind(intent);
+        return (Boolean) JRubyAdapter.callMethod(rubyInstance, "onUnbind" , intent, Boolean.class);
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_UNBIND] != null) {
+          super.onUnbind(intent);
+          return (Boolean) JRubyAdapter.callMethod(callbackProcs[CB_UNBIND], "call" , intent, Boolean.class);
+        } else {
+          return super.onUnbind(intent);
+        }
+      }
     }
   }
 
   public int onStartCommand(android.content.Intent intent, int flags, int startId) {
-    if (callbackProcs[CB_START_COMMAND] != null) {
+    if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"on_start_command"}, Boolean.class)) {
       super.onStartCommand(intent, flags, startId);
-      return (Integer) Script.callMethod(callbackProcs[CB_START_COMMAND], "call" , new Object[]{intent, flags, startId}, Integer.class);
+      return (Integer) JRubyAdapter.callMethod(rubyInstance, "on_start_command" , new Object[]{intent, flags, startId}, Integer.class);
     } else {
-      return super.onStartCommand(intent, flags, startId);
+      if (rubyInstance != null && JRubyAdapter.callMethod(rubyInstance, "respond_to?" , new Object[]{"onStartCommand"}, Boolean.class)) {
+        super.onStartCommand(intent, flags, startId);
+        return (Integer) JRubyAdapter.callMethod(rubyInstance, "onStartCommand" , new Object[]{intent, flags, startId}, Integer.class);
+      } else {
+        if (callbackProcs != null && callbackProcs[CB_START_COMMAND] != null) {
+          super.onStartCommand(intent, flags, startId);
+          return (Integer) JRubyAdapter.callMethod(callbackProcs[CB_START_COMMAND], "call" , new Object[]{intent, flags, startId}, Integer.class);
+        } else {
+          return super.onStartCommand(intent, flags, startId);
+        }
+      }
     }
   }
 

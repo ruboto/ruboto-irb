@@ -45,6 +45,8 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.ruboto.JRubyAdapter;
+
 public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickListener,
 		OnTabChangeListener {
 	public static final String TAG = "Ruboto-IRB";
@@ -103,7 +105,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		IRBScript.setLocalVariableBehavior("PERSISTENT");
+		JRubyAdapter.setLocalVariableBehavior("PERSISTENT");
 		uiSetup();
 	}
 
@@ -161,8 +163,8 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			  }
 		  }));
 
-	  IRBScript.setOutputStream(printStream);
-    irbOutput.append(">> ");
+	    JRubyAdapter.setOutputStream(printStream);
+        irbOutput.append(">> ");
 
 		configScriptsDir();
 		editorSetUp();
@@ -189,8 +191,8 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				irbOutput.append(rubyCode + "\n");
 				try {
 					irbOutput.append("=> ");
-         	IRBScript.setScriptFilename("eval");
-					irbOutput.append(IRBScript.execute(rubyCode));
+         	        JRubyAdapter.setScriptFilename("eval");
+					irbOutput.append(JRubyAdapter.execute(rubyCode));
 				} catch (RuntimeException e) {
           reportExecption(e);
 				}
@@ -444,8 +446,8 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				+ ")]\n");
 		try {
 			irbOutput.append("=> ");
-     	IRBScript.setScriptFilename(currentScript.getName());
-			irbOutput.append(IRBScript.execute(sourceEditor.getText()
+     	JRubyAdapter.setScriptFilename(currentScript.getName());
+			irbOutput.append(JRubyAdapter.execute(sourceEditor.getText()
 					.toString()));
 		} catch (RuntimeException e) {
 			reportExecption(e);
@@ -616,7 +618,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		IRBScript.defineGlobalVariable("$last_activity_result",
+		JRubyAdapter.defineGlobalVariable("$last_activity_result",
 				new ActivityResult(requestCode, resultCode, data));
 	}
 

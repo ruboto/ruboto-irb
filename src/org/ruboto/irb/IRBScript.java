@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,11 +17,18 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import org.ruboto.JRubyAdapter;
 import org.ruboto.Script;
 
 public class IRBScript extends Script {
     public static final String UNTITLED_RB = "untitled.rb";
     private static long scriptsDirModified = 0;
+
+    private static final FilenameFilter RUBY_FILES = new FilenameFilter() {
+        public boolean accept(File dir, String fname) {
+            return fname.endsWith(".rb");
+        }
+    };
 
     private String contents = null;
 
@@ -117,8 +125,8 @@ public class IRBScript extends Script {
     }
 
     public String execute() throws IOException {
-    	IRBScript.setScriptFilename(getName());
-        return Script.execute(getContents());
+    	JRubyAdapter.setScriptFilename(getName());
+        return JRubyAdapter.execute(getContents());
     }
 
     public boolean delete() {

@@ -15,14 +15,16 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.jar.JarEntry;
 import java.util.List;
+import java.util.Map;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.ruboto.Script;
+import org.ruboto.JRubyAdapter;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -34,15 +36,52 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
     public TestSuite getAllTests() {
         Log.i(getClass().getName(), "Finding test scripts");
         suite = new TestSuite("Sweet");
+        String loadStep = "Setup JRuby";
         
         try {
-            if (Script.setUpJRuby(getTargetContext())) {
-                Script.defineGlobalVariable("$runner", this);
-                Script.defineGlobalVariable("$test", this);
-                Script.defineGlobalVariable("$suite", suite);
+            final AtomicBoolean JRubyLoadedOk = new AtomicBoolean();
 
+            // TODO(uwe):  Running with large stack is currently only needed when running with JRuby 1.7.0 and android-10
+            // TODO(uwe):  Simplify when we stop support for JRuby 1.7.0 or android-10
+            Thread t = new Thread(null, new Runnable() {
+                public void run() {
+                    JRubyLoadedOk.set(JRubyAdapter.setUpJRuby(getTargetContext()));
+                }
+            }, "Setup JRuby from instrumentation test runner", 64 * 1024);
+            try {
+                t.start();
+                t.join();
+            } catch(InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted starting JRuby", ie);
+            }
+            // TODO end
+
+            if (JRubyLoadedOk.get()) {
+                loadStep = "Setup global variables";
+
+                // TODO(uwe):  Running with large stack is currently only needed when running with JRuby 1.7.0 and android-10
+                // TODO(uwe):  Simplify when we stop support for JRuby 1.7.0 or android-10
+                Thread t2 = new Thread(null, new Runnable() {
+                    public void run() {
+                        JRubyAdapter.put("$runner", InstrumentationTestRunner.this);
+                        JRubyAdapter.put("$test", InstrumentationTestRunner.this);
+                        JRubyAdapter.put("$suite", suite);
+                    }
+                }, "Setup JRuby from instrumentation test runner", 64 * 1024);
+                try {
+                    t2.start();
+                    t2.join();
+                } catch(InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interrupted starting JRuby", ie);
+                }
+                // TODO end
+
+                loadStep = "Load test helper";
                 loadScript("test_helper.rb");
 
+                loadStep = "Get app test source dir";
                 String test_apk_path = getContext().getPackageManager().getApplicationInfo(getContext().getPackageName(), 0).sourceDir;
                 JarFile jar = new JarFile(test_apk_path);
                 Enumeration<JarEntry> entries = jar.entries();
@@ -53,17 +92,18 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
                         continue;
                     }
                     if (name.equals("test_helper.rb")) continue;
+                    loadStep = "Load " + name;
                     loadScript(name);
                 }
             } else {
-                addError(suite, new RuntimeException("Ruboto Core platform is missing"));
+                addError(suite, loadStep, new RuntimeException("Ruboto Core platform is missing"));
             }
         } catch (android.content.pm.PackageManager.NameNotFoundException e) {
-            addError(suite, e);
+            addError(suite, loadStep, e);
         } catch (IOException e) {
-          addError(suite, e);
+          addError(suite, loadStep, e);
         } catch (RuntimeException e) {
-          addError(suite, e);
+          addError(suite, loadStep, e);
         }
         return suite;
     }
@@ -77,18 +117,27 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
     }
 
     public void test(String name, Object block) {
+        test(name, null, block);
+    }
+
+    public void test(String name, Map options, Object block) {
+        // FIXME(uwe): Remove when we stop supporting Android 2.2
         if (android.os.Build.VERSION.SDK_INT <= 8) {
           name ="runTest";
         }
-        Test test = new ActivityTest(activityClass, Script.getScriptFilename(), setup, name, block);
+        // FIXME end
+
+        boolean runOnUiThread = options == null || options.get("ui") == "true";
+
+        Test test = new ActivityTest(activityClass, JRubyAdapter.getScriptFilename(), setup, name, runOnUiThread, block);
         suite.addTest(test);
         Log.d(getClass().getName(), "Made test instance: " + test);
     }
 
-    private void addError(TestSuite suite, Throwable t) {
+    private void addError(TestSuite suite, String loadStep, Throwable t) {
         Throwable cause = t;
         while(cause != null) {
-          Log.e(getClass().getName(), "Exception loading tests: " + cause);
+          Log.e(getClass().getName(), "Exception loading tests (" + loadStep + "): " + cause);
           t = cause;
           cause = t.getCause();
         }
@@ -113,12 +162,12 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
         }
         buffer.close();
 
-        String oldFilename = Script.getScriptFilename();
-        Script.setScriptFilename(f);
-        Script.put("$script_code", source.toString());
-        Script.setScriptFilename(f);
-        Script.execute("$test.instance_eval($script_code)");
-        Script.setScriptFilename(oldFilename);
+        String oldFilename = JRubyAdapter.getScriptFilename();
+        JRubyAdapter.setScriptFilename(f);
+        JRubyAdapter.put("$script_code", source.toString());
+        JRubyAdapter.setScriptFilename(f);
+        JRubyAdapter.execute("$test.instance_eval($script_code)");
+        JRubyAdapter.setScriptFilename(oldFilename);
         Log.d(getClass().getName(), "Test script " + f + " loaded");
     }
 
