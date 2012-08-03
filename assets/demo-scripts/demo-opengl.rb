@@ -1,13 +1,14 @@
 #######################################################
 #
 # glsurfaceview.rb (by Scott Moyer)
-# 
-# This demo ports the GLSurfaceView demo from the Android 
+#
+# This demo ports the GLSurfaceView demo from the Android
 # API Demos to Ruboto.
 #
 #######################################################
 
 require 'ruboto/activity'
+require 'ruboto/generate'
 
 java_import "android.opengl.GLSurfaceView"
 
@@ -18,12 +19,13 @@ java_import "javax.microedition.khronos.opengles.GL10"
 java_import "java.nio.ByteBuffer"
 java_import "java.nio.ByteOrder"
 java_import "java.nio.IntBuffer"
+java_import "android.view.MotionEvent"
 
 #######################################################
 #
 # Cube Class
 #
-#   Needs to get set up before the Activity tries to use it
+# Needs to get set up before the Activity tries to use it
 #
 
 class Cube
@@ -32,32 +34,32 @@ class Cube
     vertices = [
       -one, -one, -one,
        one, -one, -one,
-       one,  one, -one,
-      -one,  one, -one,
-      -one, -one,  one,
-       one, -one,  one,
-       one,  one,  one,
-      -one,  one,  one,
+       one, one, -one,
+      -one, one, -one,
+      -one, -one, one,
+       one, -one, one,
+       one, one, one,
+      -one, one, one,
     ]
 
     colors = [
-        0,    0,    0,  one,
-      one,    0,    0,  one,
-      one,  one,    0,  one,
-        0,  one,    0,  one,
-        0,    0,  one,  one,
-      one,    0,  one,  one,
-      one,  one,  one,  one,
-        0,  one,  one,  one,
+        0, 0, 0, one,
+      one, 0, 0, one,
+      one, one, 0, one,
+        0, one, 0, one,
+        0, 0, one, one,
+      one, 0, one, one,
+      one, one, one, one,
+        0, one, one, one,
      ]
 
     indices = [
-      0, 4, 5,    0, 5, 1,
-      1, 5, 6,    1, 6, 2,
-      2, 6, 7,    2, 7, 3,
-      3, 7, 4,    3, 4, 0,
-      4, 7, 6,    4, 6, 5,
-      3, 0, 1,    3, 1, 2
+      0, 4, 5, 0, 5, 1,
+      1, 5, 6, 1, 6, 2,
+      2, 6, 7, 2, 7, 3,
+      3, 7, 4, 3, 4, 0,
+      4, 7, 6, 4, 6, 5,
+      3, 0, 1, 3, 1, 2
     ]
 
     vbb = ByteBuffer.allocateDirect(vertices.length*4)
@@ -89,7 +91,7 @@ end
 #
 # RubotoGLSurfaceViewRenderer
 #
-#   The interface android.opengl.GLSurfaceView$Renderer
+# The interface android.opengl.GLSurfaceView$Renderer
 #
 
 class RubotoGLSurfaceViewRenderer
@@ -97,6 +99,7 @@ class RubotoGLSurfaceViewRenderer
     @translucent_background = false
     @cube = Cube.new
     @angle = 0.0
+    @offset = 1.2
   end
   
   def onDrawFrame(gl)
@@ -105,8 +108,8 @@ class RubotoGLSurfaceViewRenderer
     gl.glMatrixMode(GL10::GL_MODELVIEW)
     gl.glLoadIdentity
     gl.glTranslatef(0, 0, -3.0)
-    gl.glRotatef(@angle,       0, 1, 0)
-    gl.glRotatef(@angle*0.25,  1, 0, 0)
+    gl.glRotatef(@angle, 0, 1, 0)
+    gl.glRotatef(@angle*0.25, 1, 0, 0)
 
     gl.glEnableClientState(GL10::GL_VERTEX_ARRAY)
     gl.glEnableClientState(GL10::GL_COLOR_ARRAY)
@@ -117,8 +120,7 @@ class RubotoGLSurfaceViewRenderer
     gl.glTranslatef(0.5, 0.5, 0.5)
 
     @cube.draw(gl)
-
-    @angle += 1.2
+    @angle += @offset
   end
 
   def onSurfaceChanged(gl, width, height)
@@ -143,30 +145,63 @@ class RubotoGLSurfaceViewRenderer
     gl.glShadeModel(GL10::GL_SMOOTH)
     gl.glEnable(GL10::GL_DEPTH_TEST)
   end
+  
+  def changeAngle
+    @offset = -@offset
+  end
 end
 
 #######################################################
 #
-# Activity
+# TouchGLSurfaceView
 #
-#   Start a new activity or connect to $activity
+# A surface view that reacts to touch events
 #
 
+ruboto_generate(android.opengl.GLSurfaceView => "TouchSurfaceView")
+      
+class TouchSurfaceView
+
+  def initialize(context)
+    super context
+    
+    self.initialize_ruboto_callbacks do
+      def on_touch_event(event)
+        if event.getAction == MotionEvent::ACTION_DOWN
+          @renderer.changeAngle
+          request_render
+        end      
+        return true 
+      end
+    end    
+  end
+  
+  def renderer= renderer
+    @renderer = renderer
+    super renderer
+  end
+end
+   
+#######################################################
+#
+# Activity
+#
+# Start a new activity or connect to $activity
+#   
 $activity.start_ruboto_activity "$glsurface" do
   setTitle "GLSurfaceView"
 
   def on_create(bundle)
-    @surface_view = GLSurfaceView.new(self)
-    @surface_view.renderer = RubotoGLSurfaceViewRenderer.new
-    self.content_view = @surface_view
-  end
-  
+    @surface_view = TouchSurfaceView.new(self)
+    @surface_view.renderer = RubotoGLSurfaceViewRenderer.new 
+    self.content_view = @surface_view  
+  end 
+    
   def on_resume
     @surface_view.on_resume
   end
 
   def on_pause
     @surface_view.on_pause
-  end
+  end        
 end
-
