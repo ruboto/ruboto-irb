@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:padding="10dp">
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:gravity="left"
+		android:textSize="13sp"
+		android:textColor="#fff"
+		android:text="Post Script on your facebook Wall"/>
+		
+	<EditText
+		android:id="@+id/revieew"
+		android:layout_marginTop="15dp"
+		android:layout_width="250dp"
+		android:layout_height="100dp"
+		android:hint="Comments about your Script"/>
+
+		<CheckBox
+		android:id="@+id/cb_facebook"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="5dp"
+		android:text="  Facebook"
+		android:textSize="14sp"
+		android:clickable="true"
+		android:focusable="true" 
+		android:button="@drawable/btn_check_facebook"/>
+	
+	
+	<Button
+		android:id="@+id/button1"
+		android:layout_marginTop="15dp"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="    Submit    "/>
+</LinearLayout>
