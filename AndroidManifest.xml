@@ -30,9 +30,11 @@
         <activity android:name='org.ruboto.RubotoActivity' android:alwaysRetainTaskState='true' android:configChanges='orientation|screenSize'/>
         <activity android:theme='@android:style/Theme.Dialog' android:name='org.ruboto.RubotoDialog' android:configChanges='orientation|screenSize'/>
         <activity android:name='org.ruboto.RubotoPreferenceActivity'/>
+        <activity android:name='net.android.facebook.TestConnect' android:configChanges='orientation|screenSize'/>
+        <activity android:name='net.android.facebook.TestPost' android:configChanges='orientation|screenSize'/>
         <service android:name='org.ruboto.RubotoService' android:exported='false'/>
     </application>
-    <uses-sdk android:minSdkVersion='13' android:targetSdkVersion='13'/>
+    <uses-sdk android:minSdkVersion='7' android:targetSdkVersion='13'/>
     <supports-screens android:normalScreens='true' android:largeScreens='true' android:xlargeScreens='true' android:anyDensity='true' android:smallScreens='true'/>
     <uses-feature android:name='android.hardware.telephony' android:required='false'/>
     <uses-feature android:name='android.hardware.touchscreen' android:required='false'/>
