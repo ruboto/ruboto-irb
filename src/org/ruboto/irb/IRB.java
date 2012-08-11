@@ -495,8 +495,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			}
 			catch (Exception e) {
 				Toast.makeText(IRB.this,"No SD card",1).show();
-				//finish();
-				//return;
+				return;
 			}
 			for (int i = 0; i < fList.length; i++) {
 				fileList[i] = new Item(fList[i], R.drawable.file_icon);
