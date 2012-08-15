@@ -650,7 +650,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			copyDemoScripts(DEMO_SCRIPTS, IRBScript.getDirFile());
 		} else {
       File from = new File(IRBScript.getDirFile(), "ruboto.rb");
-  		if (from.exists()) 
+  		if (from.exists())
         removeOldRubotoScripts();
 
       if (!checkVersionString()) {

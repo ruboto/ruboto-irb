@@ -19,48 +19,205 @@ public class JRubyAdapter {
     private static boolean isDebugBuild = false;
     private static PrintStream output = null;
     private static boolean initialized = false;
-
-    private static String localContextScope = "SINGLETON";
+    private static String localContextScope = "SINGLETON"; // FIXME(uwe):  Why not CONCURRENT ?  Help needed!
     private static String localVariableBehavior = "TRANSIENT";
-
     private static String RUBOTO_CORE_VERSION_NAME;
 
-    /*************************************************************************************************
-     * 
-     * Static Methods: ScriptingContainer config
+    /**
+     * @deprecated  As of Ruboto 0.7.1, replaced by {@link #runRubyMethod(Object receiver, String methodName, Object... args)}
      */
-
-    public static void setLocalContextScope(String val) {
-        localContextScope = val;
+    @Deprecated public static void callMethod(Object receiver, String methodName, Object[] args) {
+        runRubyMethod(receiver, methodName, args);
     }
 
-    public static void setLocalVariableBehavior(String val) {
-        localVariableBehavior = val;
+    /**
+     * @deprecated  As of Ruboto 0.7.1, replaced by {@link #runRubyMethod(Object receiver, String methodName, Object... args)}
+     */
+    @Deprecated public static void callMethod(Object object, String methodName, Object arg) {
+        runRubyMethod(object, methodName, arg);
     }
 
-    /*************************************************************************************************
-     * 
-     * Static Methods: JRuby Execution
+    /**
+     * @deprecated  As of Ruboto 0.7.1, replaced by {@link #runRubyMethod(Object receiver, String methodName, Object... args)}
      */
+    @Deprecated public static void callMethod(Object object, String methodName) {
+        runRubyMethod(object, methodName, new Object[] {});
+    }
 
-    public static final FilenameFilter RUBY_FILES = new FilenameFilter() {
-        public boolean accept(File dir, String fname) {
-            return fname.endsWith(".rb");
+    /**
+     * @deprecated  As of Ruboto 0.7.1, replaced by {@link #runRubyMethod(Class<T> returnType, Object receiver, String methodName, Object... args)}
+     */
+    @SuppressWarnings("unchecked")
+    @Deprecated public static <T> T callMethod(Object receiver, String methodName, Object[] args, Class<T> returnType) {
+        return runRubyMethod(returnType, receiver, methodName, args);
+    }
+
+    /**
+     * @deprecated  As of Ruboto 0.7.1, replaced by {@link #runRubyMethod(Class<T> returnType, Object receiver, String methodName, Object... args)}
+     */
+    @SuppressWarnings("unchecked")
+    @Deprecated public static <T> T callMethod(Object receiver, String methodName, Object arg, Class<T> returnType) {
+        return runRubyMethod(returnType, receiver, methodName, arg);
+    }
+
+    /**
+     * @deprecated  As of Ruboto 0.7.1, replaced by {@link #runRubyMethod(Class<T> returnType, Object receiver, String methodName, Object... args)}
+     */
+    @SuppressWarnings("unchecked")
+    @Deprecated public static <T> T callMethod(Object receiver, String methodName, Class<T> returnType) {
+        return runRubyMethod(returnType, receiver, methodName);
+    }
+
+    /**
+     * @deprecated  As of Ruboto 0.7.0, replaced by {@link #put(String name, Object object)}
+     */
+    @Deprecated public static void defineGlobalConstant(String name, Object object) {
+        put(name, object);
+    }
+
+    /**
+     * @deprecated  As of Ruboto 0.7.0, replaced by {@link #put(String name, Object object)}
+     */
+    @Deprecated public static void defineGlobalVariable(String name, Object object) {
+        put(name, object);
+    }
+
+    /**
+     * @deprecated  As of Ruboto 0.7.0, replaced by {@link #runScriptlet(String code)}
+     */
+    @Deprecated public static Object exec(String code) {
+        try {
+            Method runScriptletMethod = ruby.getClass().getMethod("runScriptlet", String.class);
+            return runScriptletMethod.invoke(ruby, code);
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        } catch (IllegalAccessException iae) {
+            throw new RuntimeException(iae);
+        } catch (java.lang.reflect.InvocationTargetException ite) {
+            if (isDebugBuild) {
+                throw ((RuntimeException) ite.getCause());
+            } else {
+                return null;
+            }
         }
-    };
+    }
 
-	public static synchronized boolean isInitialized() {
-		return initialized;
-	}
+    /**
+     * @deprecated  As of Ruboto 0.7.0, replaced by {@link #runScriptlet(String code)}
+     */
+    @Deprecated public static String execute(String code) {
+        return runRubyMethod(String.class, exec(code), "inspect");
+    }
 
-	public static boolean usesPlatformApk() {
-		return RUBOTO_CORE_VERSION_NAME != null;
-	}
-	
-	public static String getPlatformVersionName() {
-		return RUBOTO_CORE_VERSION_NAME;
-	}
-	
+    public static Object get(String name) {
+        try {
+            Method getMethod = ruby.getClass().getMethod("get", String.class);
+            return getMethod.invoke(ruby, name);
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        } catch (IllegalAccessException iae) {
+            throw new RuntimeException(iae);
+        } catch (java.lang.reflect.InvocationTargetException ite) {
+            throw new RuntimeException(ite);
+        }
+    }
+
+    public static String getPlatformVersionName() {
+        return RUBOTO_CORE_VERSION_NAME;
+    }
+
+    public static String getScriptFilename() {
+        return callScriptingContainerMethod(String.class, "getScriptFilename");
+    }
+
+    public static Object runRubyMethod(Object receiver, String methodName, Object... args) {
+        try {
+            // FIXME(uwe):  Simplify when we stop supporting JRuby < 1.7.0
+            if (isJRubyPreOneSeven()) {
+                if (args.length == 0) {
+                    Method m = ruby.getClass().getMethod("callMethod", Object.class, String.class, Class.class);
+                    // System.out.println("Calling callMethod(" + receiver + ", " + methodName + ", " + Object.class + ")");
+                    return m.invoke(ruby, receiver, methodName, Object.class);
+                } else {
+                    Method m = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object[].class, Class.class);
+                    // System.out.println("Calling callMethod(" + receiver + ", " + methodName + ", " + args + ", " + Object.class + ")");
+                    return m.invoke(ruby, receiver, methodName, args, Object.class);
+                }
+            } else {
+                Method m = ruby.getClass().getMethod("runRubyMethod", Class.class, Object.class, String.class, Object[].class);
+                return m.invoke(ruby, Object.class, receiver, methodName, args);
+            }
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        } catch (IllegalAccessException iae) {
+            throw new RuntimeException(iae);
+        } catch (java.lang.reflect.InvocationTargetException ite) {
+            printStackTrace(ite);
+            if (isDebugBuild) {
+                throw new RuntimeException(ite);
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T runRubyMethod(Class<T> returnType, Object receiver, String methodName, Object... args) {
+        try {
+            if (isJRubyPreOneSeven()) {
+                Method m = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object[].class, Class.class);
+                return (T) m.invoke(ruby, receiver, methodName, args, returnType);
+            } else {
+                Method m = ruby.getClass().getMethod("runRubyMethod", Class.class, Object.class, String.class, Object[].class);
+                return (T) m.invoke(ruby, returnType, receiver, methodName, args);
+            }
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        } catch (IllegalAccessException iae) {
+            throw new RuntimeException(iae);
+        } catch (java.lang.reflect.InvocationTargetException ite) {
+            printStackTrace(ite);
+        }
+        return null;
+    }
+
+    public static boolean isDebugBuild() {
+        return isDebugBuild;
+    }
+
+    public static boolean isInitialized() {
+        return initialized;
+    }
+
+    public static void put(String name, Object object) {
+        try {
+            Method putMethod = ruby.getClass().getMethod("put", String.class, Object.class);
+            putMethod.invoke(ruby, name, object);
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        } catch (IllegalAccessException iae) {
+            throw new RuntimeException(iae);
+        } catch (java.lang.reflect.InvocationTargetException ite) {
+            throw new RuntimeException(ite);
+        }
+    }
+
+    public static Object runScriptlet(String code) {
+        try {
+            Method runScriptletMethod = ruby.getClass().getMethod("runScriptlet", String.class);
+            return runScriptletMethod.invoke(ruby, code);
+        } catch (NoSuchMethodException nsme) {
+            throw new RuntimeException(nsme);
+        } catch (IllegalAccessException iae) {
+            throw new RuntimeException(iae);
+        } catch (java.lang.reflect.InvocationTargetException ite) {
+            if (isDebugBuild) {
+                throw ((RuntimeException) ite.getCause());
+            } else {
+                return null;
+            }
+        }
+    }
+
     public static synchronized boolean setUpJRuby(Context appContext) {
         return setUpJRuby(appContext, output == null ? System.out : output);
     }
@@ -70,7 +227,7 @@ public class JRubyAdapter {
         if (!initialized) {
             // BEGIN Ruboto HeapAlloc
             @SuppressWarnings("unused")
-			byte[] arrayForHeapAllocation = new byte[13 * 1024 * 1024];
+            byte[] arrayForHeapAllocation = new byte[13 * 1024 * 1024];
             arrayForHeapAllocation = null;
             // END Ruboto HeapAlloc
             setDebugBuild(appContext);
@@ -102,9 +259,9 @@ public class JRubyAdapter {
             } catch (ClassNotFoundException e1) {
                 String packageName = "org.ruboto.core";
                 try {
-                	PackageInfo pkgInfo = appContext.getPackageManager().getPackageInfo(packageName, 0);
+                    PackageInfo pkgInfo = appContext.getPackageManager().getPackageInfo(packageName, 0);
                     apkName = pkgInfo.applicationInfo.sourceDir;
-                	RUBOTO_CORE_VERSION_NAME = pkgInfo.versionName;
+                    RUBOTO_CORE_VERSION_NAME = pkgInfo.versionName;
                 } catch (PackageManager.NameNotFoundException e2) {
                     out.println("JRuby not found in local APK:");
                     e1.printStackTrace(out);
@@ -138,16 +295,16 @@ public class JRubyAdapter {
                 callScriptingContainerMethod(Void.class, "setCompileMode", Enum.valueOf(compileModeClass, "OFF"));
 
                 // Class traceTypeClass = Class.forName("org.jruby.runtime.backtrace.TraceType", true, classLoader);
-        	    // Method traceTypeForMethod = traceTypeClass.getMethod("traceTypeFor", String.class);
-        	    // Object traceTypeRaw = traceTypeForMethod.invoke(null, "raw");
+                // Method traceTypeForMethod = traceTypeClass.getMethod("traceTypeFor", String.class);
+                // Object traceTypeRaw = traceTypeForMethod.invoke(null, "raw");
                 // callScriptingContainerMethod(Void.class, "setTraceType", traceTypeRaw);
 
                 // FIXME(uwe): Write tutorial on profiling.
                 // container.getProvider().getRubyInstanceConfig().setProfilingMode(mode);
 
                 // callScriptingContainerMethod(Void.class, "setClassLoader", classLoader);
-        	    Method setClassLoaderMethod = ruby.getClass().getMethod("setClassLoader", ClassLoader.class);
-        	    setClassLoaderMethod.invoke(ruby, classLoader);
+                Method setClassLoaderMethod = ruby.getClass().getMethod("setClassLoader", ClassLoader.class);
+                setClassLoaderMethod.invoke(ruby, classLoader);
 
                 Thread.currentThread().setContextClassLoader(classLoader);
 
@@ -166,11 +323,8 @@ public class JRubyAdapter {
                 Log.i("Setting JRUBY_HOME: " + jrubyHome);
                 System.setProperty("jruby.home", jrubyHome);
 
-                String extraScriptsDir = scriptsDirName(appContext);
-                Log.i("Checking scripts in " + extraScriptsDir);
-                if (configDir(extraScriptsDir)) {
-                    Log.i("Added extra scripts path: " + extraScriptsDir);
-                }
+                addLoadPath(scriptsDirName(appContext));
+
                 initialized = true;
             } catch (ClassNotFoundException e) {
                 handleInitException(e);
@@ -191,26 +345,111 @@ public class JRubyAdapter {
         return initialized;
     }
 
+    public static void setScriptFilename(String name) {
+        callScriptingContainerMethod(Void.class, "setScriptFilename", name);
+    }
+
+    public static boolean usesPlatformApk() {
+        return RUBOTO_CORE_VERSION_NAME != null;
+    }
+
+    // Private methods
+
+    private static Boolean addLoadPath(String scriptsDir) {
+        if (new File(scriptsDir).exists()) {
+            Log.i("Added directory to load path: " + scriptsDir);
+            Script.addDir(scriptsDir);
+            runScriptlet("$:.unshift '" + scriptsDir + "' ; $:.uniq!");
+            Log.d("Changing JRuby current directory to " + scriptsDir);
+            callScriptingContainerMethod(Void.class, "setCurrentDirectory", scriptsDir);
+            return true;
+        } else {
+            Log.i("Extra scripts dir not present: " + scriptsDir);
+            return false;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T callScriptingContainerMethod(Class<T> returnType, String methodName, Object... args) {
+        Class<?>[] argClasses = new Class[args.length];
+        for (int i = 0; i < argClasses.length; i++) {
+            argClasses[i] = args[i].getClass();
+        }
+        try {
+            Method method = ruby.getClass().getMethod(methodName, argClasses);
+            T result = (T) method.invoke(ruby, args);
+            return result;
+        } catch (RuntimeException re) {
+            re.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            printStackTrace(e);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static void handleInitException(Exception e) {
+        Log.e("Exception starting JRuby");
+        Log.e(e.getMessage() != null ? e.getMessage() : e.getClass().getName());
+        e.printStackTrace();
+        ruby = null;
+    }
+
+    // FIXME(uwe):  Remove when we stop supporting JRuby < 1.7.0
+    @Deprecated public static boolean isJRubyPreOneSeven() {
+        return ((String)get("JRUBY_VERSION")).equals("1.7.0.dev") || ((String)get("JRUBY_VERSION")).startsWith("1.6.");
+    }
+
+    // FIXME(uwe):  Remove when we stop supporting JRuby < 1.7.0
+    @Deprecated public static boolean isJRubyOneSeven() {
+        return !isJRubyPreOneSeven() && ((String)get("JRUBY_VERSION")).startsWith("1.7.");
+    }
+
+    // FIXME(uwe):  Remove when we stop supporting Ruby 1.8
+    @Deprecated public static boolean isRubyOneEight() {
+        return ((String)get("RUBY_VERSION")).startsWith("1.8.");
+    }
+
+    // FIXME(uwe):  Remove when we stop supporting Ruby 1.8
+    @Deprecated public static boolean isRubyOneNine() {
+        return ((String)get("RUBY_VERSION")).startsWith("1.9.");
+    }
+
+    static void printStackTrace(Throwable t) {
+        // TODO(uwe):  Simplify this when Issue #144 is resolved
+        try {
+            t.printStackTrace(output);
+        } catch (NullPointerException npe) {
+            // TODO(uwe): printStackTrace should not fail
+            for (java.lang.StackTraceElement ste : t.getStackTrace()) {
+                output.append(ste.toString() + "\n");
+            }
+        }
+    }
+
     private static String scriptsDirName(Context context) {
         File storageDir = null;
-        if (JRubyAdapter.isDebugBuild()) {
+        if (isDebugBuild()) {
 
             // FIXME(uwe): Simplify this as soon as we drop support for android-7
             if (android.os.Build.VERSION.SDK_INT >= 8) {
                 try {
-					Method method = context.getClass().getMethod("getExternalFilesDir", String.class);
-					storageDir = (File) method.invoke(context, (Object) null);
-				} catch (SecurityException e) {
-					printStackTrace(e);
-				} catch (NoSuchMethodException e) {
-					printStackTrace(e);
-				} catch (IllegalArgumentException e) {
-					printStackTrace(e);
-				} catch (IllegalAccessException e) {
-					printStackTrace(e);
-				} catch (InvocationTargetException e) {
-					printStackTrace(e);
-				}
+                    Method method = context.getClass().getMethod("getExternalFilesDir", String.class);
+                    storageDir = (File) method.invoke(context, (Object) null);
+                } catch (SecurityException e) {
+                    printStackTrace(e);
+                } catch (NoSuchMethodException e) {
+                    printStackTrace(e);
+                } catch (IllegalArgumentException e) {
+                    printStackTrace(e);
+                } catch (IllegalAccessException e) {
+                    printStackTrace(e);
+                } catch (InvocationTargetException e) {
+                    printStackTrace(e);
+                }
             } else {
                 storageDir = new File(Environment.getExternalStorageDirectory(), "Android/data/" + context.getPackageName() + "/files");
                 Log.e("Calculated path to sdcard the old way: " + storageDir);
@@ -227,16 +466,23 @@ public class JRubyAdapter {
         return storageDir.getAbsolutePath() + "/scripts";
     }
 
-    public static Boolean configDir(String scriptsDir) {
-        if (new File(scriptsDir).exists()) {
-            Log.i("Found extra scripts dir: " + scriptsDir);
-            Script.setDir(scriptsDir);
-            JRubyAdapter.exec("$:.unshift '" + scriptsDir + "' ; $:.uniq!");
-            return true;
-        } else {
-            Log.i("Extra scripts dir not present: " + scriptsDir);
-            return false;
+    private static void setDebugBuild(Context context) {
+        PackageManager pm = context.getPackageManager();
+        PackageInfo pi;
+        try {
+            pi = pm.getPackageInfo(context.getPackageName(), 0);
+            isDebugBuild = ((pi.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0);
+        } catch (NameNotFoundException e) {
+            isDebugBuild = false;
         }
+    }
+
+    private static void setLocalContextScope(String val) {
+        localContextScope = val;
+    }
+
+    public static void setLocalVariableBehavior(String val) {
+        localVariableBehavior = val;
     }
 
     public static void setOutputStream(PrintStream out) {
@@ -261,216 +507,5 @@ public class JRubyAdapter {
         }
       }
     }
-
-    private static void handleInitException(Exception e) {
-        Log.e("Exception starting JRuby");
-        Log.e(e.getMessage() != null ? e.getMessage() : e.getClass().getName());
-        e.printStackTrace();
-        ruby = null;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> T callScriptingContainerMethod(Class<T> returnType, String methodName, Object... args) {
-        Class<?>[] argClasses = new Class[args.length];
-        for (int i = 0; i < argClasses.length; i++) {
-            argClasses[i] = args[i].getClass();
-        }
-        try {
-        	Method method = ruby.getClass().getMethod(methodName, argClasses);
-        	System.out.println("callScriptingContainerMethod: method: " + method);
-        	T result = (T) method.invoke(ruby, args);
-        	System.out.println("callScriptingContainerMethod: result: " + result);
-            return result;
-        } catch (RuntimeException re) {
-            re.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            printStackTrace(e);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static String execute(String code) {
-        Object result = exec(code);
-        return result != null ? result.toString() : "nil";
-// TODO: Why is callMethod returning "main"?
-//		return result != null ? callMethod(result, "inspect", String.class) : "null";
-    }
-
-	public static Object exec(String code) {
-        // return callScriptingContainerMethod(Object.class, "runScriptlet", code);
-        try {
-            Method runScriptletMethod = ruby.getClass().getMethod("runScriptlet", String.class);
-            return runScriptletMethod.invoke(ruby, code);
-        } catch (NoSuchMethodException nsme) {
-            throw new RuntimeException(nsme);
-        } catch (IllegalAccessException iae) {
-            throw new RuntimeException(iae);
-        } catch (java.lang.reflect.InvocationTargetException ite) {
-            if (isDebugBuild) {
-                throw ((RuntimeException) ite.getCause());
-            } else {
-                return null;
-            }
-        }
-	}
-
-    public static void defineGlobalConstant(String name, Object object) {
-    	put(name, object);
-    }
-
-    public static void put(String name, Object object) {
-        try {
-            Method putMethod = ruby.getClass().getMethod("put", String.class, Object.class);
-            putMethod.invoke(ruby, name, object);
-        } catch (NoSuchMethodException nsme) {
-            throw new RuntimeException(nsme);
-        } catch (IllegalAccessException iae) {
-            throw new RuntimeException(iae);
-        } catch (java.lang.reflect.InvocationTargetException ite) {
-            throw new RuntimeException(ite);
-        }
-    }
-    
-    public static Object get(String name) {
-        try {
-            Method getMethod = ruby.getClass().getMethod("get", String.class);
-            return getMethod.invoke(ruby, name);
-        } catch (NoSuchMethodException nsme) {
-            throw new RuntimeException(nsme);
-        } catch (IllegalAccessException iae) {
-            throw new RuntimeException(iae);
-        } catch (java.lang.reflect.InvocationTargetException ite) {
-            throw new RuntimeException(ite);
-        }
-    }
-
-    public static void defineGlobalVariable(String name, Object object) {
-		defineGlobalConstant(name, object);
-    }
-
-	public static boolean isDebugBuild() {
-		return isDebugBuild;
-	}
-
-    private static void setDebugBuild(Context context) {
-        PackageManager pm = context.getPackageManager();
-        PackageInfo pi;
-        try {
-            pi = pm.getPackageInfo(context.getPackageName(), 0);
-            isDebugBuild = ((pi.applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0);
-        } catch (NameNotFoundException e) {
-            isDebugBuild = false;
-        }
-    }
-
-    /*************************************************************************************************
-     *
-     * Script Actions
-     */
-
-    public static String getScriptFilename() {
-        return callScriptingContainerMethod(String.class, "getScriptFilename");
-    }
-
-    public static void setScriptFilename(String name) {
-        callScriptingContainerMethod(Void.class, "setScriptFilename", name);
-    }
-
-	public static void callMethod(Object receiver, String methodName, Object[] args) {
-        try {
-            Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object[].class);
-            callMethodMethod.invoke(ruby, receiver, methodName, args);
-        } catch (NoSuchMethodException nsme) {
-            throw new RuntimeException(nsme);
-        } catch (IllegalAccessException iae) {
-            throw new RuntimeException(iae);
-        } catch (java.lang.reflect.InvocationTargetException ite) {
-            printStackTrace(ite);
-            if (isDebugBuild) {
-                throw new RuntimeException(ite);
-            }
-        }
-    }
-
-	public static void callMethod(Object object, String methodName, Object arg) {
-		callMethod(object, methodName, new Object[] { arg });
-	}
-
-	public static void callMethod(Object object, String methodName) {
-		callMethod(object, methodName, new Object[] {});
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> T callMethod(Object receiver, String methodName, Object[] args, Class<T> returnType) {
-        try {
-            Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object[].class, Class.class);
-            return (T) callMethodMethod.invoke(ruby, receiver, methodName, args, returnType);
-        } catch (NoSuchMethodException nsme) {
-            throw new RuntimeException(nsme);
-        } catch (IllegalAccessException iae) {
-            throw new RuntimeException(iae);
-        } catch (java.lang.reflect.InvocationTargetException ite) {
-            printStackTrace(ite);
-        }
-        return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> T callMethod(Object receiver, String methodName, Object arg, Class<T> returnType) {
-    try {
-      Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Object.class, Class.class);
-      return (T) callMethodMethod.invoke(ruby, receiver, methodName, arg, returnType);
-    } catch (NoSuchMethodException nsme) {
-      throw new RuntimeException(nsme);
-    } catch (IllegalAccessException iae) {
-      throw new RuntimeException(iae);
-    } catch (java.lang.reflect.InvocationTargetException ite) {
-      printStackTrace(ite);
-    }
-    return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> T callMethod(Object receiver, String methodName, Class<T> returnType) {
-    try {
-      Method callMethodMethod = ruby.getClass().getMethod("callMethod", Object.class, String.class, Class.class);
-      return (T) callMethodMethod.invoke(ruby, receiver, methodName, returnType);
-    } catch (NoSuchMethodException nsme) {
-      throw new RuntimeException(nsme);
-    } catch (IllegalAccessException iae) {
-      throw new RuntimeException(iae);
-    } catch (java.lang.reflect.InvocationTargetException ite) {
-      printStackTrace(ite);
-    }
-    return null;
-	}
-
-	private static void printStackTrace(Throwable t) {
-        PrintStream out;
-    	try {
-            Method getOutputMethod = ruby.getClass().getMethod("getOutput");
-            out = (PrintStream) getOutputMethod.invoke(ruby);
-        } catch (java.lang.NoSuchMethodException nsme) {
-            throw new RuntimeException("ScriptingContainer#getOutput method not found.", nsme);
-        } catch (java.lang.IllegalAccessException iae) {
-            throw new RuntimeException("ScriptingContainer#getOutput method not accessable.", iae);
-        } catch (java.lang.reflect.InvocationTargetException ite) {
-            throw new RuntimeException("ScriptingContainer#getOutput failed.", ite);
-        }
-
-        // TODO(uwe):  Simplify this when Issue #144 is resolved
-        try {
-            t.printStackTrace(out);
-    	} catch (NullPointerException npe) {
-    	    // TODO(uwe): printStackTrace should not fail
-            for (java.lang.StackTraceElement ste : t.getStackTrace()) {
-                out.append(ste.toString() + "\n");
-            }
-    	}
-	}
 
 }
