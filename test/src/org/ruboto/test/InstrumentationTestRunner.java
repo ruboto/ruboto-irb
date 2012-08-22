@@ -46,6 +46,9 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
             Thread t = new Thread(null, new Runnable() {
                 public void run() {
                     JRubyLoadedOk.set(JRubyAdapter.setUpJRuby(getTargetContext()));
+                    if (!JRubyAdapter.isJRubyPreOneSeven()) {
+                        JRubyAdapter.runScriptlet("Java::OrgRubotoTest::InstrumentationTestRunner.__persistent__ = true");
+                    }
                 }
             }, "Setup JRuby from instrumentation test runner", 64 * 1024);
             try {
@@ -58,15 +61,17 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
             // TODO end
 
             if (JRubyLoadedOk.get()) {
-                loadStep = "Setup global variables";
-
-                // TODO(uwe):  Running with large stack is currently only needed when running with JRuby 1.7.0 and android-10
-                // TODO(uwe):  Simplify when we stop support for JRuby 1.7.0 or android-10
+                loadStep = "Load test helper";
+                // TODO(uwe):  Running with large stack is currently only needed when running with JRuby 1.7.0.dev and android-10
+                // TODO(uwe):  Simplify when we stop support for JRuby 1.7.0.dev or android-10
+                final IOException[] ioex = new IOException[]{null};
                 Thread t2 = new Thread(null, new Runnable() {
                     public void run() {
-                        JRubyAdapter.put("$runner", InstrumentationTestRunner.this);
-                        JRubyAdapter.put("$test", InstrumentationTestRunner.this);
-                        JRubyAdapter.put("$suite", suite);
+                        try {
+                            loadScript("test_helper.rb");
+                        } catch (IOException e) {
+                            ioex[0] = e;
+                        }
                     }
                 }, "Setup JRuby from instrumentation test runner", 64 * 1024);
                 try {
@@ -76,10 +81,10 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
                     Thread.currentThread().interrupt();
                     throw new RuntimeException("Interrupted starting JRuby", ie);
                 }
+                if (ioex[0] != null) {
+                    throw ioex[0];
+                }
                 // TODO end
-
-                loadStep = "Load test helper";
-                loadScript("test_helper.rb");
 
                 loadStep = "Get app test source dir";
                 String test_apk_path = getContext().getPackageManager().getApplicationInfo(getContext().getPackageName(), 0).sourceDir;
@@ -162,12 +167,21 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
         }
         buffer.close();
 
-        String oldFilename = JRubyAdapter.getScriptFilename();
-        JRubyAdapter.setScriptFilename(f);
-        JRubyAdapter.put("$script_code", source.toString());
-        JRubyAdapter.setScriptFilename(f);
-        JRubyAdapter.execute("$test.instance_eval($script_code)");
-        JRubyAdapter.setScriptFilename(oldFilename);
+        // FIXME(uwe):  Simplify when we stop supporting JRuby < 1.7.0
+        if (JRubyAdapter.isJRubyPreOneSeven()) {
+            JRubyAdapter.put("$test", this);
+            JRubyAdapter.put("$script_code", source.toString());
+            JRubyAdapter.runScriptlet("$test.instance_eval($script_code)");
+        } else {
+            String oldFilename = JRubyAdapter.getScriptFilename();
+            JRubyAdapter.setScriptFilename(f);
+            if (f.equals("test_helper.rb")) {
+                JRubyAdapter.runScriptlet(source.toString());
+            } else {
+                JRubyAdapter.runRubyMethod(this, "instance_eval", source.toString());
+            }
+            JRubyAdapter.setScriptFilename(oldFilename);
+        }
         Log.d(getClass().getName(), "Test script " + f + " loaded");
     }
 
