@@ -17,9 +17,6 @@ end
 
 require 'java'
 
-$package_name = ($activity || $service || $broadcast_receiver).package_name
-$package      = eval("Java::#{$package_name}")
-
 # Create convenience method for top-level android package so we do not need to prefix with 'Java::'.
 module Kernel
   def android
@@ -28,15 +25,6 @@ module Kernel
 end
 
 java_import "android.R"
-
-module Ruboto
-  java_import "#{$package_name}.R"
-  begin
-    Id = JavaUtilities.get_proxy_class("#{$package_name}.R$id")
-  rescue NameError
-    Java::android.util.Log.d "RUBOTO", "no R$id"
-  end
-end
 AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
 
 #
@@ -45,8 +33,8 @@ AndroidIds = JavaUtilities.get_proxy_class("android.R$id")
 
 module Ruboto
   module CallbackClass
-    def new_with_callbacks &block
-      new.initialize_ruboto_callbacks &block
+    def new_with_callbacks(*args, &block)
+      new(*args).initialize_ruboto_callbacks(&block)
     end
   end
     
@@ -57,14 +45,16 @@ module Ruboto
       self
     end
     
-    def ruboto_callback_methods 
-      (singleton_methods - ["on_create", "on_receive"]).select{|i| i =~ /^on_/} 
+    def ruboto_callback_methods
+      # FIXME(uwe): Remove to_sym conversion when we stop supporting Ruby 1.8 mode
+      (singleton_methods - ["on_create", "on_receive"]).select{|i| self.class.constants.map(&:to_sym).include?(i.to_s.sub(/^on_/, "CB_").upcase.to_sym) || self.class.constants.map(&:to_sym).include?("CB_#{i}".upcase.to_sym)}
     end 
 
-    def setup_ruboto_callbacks 
-      ruboto_callback_methods.each do |i| 
+    def setup_ruboto_callbacks
+      ruboto_callback_methods.each do |i|
         begin
-          setCallbackProc(self.class.const_get(i.sub(/^on_/, "CB_").upcase), method(i)) 
+          # FIXME(uwe): Remove to_sym conversion when we stop supporting Ruby 1.8 mode
+          setCallbackProc((self.class.constants.map(&:to_sym).include?(i.to_s.sub(/^on_/, "CB_").upcase.to_sym) && self.class.const_get(i.to_s.sub(/^on_/, "CB_").upcase)) || (self.class.constants.map(&:to_sym).include?("CB_#{i}".upcase.to_sym) && self.class.const_get("CB_#{i}".upcase)), method(i))
         rescue
         end
       end 

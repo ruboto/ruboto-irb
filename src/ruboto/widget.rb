@@ -1,3 +1,4 @@
+require 'ruboto/base'
 require 'ruboto/activity'
 
 #######################################################
@@ -41,6 +42,10 @@ View.class_eval do
       if height = params.delete(:height)
         getLayoutParams.height = View.convert_constant(height)
       end
+      
+      if margins = params.delete(:margins)
+        getLayoutParams.set_margins(*margins)
+      end
 
       if layout = params.delete(:layout)
         lp = getLayoutParams
@@ -62,8 +67,18 @@ end
 #
 
 java_import "android.view.ViewGroup"
-View.add_constant_conversion :wrap_content, ViewGroup::LayoutParams::WRAP_CONTENT
-View.add_constant_conversion :fill_parent, ViewGroup::LayoutParams::FILL_PARENT
+ViewGroup::LayoutParams.constants.each do |i|
+  View.add_constant_conversion i.downcase.to_sym, ViewGroup::LayoutParams.const_get(i)
+end
+
+#
+# Load Gravity constants
+#
+
+java_import "android.view.Gravity"
+Gravity.constants.each do |i|
+  View.add_constant_conversion i.downcase.to_sym, Gravity.const_get(i)
+end
 
 #
 # RubotoActivity View Generation

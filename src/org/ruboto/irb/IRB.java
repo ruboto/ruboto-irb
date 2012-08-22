@@ -112,7 +112,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
   protected void fireRubotoActivity() {
     if(appStarted) return;
     super.fireRubotoActivity();
-		configScriptsDir();
+		configScriptsDir(true);
   }
 
   public boolean rubotoAttachable() {
@@ -166,7 +166,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	    JRubyAdapter.setOutputStream(printStream);
         irbOutput.append(">> ");
 
-		configScriptsDir();
+		configScriptsDir(false);
 		editorSetUp();
 		scriptsListSetUp();
 
@@ -643,17 +643,17 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		}
 	}
 
-	private void configScriptsDir() {
+	private void configScriptsDir(boolean checkForUpdate) {
 		IRBScript.setDir(IRB.scriptsDirName(this));
 		if (!IRBScript.getDirFile().exists()) {
 			// on first install init directory + copy sample scripts
 			copyDemoScripts(DEMO_SCRIPTS, IRBScript.getDirFile());
 		} else {
       File from = new File(IRBScript.getDirFile(), "ruboto.rb");
-  		if (from.exists()) 
+  		if (from.exists())
         removeOldRubotoScripts();
 
-      if (!checkVersionString()) {
+      if (checkForUpdate && !checkVersionString()) {
 			  // Scripts exist but need updating
 			  confirmUpdate();
       }
