@@ -18,6 +18,7 @@
     <string name="Menu_about">About</string>
     <string name="Menu_edit">Edit</string>
     <string name="Menu_delete">Delete</string>
+	<string name="Menu_share">Share on Facebook</string>
     <string name="Menu_rescan">Reload scripts list</string>
     <string name="Menu_reload">Reload demos from assets</string>
     <string name="Menu_clear_irb">Clear IRB output</string>
@@ -25,6 +26,7 @@
     <string name="Menu_max_screen">Toggle usable screen</string>
     <string name="Menu_line_numbers">Toggle line numbers</string>
     <string name="Menu_goto">Go to line number</string>
+	<string name="Menu_import">Import Script</string>
 
     <string name="Dialog_ok">Ok</string>
     <string name="Dialog_cancel">Cancel</string>
