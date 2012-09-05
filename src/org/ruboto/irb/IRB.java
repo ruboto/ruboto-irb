@@ -1,19 +1,26 @@
 package org.ruboto.irb;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jruby.embed.io.WriterOutputStream;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,6 +36,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
@@ -37,6 +45,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TabHost;
@@ -45,17 +54,51 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.os.Environment;
+import android.util.Log;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
+
+
 import org.ruboto.JRubyAdapter;
 
 public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickListener,
 		OnTabChangeListener {
+	//////////////////////////////////////////////////////////////
+	// Stores names of traversed directories
+	ArrayList<String> str = new ArrayList<String>();
+
+	// Check if the first level of the directory structure is the one showing
+	private Boolean firstLvl = true;
+
+
+	private Item[] fileList;
+	private File path = new File(Environment.getExternalStorageDirectory() + "");
+	private String chosenFile;
+	private static final int DIALOG_LOAD_FILE = 1000;
+
+	ListAdapter adapter1;
+	//////////////////////////////////////////////////////////////
 	public static final String TAG = "Ruboto-IRB";
 	public static final String SDCARD_SCRIPTS_DIR = "/sdcard/jruby";
 
+	
 	private TabHost tabs;
 	private TabWidget tabWidget;
 	private final Handler handler = new Handler();
-  private PrintStream printStream;
+	private PrintStream printStream;
 
 	/* IRB_Tab Elements */
 	public static TextView currentIrbOutput;
@@ -89,12 +132,13 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	private static final int MAX_SCREEN_MENU = 10;
 	private static final int LINE_NUMBERS_MENU = 11;
 	private static final int GOTO_MENU = 12;
-
+	private static final int IMPORT_MENU = 13;
+    
 	/* Context menu option identifiers for script list */
 	private static final int EDIT_MENU = 20;
 	private static final int EXECUTE_MENU = 21;
 	private static final int DELETE_MENU = 22;
-
+    private static final int SHARE_MENU = 23;
 	private static final String DEMO_SCRIPTS = "demo-scripts";
 
 	/*********************************************************************************************
@@ -301,6 +345,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		menu.add(0, MAX_SCREEN_MENU, 0, R.string.Menu_max_screen);
 		menu.add(0, LINE_NUMBERS_MENU, 0, R.string.Menu_line_numbers);
 		menu.add(0, GOTO_MENU, 0, R.string.Menu_goto);
+		menu.add(0, IMPORT_MENU, 0, R.string.Menu_import);
 		return true;
 	}
 
@@ -383,11 +428,225 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			tabs.setCurrentTab(EDITOR_TAB);
 			gotoDialog();
 			return true;
+		case IMPORT_MENU:
+			loadFileList();
+			showDialog(DIALOG_LOAD_FILE);
+			Log.d(TAG, path.getAbsolutePath());
+		    return true; 
+		     
 		}
 
 		return super.onMenuItemSelected(featureId, item);
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public String readfiles(String path)
+	{
+		String aBuffer = "";
+        try {
+            File myFile = new File(path);
+            FileInputStream fIn = new FileInputStream(myFile);
+            BufferedReader myReader = new BufferedReader(
+                    new InputStreamReader(fIn));
+            String aDataRow = "";
+          //  String aBuffer = "";
+            while ((aDataRow = myReader.readLine()) != null) {
+                aBuffer += aDataRow + "\n";
+            }
+   //         txtData.setText(aBuffer);
+            myReader.close();
+            Toast.makeText(getBaseContext(),
+                    "Done reading SD 'mysdfile.txt'",
+                    Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(getBaseContext(), e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+        }
+		
+		
+		return aBuffer;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public void loadFileList() {
+		try {
+			path.mkdirs();
+		} catch (SecurityException e) {
+			Log.e(TAG, "unable to write on the sd card ");
+		}
+
+		// Checks whether path exists
+		if (path.exists()) {
+			FilenameFilter filter = new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String filename) {
+					File sel = new File(dir, filename);
+					// Filters based on whether the file is hidden or not
+					return (sel.isFile() || sel.isDirectory())
+							&& !sel.isHidden();
+
+				}
+			};
+
+			String[] fList = null;
+			try{
+				 fList = path.list(filter);
+				 fileList = new Item[fList.length];
+			}
+			catch (Exception e) {
+				Toast.makeText(IRB.this,"No SD card",1).show();
+				return;
+			}
+			for (int i = 0; i < fList.length; i++) {
+				fileList[i] = new Item(fList[i], R.drawable.file_icon);
+
+				// Convert into file path
+				File sel = new File(path, fList[i]);
+
+				// Set drawables
+				if (sel.isDirectory()) {
+					fileList[i].icon = R.drawable.directory_icon;
+					Log.d("DIRECTORY", fileList[i].file);
+				} else {
+					Log.d("FILE", fileList[i].file);
+				}
+			}
+
+			if (!firstLvl) {
+				Item temp[] = new Item[fileList.length + 1];
+				for (int i = 0; i < fileList.length; i++) {
+					temp[i + 1] = fileList[i];
+				}
+				temp[0] = new Item("Up", R.drawable.directory_up);
+				fileList = temp;
+			}
+		} else {
+			Log.e(TAG, "path does not exist");
+		}
+
+		adapter1 = new ArrayAdapter<Item>(this,
+				android.R.layout.select_dialog_item, android.R.id.text1,
+				fileList) {
+			@Override
+			public View getView(int position, View convertView, ViewGroup parent) {
+				// creates view
+				View view = super.getView(position, convertView, parent);
+				TextView textView = (TextView) view
+						.findViewById(android.R.id.text1);
+
+				// put the image on the text view
+				textView.setCompoundDrawablesWithIntrinsicBounds(
+						fileList[position].icon, 0, 0, 0);
+
+				// add margin between image and text (support various screen
+				// densities)
+				int dp5 = (int) (5 * getResources().getDisplayMetrics().density + 0.5f);
+				textView.setCompoundDrawablePadding(dp5);
+
+				return view;
+			}
+		};
+
+	}
+
+	private class Item {
+		public String file;
+		public int icon;
+
+		public Item(String file, Integer icon) {
+			this.file = file;
+			this.icon = icon;
+		}
+
+		@Override
+		public String toString() {
+			return file;
+		}
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog = null;
+		AlertDialog.Builder builder = new Builder(this);
+
+		if (fileList == null) {
+			Log.e(TAG, "No files loaded");
+			dialog = builder.create();
+			return dialog;
+		}
+
+		switch (id) {
+		case DIALOG_LOAD_FILE:
+			builder.setTitle("Choose your file");
+			builder.setAdapter(adapter1, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					chosenFile = fileList[which].file;
+					File sel = new File(path + "/" + chosenFile);
+					if (sel.isDirectory()) {
+						firstLvl = false;
+
+						// Adds chosen directory to list
+						str.add(chosenFile);
+						fileList = null;
+						path = new File(sel + "");
+
+						loadFileList();
+
+						removeDialog(DIALOG_LOAD_FILE);
+						showDialog(DIALOG_LOAD_FILE);
+						Log.d(TAG, path.getAbsolutePath());
+
+					}
+
+					// Checks if 'up' was clicked
+					else if (chosenFile.equalsIgnoreCase("up") && !sel.exists()) {
+
+						// present directory removed from list
+						String s = str.remove(str.size() - 1);
+
+						// path modified to exclude present directory
+						path = new File(path.toString().substring(0,
+								path.toString().lastIndexOf(s)));
+						fileList = null;
+
+						// if there are no more directories in the list, then
+						// its the first level
+						if (str.isEmpty()) {
+							firstLvl = true;
+						}
+						loadFileList();
+
+						removeDialog(DIALOG_LOAD_FILE);
+						showDialog(DIALOG_LOAD_FILE);
+						Log.d(TAG, path.getAbsolutePath());
+
+					}
+					// File picked
+					else {
+						int dot = chosenFile.lastIndexOf(".");
+						  String ext = chosenFile.substring(dot + 1);
+						  if(ext.equals("txt") || ext.equals("rb") || ext.equals("script") )
+						  {
+							  neweditScript(readfiles(path + "/" + chosenFile),true,chosenFile);
+						  }
+						  else
+							  Toast.makeText(IRB.this,"Not supported extension type" + ext,1).show();
+						
+						//	finish();
+					//	return;
+					}
+
+				}
+			});
+			break;
+		}
+		dialog = builder.show();
+		return dialog;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	/* Set up context menus for script list */
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v,
@@ -396,6 +655,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		menu.add(0, EDIT_MENU, 0, R.string.Menu_edit);
 		menu.add(0, EXECUTE_MENU, 0, R.string.Menu_run);
 		menu.add(0, DELETE_MENU, 0, R.string.Menu_delete);
+		menu.add(0, SHARE_MENU, 0, R.string.Menu_share);
 	}
 
 	/* Called when an entry in the Script List is long clicked */
@@ -414,6 +674,9 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			confirmDelete(scripts.get(((AdapterContextMenuInfo) item
 					.getMenuInfo()).position));
 			return true;
+		case SHARE_MENU:
+		    shareScript(scripts.get(((AdapterContextMenuInfo) item
+					.getMenuInfo()).position));
 		default:
 			return false;
 		}
@@ -480,6 +743,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			fnameTextView.setText(script.getName());
 			sourceEditor.setText(script.getFile().exists() ? script
 					.getContents() : "");
+			//Toast.makeText(IRB.this,script.getFile().exists() ? script.getContents() : "",1).show();		
 			sourceEditor.scrollTo(0, 0);
 			if (switchTab)
 				tabs.setCurrentTab(EDITOR_TAB);
@@ -487,6 +751,15 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			Toast.makeText(this, "Could not open " + script.getName(),
 					Toast.LENGTH_SHORT).show();
 		}
+	}
+	
+	public void neweditScript(String content, Boolean switchTab,String ChosenFileName){
+			fnameTextView.setText(ChosenFileName);
+	         sourceEditor.setText(content);
+			 sourceEditor.scrollTo(0,0);
+			 if (switchTab)
+				tabs.setCurrentTab(EDITOR_TAB);
+	
 	}
 
 	private void editScript(String name, Boolean switchTab) {
@@ -521,7 +794,32 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		}
 		scanScripts();
 	}
+	
 
+	private void shareScript(IRBScript script) {
+		Intent i = new Intent(this,net.android.facebook.TestConnect.class);
+		try {
+			currentScript = script;
+//			ScriptName = script.getName();
+//			ScriptContent=script.getFile().exists() ? script.getContents() : "";
+			i.putExtra("code",script.getFile().exists() ? script.getContents() : "");
+			i.putExtra("Sname",script.getName());
+			startActivity(i);
+
+		} catch (IOException e) {
+			Toast.makeText(this, "Could not share " + script.getName(),
+					Toast.LENGTH_SHORT).show();
+		}
+		
+		
+	}
+
+	private void shareScript(String name) {
+		shareScript(new IRBScript(name));
+	}
+	
+	
+	
 	/************************************************************************************
 	 *
 	 * Dialogs
