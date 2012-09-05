@@ -96,6 +96,7 @@ public class TestPost extends Activity{
         			mProgress.cancel();
         			
         			Toast.makeText(TestPost.this, "Posted to Facebook", Toast.LENGTH_SHORT).show();
+					finish();
         		}
         	});
         }

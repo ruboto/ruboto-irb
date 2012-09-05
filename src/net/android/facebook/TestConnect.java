@@ -84,6 +84,8 @@ public class TestConnect extends Activity {
 				connect.putExtra("code", x);
 				connect.putExtra("Sname", Sname);
 				startActivity(connect);
+
+				finish();
 			}
 		});
     }
