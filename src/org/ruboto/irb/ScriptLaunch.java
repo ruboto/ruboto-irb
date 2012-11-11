@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 public class ScriptLaunch extends org.ruboto.EntryPointActivity {
 	public void onCreate(Bundle bundle) {
-		setRubyClassName(getClass().getSimpleName());
+		getScriptInfo().setRubyClassName(getClass().getSimpleName());
 	    super.onCreate(bundle);
 	}
 }
