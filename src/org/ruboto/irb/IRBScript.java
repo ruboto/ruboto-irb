@@ -23,6 +23,7 @@ import org.ruboto.Script;
 public class IRBScript extends Script {
     public static final String UNTITLED_RB = "untitled.rb";
     private static long scriptsDirModified = 0;
+    private static String scriptDir = null;
 
     private static final FilenameFilter RUBY_FILES = new FilenameFilter() {
         public boolean accept(File dir, String fname) {
@@ -38,7 +39,7 @@ public class IRBScript extends Script {
      */
 
     public static boolean scriptsDirChanged() {
-    	return scriptsDirModified != Script.getDirFile().lastModified();
+    	return scriptsDirModified != IRBScript.getDirFile().lastModified();
     }
 
     public static List<String> list() throws SecurityException {
@@ -46,9 +47,9 @@ public class IRBScript extends Script {
     }
 
     public static List<String> list(List<String> list) throws SecurityException {
-    	scriptsDirModified = Script.getDirFile().lastModified();
+    	scriptsDirModified = IRBScript.getDirFile().lastModified();
         list.clear();
-        String[] tmpList = Script.getDirFile().list(RUBY_FILES);
+        String[] tmpList = IRBScript.getDirFile().list(RUBY_FILES);
         Arrays.sort(tmpList, 0, tmpList.length, String.CASE_INSENSITIVE_ORDER);
         list.addAll(Arrays.asList(tmpList));
         return list;
@@ -111,6 +112,19 @@ public class IRBScript extends Script {
             this.contents = source.toString();
         }
         return this.contents;
+    }
+
+    public static void setDir(String d) {
+      scriptDir = d;
+  		IRBScript.addDir(d);
+    }
+
+    public static String getDir() {
+      return scriptDir;
+    }
+
+    public static File getDirFile() {
+      return new File(scriptDir);
     }
 
     /*************************************************************************************************
