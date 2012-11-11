@@ -1098,4 +1098,44 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 					}
 				});
 	}
+
+	/*********************************************************************************************
+	 *
+	 * Fling Listener
+	 */
+
+	class FlingGestureListener extends android.view.GestureDetector.SimpleOnGestureListener {
+		private android.widget.Scroller scroller = null; //@scroller = android.widget.Scroller.new(@activity)
+        private int x = 0; //@x = 0
+		
+		FlingGestureListener() {
+			super();
+			scroller = new android.widget.Scroller(IRB.this);
+		}
+
+	    public boolean onDown(android.view.MotionEvent e) {
+			if (scroller.isFinished()) return false;
+    		scroller.forceFinished(true);
+			return true;
+    	}
+
+		public boolean onFling(android.view.MotionEvent e1, android.view.MotionEvent e2, float velocityX, float velocityY) {
+			if (Math.abs(velocityY) < android.view.ViewConfiguration.get(IRB.this).getScaledMinimumFlingVelocity()) return false;
+			    
+			x = IRB.this.sourceEditor.getScrollX();
+			int max = IRB.this.sourceEditor.getLayout().getHeight() - IRB.this.sourceEditor.getHeight() + IRB.this.sourceEditor.getLineHeight();
+			scroller.fling(0, IRB.this.sourceEditor.getScrollY(), 0, 0 - (int)velocityY, x, x, 0, max);
+			
+			final Runnable run = new Runnable() {
+				public void run() {
+					if (scroller.isFinished() || !scroller.computeScrollOffset()) return; 
+					IRB.this.sourceEditor.scrollTo(x, scroller.getCurrY());
+					IRB.this.sourceEditor.post(this);
+				}
+			};
+
+			IRB.this.sourceEditor.post(run);
+			return true;
+		}
+	}
 }
