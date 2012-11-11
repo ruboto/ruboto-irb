@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -17,27 +18,7 @@ import android.os.Environment;
 public class Script {
     private static String[] scriptsDir = new String[]{"scripts"};
 
-    private String name;
-
-    public static void setDir(String dir) {
-    	scriptsDir[0] = dir;
-        if (JRubyAdapter.isInitialized()) {
-            Log.d("Changing JRuby current directory to " + scriptsDir);
-            JRubyAdapter.callScriptingContainerMethod(Void.class, "setCurrentDirectory", dir);
-        }
-    }
-
-    public static String getDir() {
-    	return scriptsDir[0];
-    }
-
-    public static File getDirFile() {
-    	return new File(getDir());
-    }
-
-    public File getFile() {
-        return new File(getDir(), name);
-    }
+    private final String name;
 
     public static void addDir(String dir) {
         String[] oldScriptsDir = scriptsDir;
@@ -49,11 +30,9 @@ public class Script {
     }
 
     public static String toCamelCase(String s) {
-        if (s == null) {
-            return null;
-        }
         String[] parts = s.replace(".rb", "").split("_");
         for (int i = 0 ; i < parts.length ; i++) {
+            if (parts[i].length() == 0) continue;
             parts[i] = parts[i].substring(0,1).toUpperCase() + parts[i].substring(1);
         }
         return java.util.Arrays.toString(parts).replace(", ", "").replaceAll("[\\[\\]]", "");
@@ -62,12 +41,12 @@ public class Script {
     public static String toSnakeCase(String s) {
         return s.replaceAll(
             String.format("%s|%s|%s",
-                "(?<=[A-Z])(?=[A-Z][a-z])",
+                "(?<=[A-Z])(?=[A-Z][a-z0-9])",
                 "(?<=[^A-Z])(?=[A-Z])",
-                "(?<=[A-Za-z])(?=[^A-Za-z])"
+                "(?<=[A-Za-z0-9])(?=[^A-Za-z0-9])"
             ),
             "_"
-        ).toLowerCase();
+        ).replace("__", "_").toLowerCase();
     }
 
     // Private static methods
@@ -130,42 +109,30 @@ public class Script {
     }
 
     boolean exists() {
-        for (String dir : scriptsDir) {
-            System.out.println("Checking file: " + dir + "/" + name);
-            if (new File(scriptsDir + "/" + name).exists()) {
-                return true;
-            }
-        }
-        try {
-            java.io.InputStream is = getClass().getClassLoader().getResourceAsStream(name);
-            System.out.println("Classpath resource: " + is);
-            if (is != null) {
-                is.close();
-                return true;
-            } else {
-                return false;
-            }
-        } catch (IOException ioex) {
-            System.out.println("Classpath resource exception: " + ioex);
-            return false;
-        }
+        return getAbsolutePath() != null;
     }
 
-    public Script setName(String name) {
-        this.name = name;
-        return this;
+    String getAbsolutePath() {
+        for (String dir : scriptsDir) {
+            String path = dir + "/" + name;
+            Log.d("Checking path: " + path);
+            if (new File(path).exists()) {
+                return "file:" + path;
+            }
+        }
+        URL url = getClass().getClassLoader().getResource(name);
+        Log.d("Classpath resource: " + url);
+        if (url != null) {
+            return url.toString();
+        }
+        return null;
     }
 
     public String getContents() throws IOException {
         InputStream is = null;
         BufferedReader buffer = null;
         try {
-            if (new File(scriptsDir + "/" + name).exists()) {
-                is = new java.io.FileInputStream(scriptsDir + "/" + name);
-            } else {
-                is = getClass().getClassLoader().getResourceAsStream(name);
-            }
-            buffer = new BufferedReader(new java.io.InputStreamReader(is), 8192);
+            buffer = new BufferedReader(new java.io.InputStreamReader(new URL(getAbsolutePath()).openStream()), 8192);
             StringBuilder source = new StringBuilder();
             while (true) {
                 String line = buffer.readLine();
@@ -185,15 +152,15 @@ public class Script {
 		}
 	}
 
-    // public File getFile() {
-    //     for (String dir : scriptsDir) {
-    //         File f = new File(dir, name);
-    //         if (f.exists()) {
-    //             return f;
-    //         }
-    //     }
-    //     return new File(scriptsDir[0], name);
-    // }
+  public File getFile() {
+    for (String dir : scriptsDir) {
+      File f = new File(dir, name);
+      if (f.exists()) {
+        return f;
+      }
+    }
+    return new File(scriptsDir[0], name);
+  }
 
     public String getName() {
         return name;
