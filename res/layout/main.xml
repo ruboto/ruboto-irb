@@ -33,7 +33,7 @@
 	    			android:textColor="#ffffffff"
 	    			android:scrollbars="vertical"
 				/>
-s			</LinearLayout>
+			</LinearLayout>
 			<LinearLayout
 				android:id="@+id/tab2"
 				android:orientation="vertical"
