@@ -146,6 +146,10 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	 * Setup
 	 */
 
+  // Needed because called during startup
+  public void initializeRuboto() {
+  }
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -255,6 +259,13 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 
 		sourceEditor = (LineNumberEditText) findViewById(R.id.source_editor);
 		fnameTextView = (TextView) findViewById(R.id.fname_textview);
+
+		final android.view.GestureDetector gestureDetector = new android.view.GestureDetector(new FlingGestureListener());
+		sourceEditor.setOnTouchListener(new android.view.View.OnTouchListener() {
+			public boolean onTouch(android.view.View view,android.view.MotionEvent event) {
+				  return gestureDetector.onTouchEvent(event);
+			}
+    });
 
 		editScript(IRBScript.UNTITLED_RB, false);
 	}
@@ -565,7 +576,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	}
 
 	@Override
-	protected Dialog onCreateDialog(int id) {
+	public Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
 		AlertDialog.Builder builder = new Builder(this);
 
@@ -723,9 +734,8 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	/* Save the script currently in the editor */
 	private void saveEditorScript() {
 		try {
-			IRBScript tmp = (IRBScript) (currentScript.setName(fnameTextView
-					.getText().toString()));
-			tmp.setContents(sourceEditor.getText().toString()).save();
+      currentScript = new IRBScript(fnameTextView.getText().toString());
+ 		  currentScript.setContents(sourceEditor.getText().toString()).save();
 			scanScripts();
 			Toast.makeText(this, "Saved " + currentScript.getName(),
 					Toast.LENGTH_SHORT).show();
@@ -942,7 +952,12 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	}
 
 	private void configScriptsDir(boolean checkForUpdate) {
-		IRBScript.setDir(IRB.scriptsDirName(this));
+    if (checkForUpdate) {
+      JRubyAdapter.addLoadPath(IRB.scriptsDirName(this));
+    } else {
+		  IRBScript.setDir(IRB.scriptsDirName(this));
+    }
+
 		if (!IRBScript.getDirFile().exists()) {
 			// on first install init directory + copy sample scripts
 			copyDemoScripts(DEMO_SCRIPTS, IRBScript.getDirFile());
