@@ -1,4 +1,8 @@
-if `ant -version` !~ /version (\d+)\.(\d+)\.(\d+)/ || $1.to_i < 1 || ($1.to_i == 1 && $2.to_i < 8)
+require 'rbconfig'
+
+ANT_CMD = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw/i) ? "ant.bat" : "ant"
+
+if `#{ANT_CMD} -version` !~ /version (\d+)\.(\d+)\.(\d+)/ || $1.to_i < 1 || ($1.to_i == 1 && $2.to_i < 8)
   puts "ANT version 1.8.0 or later required.  Version found: #{$1}.#{$2}.#{$3}"
   exit 1
 end
@@ -128,10 +132,12 @@ task :emulator do
   sh 'emulator -partition-size 1024 -avd Android_3.0'
 end
 
+desc 'Start the application on the device/emulator.'
 task :start do
   start_app
 end
 
+desc 'Stop the application on the device/emulator (requires emulator or rooted device).'
 task :stop do
   raise "Unable to stop app.  Only available on emulator." unless stop_app
 end
@@ -180,7 +186,7 @@ task :test => :uninstall do
   Dir.chdir('test') do
     puts 'Running tests'
     sh "adb uninstall #{package}.tests"
-    sh "ant instrument install test"
+    sh "#{ANT_CMD} instrument install test"
   end
 end
 
@@ -188,9 +194,9 @@ namespace :test do
   task :quick => :update_scripts do
     Dir.chdir('test') do
       puts 'Running quick tests'
-      sh 'ant instrument'
-      sh 'ant installi'
-      sh "ant run-tests-quick"
+      sh "#{ANT_CMD} instrument"
+      sh "#{ANT_CMD} installi"
+      sh "#{ANT_CMD} run-tests-quick"
     end
   end
 end
@@ -396,9 +402,9 @@ def build_apk(t, release)
     puts "Forcing rebuild of #{apk_file}."
   end
   if release
-    sh 'ant release'
+    sh "#{ANT_CMD} release"
   else
-    sh 'ant debug'
+    sh "#{ANT_CMD} debug"
   end
   return true
 end
