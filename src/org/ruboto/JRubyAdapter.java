@@ -49,7 +49,7 @@ public class JRubyAdapter {
      */
     @SuppressWarnings("unchecked")
     @Deprecated public static <T> T callMethod(Object receiver, String methodName, Object[] args, Class<T> returnType) {
-        return runRubyMethod(returnType, receiver, methodName, args);
+        return (T) runRubyMethod(returnType, receiver, methodName, args);
     }
 
     /**
@@ -57,7 +57,7 @@ public class JRubyAdapter {
      */
     @SuppressWarnings("unchecked")
     @Deprecated public static <T> T callMethod(Object receiver, String methodName, Object arg, Class<T> returnType) {
-        return runRubyMethod(returnType, receiver, methodName, arg);
+        return (T) runRubyMethod(returnType, receiver, methodName, arg);
     }
 
     /**
@@ -65,7 +65,7 @@ public class JRubyAdapter {
      */
     @SuppressWarnings("unchecked")
     @Deprecated public static <T> T callMethod(Object receiver, String methodName, Class<T> returnType) {
-        return runRubyMethod(returnType, receiver, methodName);
+        return (T) runRubyMethod(returnType, receiver, methodName);
     }
 
     /**
@@ -106,7 +106,7 @@ public class JRubyAdapter {
      * @deprecated  As of Ruboto 0.7.0, replaced by {@link #runScriptlet(String code)}
      */
     @Deprecated public static String execute(String code) {
-        return runRubyMethod(String.class, exec(code), "inspect");
+        return (String) runRubyMethod(String.class, exec(code), "inspect");
     }
 
     public static Object get(String name) {
@@ -127,7 +127,7 @@ public class JRubyAdapter {
     }
 
     public static String getScriptFilename() {
-        return callScriptingContainerMethod(String.class, "getScriptFilename");
+        return (String) callScriptingContainerMethod(String.class, "getScriptFilename");
     }
 
     public static Object runRubyMethod(Object receiver, String methodName, Object... args) {
@@ -163,6 +163,7 @@ public class JRubyAdapter {
     @SuppressWarnings("unchecked")
     public static <T> T runRubyMethod(Class<T> returnType, Object receiver, String methodName, Object... args) {
         try {
+            // FIXME(uwe):  Simplify when we stop supporting JRuby < 1.7.0
             if (isJRubyPreOneSeven()) {
                 if (args.length == 0) {
                   Method m = ruby.getClass().getMethod("callMethod", Object.class, String.class, Class.class);
@@ -216,14 +217,18 @@ public class JRubyAdapter {
             throw new RuntimeException(iae);
         } catch (java.lang.reflect.InvocationTargetException ite) {
             if (isDebugBuild) {
-                throw ((RuntimeException) ite.getCause());
+                if (ite.getCause() instanceof RuntimeException) {
+                    throw ((RuntimeException) ite.getCause());
+                } else {
+                    throw ((Error) ite.getCause());
+                }
             } else {
                 return null;
             }
         }
     }
 
-    public static synchronized boolean setUpJRuby(Context appContext) {
+    public static boolean setUpJRuby(Context appContext) {
         return setUpJRuby(appContext, output == null ? System.out : output);
     }
 
@@ -237,18 +242,25 @@ public class JRubyAdapter {
             // END Ruboto HeapAlloc
             setDebugBuild(appContext);
             Log.d("Setting up JRuby runtime (" + (isDebugBuild ? "DEBUG" : "RELEASE") + ")");
+            System.setProperty("jruby.compile.mode", "OFF"); // OFF OFFIR JITIR? FORCEIR
+            // System.setProperty("jruby.compile.backend", "DALVIK");
             System.setProperty("jruby.bytecode.version", "1.6");
             System.setProperty("jruby.interfaces.useProxy", "true");
             System.setProperty("jruby.management.enabled", "false");
             System.setProperty("jruby.objectspace.enabled", "false");
             System.setProperty("jruby.thread.pooling", "true");
             System.setProperty("jruby.native.enabled", "false");
-            // System.setProperty("jruby.compat.version", "RUBY1_8"); // RUBY1_9 is the default
+            // System.setProperty("jruby.compat.version", "RUBY1_8"); // RUBY1_9 is the default in JRuby 1.7
+            System.setProperty("jruby.ir.passes", "LocalOptimizationPass,DeadCodeElimination");
+            System.setProperty("jruby.backtrace.style", "normal"); // normal raw full mri
 
-            // Uncomment these to debug Ruby source loading
-            // System.setProperty("jruby.debug.loadService", "true");
+            // Uncomment these to debug/profile Ruby source loading
+            System.setProperty("jruby.debug.loadService", "true");
             // System.setProperty("jruby.debug.loadService.timing", "true");
 
+            // Used to enable JRuby to generate proxy classes
+            System.setProperty("jruby.ji.proxyClassFactory", "org.ruboto.DalvikProxyClassFactory");
+            System.setProperty("jruby.class.cache.path", appContext.getDir("dex", 0).getAbsolutePath());
 
             ClassLoader classLoader;
             Class<?> scriptingContainerClass;
@@ -296,14 +308,6 @@ public class JRubyAdapter {
                          .newInstance(Enum.valueOf(scopeClass, localContextScope), 
                                       Enum.valueOf(behaviorClass, localVariableBehavior));
 
-                Class compileModeClass = Class.forName("org.jruby.RubyInstanceConfig$CompileMode", true, classLoader);
-                callScriptingContainerMethod(Void.class, "setCompileMode", Enum.valueOf(compileModeClass, "OFF"));
-
-                // Class traceTypeClass = Class.forName("org.jruby.runtime.backtrace.TraceType", true, classLoader);
-                // Method traceTypeForMethod = traceTypeClass.getMethod("traceTypeFor", String.class);
-                // Object traceTypeRaw = traceTypeForMethod.invoke(null, "raw");
-                // callScriptingContainerMethod(Void.class, "setTraceType", traceTypeRaw);
-
                 // FIXME(uwe): Write tutorial on profiling.
                 // container.getProvider().getRubyInstanceConfig().setProfilingMode(mode);
 
@@ -324,7 +328,16 @@ public class JRubyAdapter {
                   setOutputStream(output);
                 }
 
-                String jrubyHome = "file:" + apkName + "!";
+                String jrubyHome = "file:" + apkName + "!/jruby.home";
+
+                // FIXME(uwe): Remove when we stop supporting RubotoCore 0.4.7
+                Log.i("RUBOTO_CORE_VERSION_NAME: " + RUBOTO_CORE_VERSION_NAME);
+                if (RUBOTO_CORE_VERSION_NAME != null &&
+                        (RUBOTO_CORE_VERSION_NAME.equals("0.4.7") || RUBOTO_CORE_VERSION_NAME.equals("0.4.8"))) {
+                    jrubyHome = "file:" + apkName + "!";
+                }
+                // EMXIF
+
                 Log.i("Setting JRUBY_HOME: " + jrubyHome);
                 System.setProperty("jruby.home", jrubyHome);
 
@@ -360,7 +373,7 @@ public class JRubyAdapter {
 
     // Private methods
 
-    private static Boolean addLoadPath(String scriptsDir) {
+    public static Boolean addLoadPath(String scriptsDir) {
         if (new File(scriptsDir).exists()) {
             Log.i("Added directory to load path: " + scriptsDir);
             Script.addDir(scriptsDir);
@@ -375,7 +388,7 @@ public class JRubyAdapter {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T callScriptingContainerMethod(Class<T> returnType, String methodName, Object... args) {
+    private static <T> T callScriptingContainerMethod(Class<T> returnType, String methodName, Object... args) {
         Class<?>[] argClasses = new Class[args.length];
         for (int i = 0; i < argClasses.length; i++) {
             argClasses[i] = args[i].getClass();
@@ -482,7 +495,7 @@ public class JRubyAdapter {
         }
     }
 
-    private static void setLocalContextScope(String val) {
+    public static void setLocalContextScope(String val) {
         localContextScope = val;
     }
 
