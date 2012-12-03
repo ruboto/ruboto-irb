@@ -158,9 +158,10 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	}
 
   protected void fireRubotoActivity() {
+    JRubyAdapter.put("$irb", this);
     if(appStarted) return;
     super.fireRubotoActivity();
-		configScriptsDir(true);
+    configScriptsDir(true);
   }
 
   public boolean rubotoAttachable() {
