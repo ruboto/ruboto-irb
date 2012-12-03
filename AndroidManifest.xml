@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?> 
-<manifest android:versionCode='12' xmlns:android='http://schemas.android.com/apk/res/android' package='org.ruboto.irb' android:versionName='@string/version_name' android:installLocation='preferExternal'>
-    <application android:hardwareAccelerated='true' android:largeHeap='true' android:icon='@drawable/icon' android:label='@string/app_name'>
-        <activity android:name='IRB' android:hardwareAccelerated='false' android:alwaysRetainTaskState='true' android:windowSoftInputMode='adjustResize' android:configChanges='orientation|screenSize' android:label='@string/app_name'>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='org.ruboto.irb' android:installLocation='preferExternal' android:versionCode='12' android:versionName='@string/version_name'>
+    <application android:hardwareAccelerated='true' android:label='@string/app_name' android:icon='@drawable/icon' android:largeHeap='true'>
+        <activity android:hardwareAccelerated='false' android:label='@string/app_name' android:windowSoftInputMode='adjustResize' android:alwaysRetainTaskState='true' android:configChanges='orientation|screenSize' android:name='IRB'>
             <intent-filter>
                 <action android:name='android.intent.action.MAIN'/>
                 <category android:name='android.intent.category.LAUNCHER'/>
@@ -21,31 +21,31 @@
                 <category android:name='android.intent.category.DEFAULT'/>
             </intent-filter>
         </activity>
-        <activity android:name='ScriptLaunch' android:configChanges='orientation|screenSize'>
+        <activity android:configChanges='orientation|screenSize' android:name='ScriptLaunch'>
             <intent-filter>
                 <action android:name='org.ruboto.intent.action.LAUNCH_SCRIPT'/>
                 <category android:name='android.intent.category.DEFAULT'/>
             </intent-filter>
         </activity>
-        <activity android:name='org.ruboto.RubotoActivity' android:alwaysRetainTaskState='true' android:configChanges='orientation|screenSize'/>
-        <activity android:theme='@android:style/Theme.Dialog' android:name='org.ruboto.RubotoDialog' android:configChanges='orientation|screenSize'/>
+        <activity android:alwaysRetainTaskState='true' android:configChanges='orientation|screenSize' android:name='org.ruboto.RubotoActivity'/>
+        <activity android:theme='@android:style/Theme.Dialog' android:configChanges='orientation|screenSize' android:name='org.ruboto.RubotoDialog'/>
         <activity android:name='org.ruboto.RubotoPreferenceActivity'/>
-        <activity android:name='net.android.facebook.TestConnect' android:configChanges='orientation|screenSize'/>
-        <activity android:name='net.android.facebook.TestPost' android:configChanges='orientation|screenSize'/>
-        <service android:name='org.ruboto.RubotoService' android:exported='false'/>
+        <activity android:configChanges='orientation|screenSize' android:name='net.android.facebook.TestConnect'/>
+        <activity android:configChanges='orientation|screenSize' android:name='net.android.facebook.TestPost'/>
+        <service android:exported='false' android:name='org.ruboto.RubotoService'/>
     </application>
-    <uses-sdk android:minSdkVersion='7' android:targetSdkVersion='13'/>
-    <supports-screens android:normalScreens='true' android:largeScreens='true' android:xlargeScreens='true' android:anyDensity='true' android:smallScreens='true'/>
-    <uses-feature android:name='android.hardware.telephony' android:required='false'/>
-    <uses-feature android:name='android.hardware.touchscreen' android:required='false'/>
-    <uses-feature android:name='android.hardware.location' android:required='false'/>
-    <uses-feature android:name='android.hardware.location.gps' android:required='false'/>
-    <uses-feature android:name='android.hardware.location.network' android:required='false'/>
-    <uses-feature android:name='android.hardware.wifi' android:required='false'/>
-    <uses-feature android:name='android.hardware.microphone' android:required='false'/>
-    <uses-feature android:name='android.hardware.camera' android:required='false'/>
-    <uses-feature android:name='android.hardware.camera.autofocus' android:required='false'/>
-    <uses-feature android:name='android.hardware.bluetooth' android:required='false'/>
+    <uses-sdk android:targetSdkVersion='13' android:minSdkVersion='7'/>
+    <supports-screens android:xlargeScreens='true' android:largeScreens='true' android:normalScreens='true' android:anyDensity='true' android:smallScreens='true'/>
+    <uses-feature android:required='false' android:name='android.hardware.telephony'/>
+    <uses-feature android:required='false' android:name='android.hardware.touchscreen'/>
+    <uses-feature android:required='false' android:name='android.hardware.location'/>
+    <uses-feature android:required='false' android:name='android.hardware.location.gps'/>
+    <uses-feature android:required='false' android:name='android.hardware.location.network'/>
+    <uses-feature android:required='false' android:name='android.hardware.wifi'/>
+    <uses-feature android:required='false' android:name='android.hardware.microphone'/>
+    <uses-feature android:required='false' android:name='android.hardware.camera'/>
+    <uses-feature android:required='false' android:name='android.hardware.camera.autofocus'/>
+    <uses-feature android:required='false' android:name='android.hardware.bluetooth'/>
     <uses-permission android:name='android.permission.WRITE_EXTERNAL_STORAGE'/>
     <uses-permission android:name='com.android.launcher.permission.INSTALL_SHORTCUT'/>
     <uses-permission android:name='android.permission.INTERNET'/>

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?> 
 <!-- package name must be unique so suffix with "tests" so package loader doesn't ignore us --> 
-<manifest package='org.ruboto.irb.tests' android:versionName='1.0' xmlns:android='http://schemas.android.com/apk/res/android' android:versionCode='1'>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='org.ruboto.irb.tests' android:versionCode='1' android:versionName='1.0'>
     <!-- We add an application tag here just so that we can indicate that
          this package needs to link against the android.test library,
          which is needed when building test cases. -->
@@ -12,5 +12,5 @@
     the package of org.jruby.  To run the tests use the command:
     "adb shell am instrument -w org.jruby.ruboto.tests/android.test.InstrumentationTestRunner"
     -->
-    <instrumentation android:name='org.ruboto.test.InstrumentationTestRunner' android:targetPackage='org.ruboto.irb' android:label='Tests for IRB'/>
+    <instrumentation android:label='Tests for IRB' android:name='org.ruboto.test.InstrumentationTestRunner' android:targetPackage='org.ruboto.irb'/>
 </manifest>

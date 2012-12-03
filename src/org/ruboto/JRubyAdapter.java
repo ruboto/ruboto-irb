@@ -236,13 +236,13 @@ public class JRubyAdapter {
     public static synchronized boolean setUpJRuby(Context appContext, PrintStream out) {
         if (!initialized) {
             // BEGIN Ruboto HeapAlloc
-            @SuppressWarnings("unused")
-            byte[] arrayForHeapAllocation = new byte[13 * 1024 * 1024];
-            arrayForHeapAllocation = null;
+            // @SuppressWarnings("unused")
+            // byte[] arrayForHeapAllocation = new byte[13 * 1024 * 1024];
+            // arrayForHeapAllocation = null;
             // END Ruboto HeapAlloc
             setDebugBuild(appContext);
             Log.d("Setting up JRuby runtime (" + (isDebugBuild ? "DEBUG" : "RELEASE") + ")");
-            System.setProperty("jruby.compile.mode", "OFF"); // OFF OFFIR JITIR? FORCEIR
+            System.setProperty("jruby.compile.mode", "OFF"); // OFF OFFIR JITIR? FORCE FORCEIR
             // System.setProperty("jruby.compile.backend", "DALVIK");
             System.setProperty("jruby.bytecode.version", "1.6");
             System.setProperty("jruby.interfaces.useProxy", "true");
@@ -255,7 +255,7 @@ public class JRubyAdapter {
             System.setProperty("jruby.backtrace.style", "normal"); // normal raw full mri
 
             // Uncomment these to debug/profile Ruby source loading
-            System.setProperty("jruby.debug.loadService", "true");
+            // System.setProperty("jruby.debug.loadService", "true");
             // System.setProperty("jruby.debug.loadService.timing", "true");
 
             // Used to enable JRuby to generate proxy classes
@@ -342,6 +342,7 @@ public class JRubyAdapter {
                 System.setProperty("jruby.home", jrubyHome);
 
                 addLoadPath(scriptsDirName(appContext));
+    	        put("$package_name", appContext.getPackageName());
 
                 initialized = true;
             } catch (ClassNotFoundException e) {
@@ -371,8 +372,6 @@ public class JRubyAdapter {
         return RUBOTO_CORE_VERSION_NAME != null;
     }
 
-    // Private methods
-
     public static Boolean addLoadPath(String scriptsDir) {
         if (new File(scriptsDir).exists()) {
             Log.i("Added directory to load path: " + scriptsDir);
@@ -386,6 +385,8 @@ public class JRubyAdapter {
             return false;
         }
     }
+
+    // Private methods
 
     @SuppressWarnings("unchecked")
     private static <T> T callScriptingContainerMethod(Class<T> returnType, String methodName, Object... args) {
