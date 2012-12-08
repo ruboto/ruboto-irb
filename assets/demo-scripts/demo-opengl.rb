@@ -8,9 +8,7 @@
 #######################################################
 
 require 'ruboto/activity'
-require 'ruboto/generate'
-
-java_import "android.opengl.GLSurfaceView"
+require 'ruboto/widget'
 
 java_import "javax.microedition.khronos.egl.EGL10"
 java_import "javax.microedition.khronos.egl.EGLConfig"
@@ -19,7 +17,8 @@ java_import "javax.microedition.khronos.opengles.GL10"
 java_import "java.nio.ByteBuffer"
 java_import "java.nio.ByteOrder"
 java_import "java.nio.IntBuffer"
-java_import "android.view.MotionEvent"
+
+ruboto_import_widget :GLSurfaceView, "android.opengl"
 
 #######################################################
 #
@@ -146,39 +145,8 @@ class RubotoGLSurfaceViewRenderer
     gl.glEnable(GL10::GL_DEPTH_TEST)
   end
   
-  def changeAngle
+  def change_angle
     @offset = -@offset
-  end
-end
-
-#######################################################
-#
-# TouchGLSurfaceView
-#
-# A surface view that reacts to touch events
-#
-
-ruboto_generate(android.opengl.GLSurfaceView => "TouchSurfaceView")
-      
-class TouchSurfaceView
-
-  def initialize(context)
-    super context
-    
-    self.initialize_ruboto_callbacks do
-      def on_touch_event(event)
-        if event.getAction == MotionEvent::ACTION_DOWN
-          @renderer.changeAngle
-          request_render
-        end      
-        return true 
-      end
-    end    
-  end
-  
-  def renderer= renderer
-    @renderer = renderer
-    super renderer
   end
 end
    
@@ -188,20 +156,43 @@ end
 #
 # Start a new activity or connect to $activity
 #   
-$activity.start_ruboto_activity "$glsurface" do
-  setTitle "GLSurfaceView"
 
+class OpenGLDemo
   def on_create(bundle)
-    @surface_view = TouchSurfaceView.new(self)
-    @surface_view.renderer = RubotoGLSurfaceViewRenderer.new 
-    self.content_view = @surface_view  
+    super
+
+    begin
+      action_bar.hide
+    rescue
+      set_title("GLSurfaceView Demo")
+    end
+
+    @renderer = RubotoGLSurfaceViewRenderer.new
+    @surface_view = g_l_surface_view :renderer => @renderer, 
+                                     :on_click_listener => (proc{@renderer.change_angle})
+
+    self.content_view = @surface_view
   end 
     
   def on_resume
+    super
     @surface_view.on_resume
   end
 
   def on_pause
+    super
     @surface_view.on_pause
   end        
 end
+
+#######################################################
+#
+# Needed because this is called from inside of Ruboto IRB
+#
+
+$irb.start_ruboto_activity :class_name => "OpenGLDemo"
+
+# The other option is the remove the line above and to replace
+# the "class OpenGLDemo" line with this:
+#   $irb.start_ruboto_activity "$glsurface" do
+

@@ -21,35 +21,42 @@ class Camera
 end
 
 class RubotoSurfaceHolderCallback
+  attr_reader :camera
+
   def surfaceCreated(holder)
-    $camera = Camera.open # Add (1) for front camera
-    $camera.preview_display = holder
-    $camera.start_preview
+    @camera = Camera.open # Add (1) for front camera
+    @camera.preview_display = holder
+    @camera.start_preview
   end
 
   def surfaceChanged(holder, format, width, height)
   end
 
   def surfaceDestroyed(holder)
-    $camera.stop_preview
-    $camera.release
-    $camera = nil
+    @camera.stop_preview
+    @camera.release
+    @camera = nil
   end
 end
   
-$activity.start_ruboto_activity "$camera_demo", RubotoActivity, R.style::Theme_NoTitleBar_Fullscreen do
+class CameraDemo
   def on_create(bundle)
-    @surface_view = android.view.SurfaceView.new(self)
+    super
+    @surface_view = android.view.SurfaceView.new(@ruboto_java_instance)
     @surface_view.set_on_click_listener{|v| take_picture}
-    @surface_view.holder.add_callback RubotoSurfaceHolderCallback.new
+    @holder_callback = RubotoSurfaceHolderCallback.new
+    @surface_view.holder.add_callback @holder_callback
     # Deprecated, but still required for older API version
     @surface_view.holder.set_type android.view.SurfaceHolder::SURFACE_TYPE_PUSH_BUFFERS
     self.content_view = @surface_view
   end
 
   def take_picture
-    picture_file = "#{Dir.pwd}/picture#{$camera.picture_id}.jpg"
-    $camera.take_picture(proc{toast "Picture taken"}, nil) do |data, camera|
+    camera = @holder_callback.camera
+    return unless camera
+
+    picture_file = "#{Dir.pwd}/picture#{camera.picture_id}.jpg"
+    camera.take_picture(proc{toast "Picture taken"}, nil) do |data, camera|
       fos = java.io.FileOutputStream.new(picture_file)
       fos.write(data)
       fos.close
@@ -58,3 +65,5 @@ $activity.start_ruboto_activity "$camera_demo", RubotoActivity, R.style::Theme_N
   end
 end
 
+$irb.start_ruboto_activity "$camera_demo", RubotoActivity, R.style::Theme_NoTitleBar_Fullscreen, 
+                             :class_name => "CameraDemo"

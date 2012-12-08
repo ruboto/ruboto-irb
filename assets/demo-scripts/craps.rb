@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 ######################################################
 #
 # craps.rb (by Daniel Jackoway)
@@ -149,7 +148,7 @@ $point = nil
 # all of the bets on the table
 $bets = []
 # all of the types of bets one can place
-AVAILABLE_BETS = subclasses_of Bet
+$AVAILABLE_BETS = subclasses_of Bet
 
 
 ###############################################################################
@@ -160,102 +159,107 @@ AVAILABLE_BETS = subclasses_of Bet
 #
 ###############################################################################
 
-require 'ruboto'
-confirm_ruboto_version(3, false)
+require 'ruboto/activity'
+require 'ruboto/widget'
+require 'ruboto/util/toast'
 
 ruboto_import_widgets :TextView, :LinearLayout, :Button, :ListView, :EditText
 
-
-$activity.start_ruboto_activity "$craps" do
-  setTitle "Craps"
-  setup_content do
-    linear_layout :orientation => LinearLayout::VERTICAL do
-      linear_layout :orientation => LinearLayout::HORIZONTAL do
+class CrapsActivity
+  def on_create(b)
+    super
+    setTitle "Craps"
+    set_content_view(linear_layout(:orientation => :vertical) do
+      linear_layout(:orientation => :horizontal) do
         text_view :text => "You have $"
         @money_view = text_view :text => "#{$money}"
       end
       @point_view = text_view :text => "Come-out"
-      linear_layout :orientation => LinearLayout::HORIZONTAL do
-        button :text => "Roll", :width => :wrap_content
+      linear_layout(:orientation => :horizontal) do
+        button :text => "Roll", :width => :wrap_content, :on_click_listener => (proc{roll}) 
         @roll_view = text_view :text => ""
       end
-      button :text => "Place a Bet", :width => :wrap_content
-    end
+      button :text => "Place a Bet", :width => :wrap_content, :on_click_listener => (proc{launch_bets})
+    end)
   end
 
-  handle_click do |view|
-    case view.getText
-    when "Roll" then roll
-    when "Place a Bet" then launch_bets
-    else toast "foo"
-    end
+  def launch_bets
+    start_ruboto_activity :class_name => "BetList"
   end
-end
 
-def launch_bets
-  self.start_ruboto_activity("$bet_list") do
-    setTitle "Place a Bet"
-    setup_content {list_view :list => AVAILABLE_BETS}
-    handle_item_click do |adapter_view, view, pos, item_id|
-      klass = AVAILABLE_BETS[pos]
-      $activity.start_ruboto_activity "$money_dialog" do
-        setTitle klass.to_s
-        setup_content do
-          linear_layout :orientation => LinearLayout::VERTICAL do
-            @bet_amount = edit_text
-            button :text => "Place Bet"
-          end
-        end
+  def roll
+    $bets.compact!
 
-        handle_click do |view|
-          if view.getText == "Place Bet"
-            amount = @bet_amount.getText.to_s.to_i
-            if amount > 0
-              $bets << bet(klass, amount)
-            else
-              toast "enter a valid integer greater than 0"
-            end
-          else
-            toast "something bad happened"
-          end
-        end
+    roll = Roll.new
+    @roll_view.setText roll.dice.inspect
+
+    delete = []
+    $bets.each do |bet|
+      result = bet.play(roll, $point)
+      if !result
+        toast "your #{bet.name} bet is still on"
+      elsif result < 0
+        toast "you lost your #{bet.name} bet"
+        delete << bet
+      else
+        # they get their money back (1 * money) + the payout (result * money)
+        toast "you won your #{bet.name} bet!"
+        $money += bet.money * (1 + result)
+        delete << bet
       end
     end
+    delete.each {|bet| $bets.delete bet }
+
+    if $point
+      $point = nil if $point == roll.sum || roll.sum == 7
+    else
+      $point = roll.sum if [4,5,6,8,9,10].include? roll.sum
+    end
+
+    @money_view.setText $money.to_s
+    @point_view.setText $point ? "The point is #{$point}" : "Come-out"
   end
 end
 
+class BetList
+  def on_create(b)
+    super
+    setTitle "Place a Bet"
+    self.content_view = list_view(:list => $AVAILABLE_BETS, 
+                                  :on_item_click_listener => (proc{|av, v, p, i| item_clicked(p)}))
+  end
 
+  def item_clicked(pos)
+    MoneyDialog.klass = $AVAILABLE_BETS[pos]
+    start_ruboto_activity :class_name => "MoneyDialog"
+    finish
+  end
+end
 
-def roll
-  $bets.compact!
+class MoneyDialog
+  def self.klass=(k)
+    @@klass = k
+  end
 
-  roll = Roll.new
-  @roll_view.setText roll.dice.inspect
+  def on_create(b)
+    super
+    setTitle @@klass.to_s
+    set_content_view(
+      linear_layout(:orientation => :vertical) do
+        @bet_amount = edit_text
+        button :text => "Place Bet", :on_click_listener => (proc{place_bet}) 
+      end)
+  end
 
-  delete = []
-  $bets.each do |bet|
-    result = bet.play(roll, $point)
-    if !result
-      toast "your #{bet.name} bet is still on"
-    elsif result < 0
-      toast "you lost your #{bet.name} bet"
-      delete << bet
+  def place_bet
+    amount = @bet_amount.getText.to_s.to_i
+    if amount > 0
+      $bets << bet(@@klass, amount)
+      finish
     else
-      # they get their money back (1 * money) + the payout (result * money)
-      toast "you won your #{bet.name} bet!"
-      $money += bet.money * (1 + result)
-      delete << bet
+      toast "enter a valid integer greater than 0"
     end
   end
-  delete.each {|bet| $bets.delete bet }
-
-
-  if $point
-    $point = nil if $point == roll.sum || roll.sum == 7
-  else
-    $point = roll.sum if [4,5,6,8,9,10].include? roll.sum
-  end
-
-  @money_view.setText $money.to_s
-  @point_view.setText $point ? "The point is #{$point}" : "Come-out"
 end
+
+$irb.start_ruboto_activity :class_name => "CrapsActivity"

@@ -9,71 +9,86 @@
 
 require 'ruboto/activity'
 require 'ruboto/widget'
-require 'ruboto/menu'
 require 'ruboto/util/toast'
-confirm_ruboto_version(10, false)
+
+java_import "android.view.MenuItem"
 
 #
 # ruboto_import_widgets imports the UI widgets needed
-# by the activities in this script. ListView and Button 
-# come in automatically because those classes get extended.
+# by the activities in this script. 
 #
 
 ruboto_import_widgets :LinearLayout, :EditText, :TextView, :ListView, :Button
+
+$options = ["Hello", "World", "Mr", "Ruboto"]
 
 #
 # $activity is the Activity that launched the 
 # script engine. The start_ruboto_activity
 # method creates a new RubotoActivity to work with.
-# After launch, the new activity can be accessed 
-# through the $ruboto_demo (in this case) global.
-# You man not need the global, because the block
-# to start_ruboto_activity is executed in the 
-# context of the new activity as it initializes. 
 #
-$activity.start_ruboto_activity "$ruboto_demo" do
+$irb.start_ruboto_activity do
   #
   # on_create uses methods created through
-  # ruboto_import_widgets to build a UI. All
-  # code is executed in the context of the 
-  # activity.
+  # ruboto_import_widgets to build a UI. 
+  # All code will be executed in the context  
+  # of the activity.
   #
   def on_create(bundle)
+    super
+
+    self.title = "Simple Ruboto Demo"
+
+    # Easy way to allow the list activity to call back into this activity
+    $main_activity = self
+
     setContentView(
       linear_layout(:orientation => LinearLayout::VERTICAL) do
         @et = edit_text
         linear_layout do
-          button :text => "Hello, World",  :on_click_listener => proc{|v| my_click(v.getText)}
-          button :text => "Hello, Ruboto", :on_click_listener => proc{|v| my_click(v.getText)}
-          button :text => "List",          :on_click_listener => proc{|v| launch_list}
+          $options.each do |i|
+            button :text => i,  :on_click_listener => proc{|v| my_click(v.text)}
+          end
+
+          button :text => "List", :on_click_listener => proc{|v| launch_list}
         end
         @tv = text_view :text => "Click buttons or menu items:"
       end)
   end
 
   #
-  # All "handle" methods register for the 
-  # corresponding callback (in this case 
-  # OnCreateOptionsMenu. Creates menus that
-  # execute the corresponding block (still
-  # in the context of the activity)
+  # Creates menus items
   #
-  handle_create_options_menu do |menu|
-    add_menu("Hello, World") {my_click "Hello, World"}
-    add_menu("Hello, Ruboto") {my_click "Hello, Ruboto"}
-    add_menu("Exit") {finish}
+
+  def on_create_options_menu(m)
+    $options.each do |i|
+      mi = m.add(i)
+      mi.show_as_action = MenuItem::SHOW_AS_ACTION_IF_ROOM if MenuItem.const_defined?("SHOW_AS_ACTION_IF_ROOM")
+    end
+
+    m.add("Exit")
+
+    true
+  end
+
+  def on_options_item_selected(mi)
+    case mi.title.to_s
+    when "Exit"
+      finish
+    else
+      my_click(mi.title.to_s)
+    end
+
     true
   end
 
   #
-  # Extra singleton methods for this activity
-  # need to be declared with self. This one 
-  # handles some of the button and menu clicks.
+  # Handles text update for clicks.
   # 
   def my_click(text)
-    toast text
-    @tv.append "\n#{text}"
-    @et.setText text
+    toast "Hello, #{text}"
+    @tv.append "\nHello, #{text}"
+    @et.text = "Hello, #{text}"
   end
 
   #
@@ -81,12 +96,12 @@ $activity.start_ruboto_activity "$ruboto_demo" do
   # a ListView.
   #
   def launch_list
-    self.start_ruboto_activity("$my_list") do
-      setTitle "Pick Something"
-      @list = ["Hello, World", "Hello, Ruboto"]
+    self.start_ruboto_activity do
       def on_create(bundle)
-        setContentView(list_view :list => @list, 
-          :on_item_click_listener => proc{|av, v, pos, item_id| toast(@list[pos]); finish})
+        super
+        self.title = "Pick One"
+        setContentView(list_view :list => $options, 
+          :on_item_click_listener => proc{|av, v, pos, i| puts $main_activity.my_click(v.text.to_s); finish})
       end
     end
   end
