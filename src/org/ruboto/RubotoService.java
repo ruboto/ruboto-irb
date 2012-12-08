@@ -17,30 +17,86 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
      */
     @Override
     public void onCreate() {
-        if (ScriptLoader.isCalledFromJRuby()) {
-            super.onCreate();
-            return;
-        }
-	    System.out.println("RubotoService.onCreate()");
+      System.out.println("RubotoService onCreate(): " + getClass().getName());
 
-        if (JRubyAdapter.setUpJRuby(this)) {
-            ScriptLoader.loadScript(this);
-        } else {
-            // FIXME(uwe):  What to do if the Ruboto Core platform cannot be found?
-        }
+      if (ScriptLoader.isCalledFromJRuby()) {
+        super.onCreate();
+        return;
+      }
+
+      if (JRubyAdapter.isInitialized() && scriptInfo.isReadyToLoad()) {
+  	    ScriptLoader.loadScript(this);
+      } else {
+        super.onCreate();
+      }
     }
 
-  /****************************************************************************************
-   * 
-   *  Generated Methods
-   */
+  @Override
+  public int onStartCommand(android.content.Intent intent, int flags, int startId) {
+	  if (ScriptLoader.isCalledFromJRuby()) return super.onStartCommand(intent, flags, startId);
 
+    if (!JRubyAdapter.isInitialized()) {
+      Log.i("Method called before JRuby runtime was initialized: RubotoService#onStartCommand");
+      return super.onStartCommand(intent, flags, startId);
+    }
+	
+    if (JRubyAdapter.isInitialized() && !scriptInfo.isLoaded()) {
+      scriptInfo.setFromIntent(intent);
+ 	    ScriptLoader.loadScript(this);
+    }
+	  
+	  String rubyClassName = scriptInfo.getRubyClassName();
+	  if (rubyClassName == null) return super.onStartCommand(intent, flags, startId);
+	  if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_start_command}")) {
+		  // FIXME(uwe): Simplify when we stop support for RubotoCore 0.4.7
+      if (JRubyAdapter.isJRubyPreOneSeven()) {
+        JRubyAdapter.put("$arg_intent", intent);
+        JRubyAdapter.put("$arg_flags", flags);
+        JRubyAdapter.put("$arg_startId", startId);
+        JRubyAdapter.put("$ruby_instance", scriptInfo.getRubyInstance());
+        return (Integer) ((Number)JRubyAdapter.runScriptlet("$ruby_instance.on_start_command($arg_intent, $arg_flags, $arg_startId)")).intValue();
+      } else {
+        if (JRubyAdapter.isJRubyOneSeven()) {
+          return (Integer) JRubyAdapter.runRubyMethod(Integer.class, scriptInfo.getRubyInstance(), "on_start_command", new Object[]{intent, flags, startId});
+        } else {
+          throw new RuntimeException("Unknown JRuby version: " + JRubyAdapter.get("JRUBY_VERSION"));
+        }
+      }
+    } else {
+      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onStartCommand}")) {
+        // FIXME(uwe): Simplify when we stop support for RubotoCore 0.4.7
+        if (JRubyAdapter.isJRubyPreOneSeven()) {
+          JRubyAdapter.put("$arg_intent", intent);
+          JRubyAdapter.put("$arg_flags", flags);
+          JRubyAdapter.put("$arg_startId", startId);
+          JRubyAdapter.put("$ruby_instance", scriptInfo.getRubyInstance());
+          return (Integer) ((Number)JRubyAdapter.runScriptlet("$ruby_instance.onStartCommand($arg_intent, $arg_flags, $arg_startId)")).intValue();
+        } else {
+          if (JRubyAdapter.isJRubyOneSeven()) {
+            return (Integer) JRubyAdapter.runRubyMethod(Integer.class, scriptInfo.getRubyInstance(), "onStartCommand", new Object[]{intent, flags, startId});
+          } else {
+            throw new RuntimeException("Unknown JRuby version: " + JRubyAdapter.get("JRUBY_VERSION"));
+          }
+        }
+      } else {
+        return super.onStartCommand(intent, flags, startId);
+      }
+    }
+  }
+
+  @Override
   public android.os.IBinder onBind(android.content.Intent intent) {
     if (ScriptLoader.isCalledFromJRuby()) return null;
     if (!JRubyAdapter.isInitialized()) {
       Log.i("Method called before JRuby runtime was initialized: RubotoService#onBind");
       return null;
     }
+
+    if (JRubyAdapter.isInitialized() && !scriptInfo.isLoaded()) {
+      scriptInfo.setFromIntent(intent);
+      ScriptLoader.loadScript(this);
+    }
+      
     String rubyClassName = scriptInfo.getRubyClassName();
     if (rubyClassName == null) return null;
     if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_bind}")) {
@@ -75,6 +131,12 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
       }
     }
   }
+
+
+  /****************************************************************************************
+   * 
+   *  Generated Methods
+   */
 
   public void onConfigurationChanged(android.content.res.Configuration newConfig) {
     if (ScriptLoader.isCalledFromJRuby()) {super.onConfigurationChanged(newConfig); return;}
@@ -273,51 +335,6 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
         }
       } else {
         return super.onUnbind(intent);
-      }
-    }
-  }
-
-  public int onStartCommand(android.content.Intent intent, int flags, int startId) {
-    if (ScriptLoader.isCalledFromJRuby()) return super.onStartCommand(intent, flags, startId);
-    if (!JRubyAdapter.isInitialized()) {
-      Log.i("Method called before JRuby runtime was initialized: RubotoService#onStartCommand");
-      return super.onStartCommand(intent, flags, startId);
-    }
-    String rubyClassName = scriptInfo.getRubyClassName();
-    if (rubyClassName == null) return super.onStartCommand(intent, flags, startId);
-    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_start_command}")) {
-      // FIXME(uwe): Simplify when we stop support for RubotoCore 0.4.7
-      if (JRubyAdapter.isJRubyPreOneSeven()) {
-        JRubyAdapter.put("$arg_intent", intent);
-        JRubyAdapter.put("$arg_flags", flags);
-        JRubyAdapter.put("$arg_startId", startId);
-        JRubyAdapter.put("$ruby_instance", scriptInfo.getRubyInstance());
-        return (Integer) ((Number)JRubyAdapter.runScriptlet("$ruby_instance.on_start_command($arg_intent, $arg_flags, $arg_startId)")).intValue();
-      } else {
-        if (JRubyAdapter.isJRubyOneSeven()) {
-          return (Integer) JRubyAdapter.runRubyMethod(Integer.class, scriptInfo.getRubyInstance(), "on_start_command", new Object[]{intent, flags, startId});
-        } else {
-          throw new RuntimeException("Unknown JRuby version: " + JRubyAdapter.get("JRUBY_VERSION"));
-        }
-      }
-    } else {
-      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onStartCommand}")) {
-        // FIXME(uwe): Simplify when we stop support for RubotoCore 0.4.7
-        if (JRubyAdapter.isJRubyPreOneSeven()) {
-          JRubyAdapter.put("$arg_intent", intent);
-          JRubyAdapter.put("$arg_flags", flags);
-          JRubyAdapter.put("$arg_startId", startId);
-          JRubyAdapter.put("$ruby_instance", scriptInfo.getRubyInstance());
-          return (Integer) ((Number)JRubyAdapter.runScriptlet("$ruby_instance.onStartCommand($arg_intent, $arg_flags, $arg_startId)")).intValue();
-        } else {
-          if (JRubyAdapter.isJRubyOneSeven()) {
-            return (Integer) JRubyAdapter.runRubyMethod(Integer.class, scriptInfo.getRubyInstance(), "onStartCommand", new Object[]{intent, flags, startId});
-          } else {
-            throw new RuntimeException("Unknown JRuby version: " + JRubyAdapter.get("JRUBY_VERSION"));
-          }
-        }
-      } else {
-        return super.onStartCommand(intent, flags, startId);
       }
     }
   }
