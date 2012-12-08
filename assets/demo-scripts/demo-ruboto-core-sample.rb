@@ -12,20 +12,28 @@ require 'ruboto/util/toast'
 
 ruboto_import_widgets :Button, :LinearLayout, :TextView
 
-$activity.start_ruboto_activity "$sample_activity" do
-  setTitle 'This is the Title'
-
+class SampleActivity
   def on_create(bundle)
+    super
+    set_title 'Domo arigato, Mr Ruboto!'
+
     self.content_view =
-        linear_layout(:orientation => :vertical) do
-          @text_view = text_view :text => 'What hath Matz wrought?', :id => 42
-          button :text => 'M-x butterfly', :width => :wrap_content, :id => 43,
-                    :on_click_listener => @handle_click
+        linear_layout :orientation => :vertical do
+          @text_view = text_view :text => 'What hath Matz wrought?', :id => 42, :width => :match_parent,
+                                 :gravity => :center, :text_size => 48.0
+          button :text => 'M-x butterfly', :width => :match_parent, :id => 43, :on_click_listener => proc { butterfly }
         end
+  rescue
+    puts "Exception creating activity: #{$!}"
+    puts $!.backtrace.join("\n")
   end
 
-  @handle_click = proc do |view|
-      @text_view.text = 'What hath Matz wrought!'
-      toast 'Flipped a bit via butterfly'
+  private
+
+  def butterfly
+    @text_view.text = 'What hath Matz wrought!'
+    toast 'Flipped a bit via butterfly'
   end
 end
+
+$irb.start_ruboto_activity :class_name => "SampleActivity"
