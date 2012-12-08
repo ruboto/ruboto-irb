@@ -11,7 +11,6 @@ public class RubotoActivity extends android.app.Activity implements org.ruboto.R
     private final ScriptInfo scriptInfo = new ScriptInfo();
     private String remoteVariable = null;
     Bundle[] args;
-    private Bundle configBundle = null;
 
     public RubotoActivity setRemoteVariable(String var) {
         remoteVariable = var;
@@ -40,26 +39,12 @@ public class RubotoActivity extends android.app.Activity implements org.ruboto.R
         args = new Bundle[1];
         args[0] = bundle;
 
-        configBundle = getIntent().getBundleExtra("RubotoActivity Config");
-
+        Bundle configBundle = getIntent().getBundleExtra("Ruboto Config");
         if (configBundle != null) {
             if (configBundle.containsKey("Theme")) {
                 setTheme(configBundle.getInt("Theme"));
             }
-            if (configBundle.containsKey("ClassName")) {
-                if (this.getClass().getName() == RubotoActivity.class.getName()) {
-                    scriptInfo.setRubyClassName(configBundle.getString("ClassName"));
-                } else {
-                    throw new IllegalArgumentException("Only local Intents may set class name.");
-                }
-            }
-            if (configBundle.containsKey("Script")) {
-                if (this.getClass().getName() == RubotoActivity.class.getName()) {
-                    scriptInfo.setScriptName(configBundle.getString("Script"));
-                } else {
-                    throw new IllegalArgumentException("Only local Intents may set script name.");
-                }
-            }
+            scriptInfo.setFromIntent(getIntent());
         }
 
         if (JRubyAdapter.isInitialized()) {
