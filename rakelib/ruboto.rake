@@ -74,9 +74,15 @@ task :install => APK_FILE do
   install_apk
 end
 
+desc 'uninstall, build, and install the application'
+task :reinstall => [:uninstall, APK_FILE, :install]
+
 namespace :install do
-  desc 'uninstall, build, and install the application'
-  task :clean => [:uninstall, APK_FILE, :install]
+  # FIXME(uwe):  Remove in 2013
+  desc 'Deprecated:  use "reinstall" instead.'
+  task :clean => :reinstall do
+    puts '"rake install:clean" is deprecated.  Use "rake reinstall" instead.'
+  end
 
   desc 'Install the application, but only if compiled files are changed.'
   task :quick => 'debug:quick' do
@@ -116,7 +122,7 @@ task :tag => :release do
 end
 
 task :sign => :release do
-  sh "jarsigner -keystore #{ENV['RUBOTO_KEYSTORE']} -signedjar bin/#{build_project_name}.apk bin/#{build_project_name}-unsigned.apk #{ENV['RUBOTO_KEY_ALIAS']}"
+  sh "jarsigner -keystore #{ENV['RUBOTO_KEYSTORE']} -signedjar bin/#{build_project_name}.apk bin/#{build_project_name}-release-unsigned.apk #{ENV['RUBOTO_KEY_ALIAS']}"
 end
 
 task :align => :sign do
