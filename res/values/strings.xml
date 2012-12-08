@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Ruboto IRB</string>
-    <string name="version_name">0.7.1-dev</string>
-    <string name="demo_scripts_version">15</string>
+    <string name="version_name">0.8-dev</string>
+    <string name="demo_scripts_version">16</string>
 
     <string name="IRB_Tab">IRB</string>
     <string name="Editor_Tab">Editor</string>
@@ -39,63 +39,41 @@ http://groups.google.com/group/ruboto
 \n\n
 Developers:\n
 Charlie Nutter\n
+Scott Moyer\n
+Uwe Kubosch
+
+\n\n
+Facebook sharing and script import added by:\n
+Akshay 
+
+\n\n
+Icons by:\n
+Michael "RedNifre" Zinn
+
+\n\n
+Past contributions from:\n
 Jan Berkel\n
 Pascal Chatterjee (jruby-for-android project)\n
-Scott Moyer\n
 Daniel Jackoway\n
-Uwe Kubosch
+
 \n\n
 JRuby Project:\n
-http://jruby.org\n\nIcon:\nRuby Visual Identity Team\n
-http://rubyidentity.org\nCC ShareAlike 2.5
+http://jruby.org
+
 \n\n
-Syntax highlighting though CodeMirror:
+Facebook classes contain their license (Apache License, Version 2.0):\n
+https://github.com/ruboto/ruboto-irb/tree/master/src/com/facebook/android
+
 \n\n
-Copyright (C) 2011 by Marijn Haverbeke &lt;marijnh@gmail.com&gt;
+Syntax highlighting though CodeMirror. License included here:\n
+https://github.com/ruboto/ruboto-irb/blob/master/assets/demo-scripts/codemirror/LICENSE
+
 \n\n
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-\n\n
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-\n\n
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-\n\n
-The Ruby mode for CodeMirror is provided by Ubalo:
-\n\n
-Copyright (c) 2011, Ubalo, Inc.\n
-All rights reserved.
-\n\n
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-\n\n
-* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n
-* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n
-* Neither the name of the Ubalo, Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-\n\n
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL UBALO, INC BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+The Ruby mode for CodeMirror is provided by Ubalo. License found here:\n
+https://github.com/ruboto/ruboto-irb/blob/master/assets/demo-scripts/codemirror/mode/ruby/LICENSE
 </string>
 
-    <string name="Script_update_text">We have made modifications to the demos. Please update now or click cancel and update manually later.</string>
+    <string name="Script_update_text">We have made modifications to the demos. Many of the old demos will not work unless you update them. Please update now or click cancel and update manually later.</string>
 
     <string name="Ruboto_remove_text">We move the core ruboto scripts into the apk. Your old ruboto scripts need to be renamed to keep them from interfering with your scripts. Press ok to rename them now or cancel to rename them later.</string>
 
