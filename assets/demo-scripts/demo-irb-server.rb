@@ -26,10 +26,15 @@ $default_exception_handler = proc do |t, e|
 
 ruboto_import_widgets :LinearLayout, :TextView, :ToggleButton
 
-$activity.start_ruboto_activity("$irb_activity") do
+$irb.start_ruboto_activity("$irb_activity") do
+  attr_reader :ruboto_java_instance
+
   def on_create(bundle)
+    super
+
     $ui_thread = java.lang.Thread.currentThread
     $ui_thread.setUncaughtExceptionHandler($default_exception_handler)
+    $irb_activity = self
 
     setContentView(
       linear_layout(:orientation => :vertical) do
@@ -68,7 +73,7 @@ Thread.with_large_stack do
     end
 
     def self.ip_address
-      ip = $context.get_system_service($context.class::WIFI_SERVICE).connection_info.ip_address
+      ip = $irb.get_system_service($irb.class::WIFI_SERVICE).connection_info.ip_address
       return "localhost" if ip == 0
       [0, 8, 16, 24].map{|n| ((ip >> n) & 0xff).to_s}.join(".")
     end
@@ -92,7 +97,7 @@ Thread.with_large_stack do
       intent.setAction("org.ruboto.intent.action.LAUNCH_SCRIPT")
       intent.addCategory("android.intent.category.DEFAULT")
       intent.putExtra("org.ruboto.extra.SCRIPT_NAME", "demo-irb-server.rb")
-      pending = android.app.PendingIntent.getActivity($irb_activity, 0, intent, 0)
+      pending = android.app.PendingIntent.getActivity($irb_activity.ruboto_java_instance, 0, intent, 0)
       notification.setLatestEventInfo($irb_activity.getApplicationContext, title, text, pending)
       $irb_service.startForeground(1, notification)
 
@@ -111,14 +116,20 @@ Thread.with_large_stack do
           @server.mount("/", EvalServlet, nil)
 
           @after_start.call if @after_start
-          $irb_activity.start_ruboto_service("$irb_service") do
+          $irb_activity.start_ruboto_service do
+            def on_create
+              super
+            end
+
             def on_start_command(intent, flags, startId)
+              super
+              $irb_service = self
               Thread.with_large_stack do 
                 java.lang.Thread.currentThread.setUncaughtExceptionHandler($default_exception_handler)
                 $server.__start
               end        
               
-              self.class::START_NOT_STICKY
+              @ruboto_java_instance.class::START_NOT_STICKY
             end
           end
         end
@@ -131,7 +142,7 @@ Thread.with_large_stack do
 
         @server.shutdown
         @server = nil
-        $irb_activity.stop_service android.content.Intent.new($irb_activity, RubotoService.java_class)
+        $irb_activity.stop_service android.content.Intent.new($irb_activity.ruboto_java_instance, RubotoService.java_class)
         $irb_service = nil
       end
     end
