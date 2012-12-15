@@ -25,7 +25,6 @@ public class HistoryEditText extends AutoCompleteTextView implements
 		void onNewLine(String s);
 	}     
 
-	private List<String> history = new ArrayList<String>();
 	private ArrayAdapter<String> adapter = null;
 	private LineListener listener;
 
@@ -37,14 +36,14 @@ public class HistoryEditText extends AutoCompleteTextView implements
 	public HistoryEditText(Context ctxt,  android.util.AttributeSet attrs) {
 		super(ctxt, attrs);    
 		initListeners();
-		initAdapter();
+		initAdapter(null);
 		this.setThreshold(0);
 	}
 
 	public HistoryEditText(Context ctxt,  android.util.AttributeSet attrs, int defStyle) {
 		super(ctxt, attrs, defStyle);
 		initListeners();
-		initAdapter();
+		initAdapter(null);
 		this.setThreshold(0);
 	}
 
@@ -52,51 +51,60 @@ public class HistoryEditText extends AutoCompleteTextView implements
 		setOnEditorActionListener(this);
 	}
 
-	private void initAdapter() {
-		adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, history);
+	private void initAdapter(ArrayList<String> history) {
+		if (history == null) {
+			adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line);
+		} else {
+			adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_dropdown_item_1line, history);
+		}
 	    this.setAdapter(adapter);
 	}
 
 	public void onSaveInstanceState(Bundle savedInstanceState) {
-    	savedInstanceState.putStringArrayList("history", (ArrayList<String>)history);
+		ArrayList<String> history = new ArrayList<String>();
+		for(int i=0; i < adapter.getCount(); i++) {
+            history.add(adapter.getItem(i));
+        }
+		savedInstanceState.putStringArrayList("history", history);
     }
     
     public void onRestoreInstanceState(Bundle savedInstanceState) {
-    	if (savedInstanceState.containsKey("history")) history = savedInstanceState.getStringArrayList("history");
-    	initAdapter();
+    	if (savedInstanceState.containsKey("history")) {
+			ArrayList<String> history = new ArrayList<String>();
+			history = savedInstanceState.getStringArrayList("history");
+			initAdapter(history);
+		}
     }
     
     @Override
     public boolean performClick() {
-    	if (history.size() > 0) showDropDown();
+    	if (adapter.getCount() > 0) showDropDown();
     	return super.performClick();
     }
     
     public String getHistoryString() {
     	StringBuilder string = new StringBuilder();
-        for (String aHistory : history) {
-            string.append(aHistory);
+		for(int i=0; i < adapter.getCount(); i++) {
+            string.append(adapter.getItem(i));
             string.append("\n");
         }
     	return string.toString();
     }
-    
+
 	public boolean onEditorAction(TextView arg0, int actionId, KeyEvent event) {
 		if (actionId == EditorInfo.IME_NULL) {
 			String line = getText().toString();
 			if (line.length() == 0) return true;
 			
-			int i=0;
-			for(; i < history.size(); i++) {
-				if (history.get(i).equals(line)) {
-					history.remove(i);
+			for(int i=0; i < adapter.getCount(); i++) {
+				if (adapter.getItem(i).equals(line)) {
 					adapter.remove(adapter.getItem(i));
 					break;
 				}
 			}
-			history.add(0, line);
-			adapter.insert(line, 0);
 
+			adapter.insert(line, 0);
+			
 			if (listener != null) {
 				listener.onNewLine(line);
 				return true;
