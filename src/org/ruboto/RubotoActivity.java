@@ -47,7 +47,7 @@ public class RubotoActivity extends android.app.Activity implements org.ruboto.R
             scriptInfo.setFromIntent(getIntent());
         }
 
-        if (JRubyAdapter.isInitialized()) {
+        if (JRubyAdapter.isInitialized() && scriptInfo.isReadyToLoad()) {
     	    ScriptLoader.loadScript(this, (Object[]) args);
         } else {
             super.onCreate(bundle);
