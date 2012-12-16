@@ -99,7 +99,8 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	private TabWidget tabWidget;
 	private final Handler handler = new Handler();
 	private PrintStream printStream;
-
+	private long timeBackPressed = 0;
+	
 	/* IRB_Tab Elements */
 	public static TextView currentIrbOutput;
 	private TextView irbOutput;
@@ -155,6 +156,18 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		super.onCreate(savedInstanceState);
 		JRubyAdapter.setLocalVariableBehavior("PERSISTENT");
 		uiSetup();
+	}
+	
+	@Override
+	public void onBackPressed() {
+		if (System.currentTimeMillis() - timeBackPressed < 5000) {
+			finish();
+		} else {
+			Toast.makeText(this,
+						   "Press back again to exit.",
+						   Toast.LENGTH_SHORT).show();
+			timeBackPressed = System.currentTimeMillis();
+		} 
 	}
 
   protected void fireRubotoActivity() {
