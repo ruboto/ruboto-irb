@@ -47,7 +47,7 @@ public class RubotoPreferenceActivity extends android.preference.PreferenceActiv
             scriptInfo.setFromIntent(getIntent());
         }
 
-        if (JRubyAdapter.isInitialized()) {
+        if (JRubyAdapter.isInitialized() && scriptInfo.isReadyToLoad()) {
     	    ScriptLoader.loadScript(this, (Object[]) args);
         } else {
             super.onCreate(bundle);
