@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Ruboto IRB</string>
-    <string name="version_name">0.8</string>
+    <string name="version_name">0.8.1</string>
     <string name="demo_scripts_version">17</string>
 
     <string name="IRB_Tab">IRB</string>
