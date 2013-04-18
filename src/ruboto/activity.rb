@@ -15,7 +15,7 @@ require 'ruboto/package'
 module Ruboto
   module Context
     def start_ruboto_dialog(remote_variable, theme=Java::android.R.style::Theme_Dialog, &block)
-      java_import "org.ruboto.RubotoDialog"
+      java_import 'org.ruboto.RubotoDialog'
       start_ruboto_activity(remote_variable, RubotoDialog, theme, &block)
     end
 
@@ -28,22 +28,21 @@ module Ruboto
         else
           options = {}
         end
-        global_variable_name = nil
       end
 
-      class_name = options[:class_name] || "#{klass.name.split('::').last}_#{source_descriptor(block)[0].split("/").last.gsub(/[.-]+/, '_')}_#{source_descriptor(block)[1]}"
-      if !Object.const_defined?(class_name)
-        Object.const_set(class_name, Class.new(&block))
-      else
+      class_name = options[:class_name] || "#{klass.name.split('::').last}_#{source_descriptor(block)[0].split('/').last.gsub(/[.-]+/, '_')}_#{source_descriptor(block)[1]}"
+      if Object.const_defined?(class_name)
         Object.const_get(class_name).class_eval(&block) if block_given?
+      else
+        Object.const_set(class_name, Class.new(&block))
       end
       b = Java::android.os.Bundle.new
-      b.putInt("Theme", theme) if theme
-      b.putString("ClassName", class_name)
-      b.putString("Script", options[:script]) if options[:script]
+      b.putInt('Theme', theme) if theme
+      b.putString('ClassName', class_name)
+      b.putString('Script', options[:script]) if options[:script]
       i = android.content.Intent.new
       i.setClass self, klass.java_class
-      i.putExtra("Ruboto Config", b)
+      i.putExtra('Ruboto Config', b)
       startActivity i
       self
     end
@@ -61,7 +60,7 @@ module Ruboto
 
 end
 
-java_import "android.content.Context"
+java_import 'android.content.Context'
 Context.class_eval do
   include Ruboto::Context
 end
@@ -85,7 +84,7 @@ def ruboto_configure_activity(klass)
   end
 end
 
-java_import "android.app.Activity"
-java_import "org.ruboto.RubotoActivity"
+java_import 'android.app.Activity'
+java_import 'org.ruboto.RubotoActivity'
 ruboto_configure_activity(RubotoActivity)
 
