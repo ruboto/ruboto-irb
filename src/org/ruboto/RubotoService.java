@@ -298,6 +298,49 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
     }
   }
 
+  public void onStart(android.content.Intent intent, int startId) {
+    if (ScriptLoader.isCalledFromJRuby()) {super.onStart(intent, startId); return;}
+    if (!JRubyAdapter.isInitialized()) {
+      Log.i("Method called before JRuby runtime was initialized: RubotoService#onStart");
+      {super.onStart(intent, startId); return;}
+    }
+    String rubyClassName = scriptInfo.getRubyClassName();
+    if (rubyClassName == null) {super.onStart(intent, startId); return;}
+    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_start}")) {
+      // FIXME(uwe): Simplify when we stop support for RubotoCore 0.4.7
+      if (JRubyAdapter.isJRubyPreOneSeven()) {
+        JRubyAdapter.put("$arg_intent", intent);
+        JRubyAdapter.put("$arg_startId", startId);
+        JRubyAdapter.put("$ruby_instance", scriptInfo.getRubyInstance());
+        JRubyAdapter.runScriptlet("$ruby_instance.on_start($arg_intent, $arg_startId)");
+      } else {
+        if (JRubyAdapter.isJRubyOneSeven()) {
+          JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_start", new Object[]{intent, startId});
+        } else {
+          throw new RuntimeException("Unknown JRuby version: " + JRubyAdapter.get("JRUBY_VERSION"));
+        }
+      }
+    } else {
+      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onStart}")) {
+        // FIXME(uwe): Simplify when we stop support for RubotoCore 0.4.7
+        if (JRubyAdapter.isJRubyPreOneSeven()) {
+          JRubyAdapter.put("$arg_intent", intent);
+          JRubyAdapter.put("$arg_startId", startId);
+          JRubyAdapter.put("$ruby_instance", scriptInfo.getRubyInstance());
+          JRubyAdapter.runScriptlet("$ruby_instance.onStart($arg_intent, $arg_startId)");
+        } else {
+          if (JRubyAdapter.isJRubyOneSeven()) {
+            JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onStart", new Object[]{intent, startId});
+          } else {
+            throw new RuntimeException("Unknown JRuby version: " + JRubyAdapter.get("JRUBY_VERSION"));
+          }
+        }
+      } else {
+        {super.onStart(intent, startId); return;}
+      }
+    }
+  }
+
   public boolean onUnbind(android.content.Intent intent) {
     if (ScriptLoader.isCalledFromJRuby()) return super.onUnbind(intent);
     if (!JRubyAdapter.isInitialized()) {
