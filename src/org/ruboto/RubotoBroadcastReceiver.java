@@ -31,6 +31,9 @@ public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver i
     public void onReceive(android.content.Context context, android.content.Intent intent) {
         try {
             Log.d("onReceive: " + this);
+            if (ScriptLoader.isCalledFromJRuby()) {
+                return;
+            }
             if (!scriptLoaded) {
                 if (JRubyAdapter.setUpJRuby(context)) {
                     ScriptLoader.loadScript(this);
@@ -47,7 +50,13 @@ public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver i
     	        JRubyAdapter.put("$intent", intent);
                 JRubyAdapter.runScriptlet("$broadcast_receiver.on_receive($context, $intent)");
             } else if (JRubyAdapter.isJRubyOneSeven()) {
+            // FIXME(uwe):  Simplify when we stop support for snake case aliasing interface callback methods.
+            if ((Boolean)JRubyAdapter.runScriptlet(scriptInfo.getRubyClassName() + ".instance_methods(false).any?{|m| m.to_sym == :onReceive}")) {
+    	        JRubyAdapter.runRubyMethod(this, "onReceive", new Object[]{context, intent});
+            } else if ((Boolean)JRubyAdapter.runScriptlet(scriptInfo.getRubyClassName() + ".instance_methods(false).any?{|m| m.to_sym == :on_receive}")) {
     	        JRubyAdapter.runRubyMethod(this, "on_receive", new Object[]{context, intent});
+            }
+            // EMXIF
             } else {
                 throw new RuntimeException("Unknown JRuby version: " + JRubyAdapter.get("JRUBY_VERSION"));
         	}
