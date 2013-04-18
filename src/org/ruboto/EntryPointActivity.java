@@ -18,7 +18,10 @@ public class EntryPointActivity extends org.ruboto.RubotoActivity {
     private ProgressDialog loadingDialog;
     private boolean dialogCancelled = false;
     private BroadcastReceiver receiver;
+
+    // FIXME(uwe):  Remove this field?  Duplicated by ScriptInfo.isLoaded() ?
     protected boolean appStarted = false;
+    // EMXIF
 
 	public void onCreate(Bundle bundle) {
         Log.d("onCreate: ");
@@ -131,7 +134,7 @@ public class EntryPointActivity extends org.ruboto.RubotoActivity {
     }
 
 	private static final String RUBOTO_APK = "RubotoCore-release.apk";
-	private static final String RUBOTO_URL = "https://github.com/downloads/ruboto/ruboto/" + RUBOTO_APK;
+	private static final String RUBOTO_URL = "https://raw.github.com/ruboto/ruboto-core/master/dist/" + RUBOTO_APK;
 
     // Called when the button is pressed.
     public void getRubotoCore(View view) {
