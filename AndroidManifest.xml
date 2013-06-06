@@ -5,6 +5,7 @@
             <intent-filter>
                 <action android:name='android.intent.action.MAIN'/>
                 <category android:name='android.intent.category.LAUNCHER'/>
+                <category android:name='android.intent.category.MULTIWINDOW_LAUNCHER'/>
             </intent-filter>
             <intent-filter>
                 <action android:name='android.intent.action.VIEW'/>
@@ -33,6 +34,12 @@
         <activity android:configChanges='orientation|screenSize' android:name='net.android.facebook.TestConnect'/>
         <activity android:configChanges='orientation|screenSize' android:name='net.android.facebook.TestPost'/>
         <service android:exported='false' android:name='org.ruboto.RubotoService'/>
+        <uses-library required='false' name='com.sec.android.app.multiwindow' />
+        <meta-data android:name='com.sec.android.support.multiwindow' android:value='true'/>
+        <meta-data android:name='com.sec.android.multiwindow.DEFAULT_SIZE_W' android:value='632.0dip'/>
+        <meta-data android:name='com.sec.android.multiwindow.DEFAULT_SIZE_H' android:value='598.0dip'/>
+        <meta-data android:name='com.sec.android.multiwindow.MINIMUM_SIZE_W' android:value='632.0dip'/>
+        <meta-data android:name='com.sec.android.multiwindow.MINIMUM_SIZE_H' android:value='598.0dip'/>
     </application>
     <uses-sdk android:minSdkVersion='7' android:targetSdkVersion='13'/>
     <supports-screens android:anyDensity='true' android:largeScreens='true' android:normalScreens='true' android:smallScreens='true' android:xlargeScreens='true'/>
