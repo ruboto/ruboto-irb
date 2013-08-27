@@ -49,29 +49,29 @@ class RubotoActivity
 
   def self.resolve_click(context, title)
     if @@lists[title]
-      RubotoActivity.launch_list context, "$sl_#{title.downcase.gsub(' ', '_')}", "Api Demos", title
+      RubotoActivity.launch_list(context, "Api Demos", title)
     else
       case title
-      when "Custom Dialog"        then context.start_ruboto_dialog(:class_name => "CustomDialog")
-      when "Custom Title"         then context.start_ruboto_activity(:class_name => "CustomTitle")
-      when "Forwarding"           then context.start_ruboto_activity(:class_name => "Forwarding")
-      when "Hello World"          then context.start_ruboto_activity(:class_name => "HelloWorld")
-      when "Persistent State"     then context.start_ruboto_activity(:class_name => "PersistentState")
-      when "Save & Restore State" then context.start_ruboto_activity(:class_name => "SaveAndRestoreState")
-      when "Arcs"                 then context.start_ruboto_activity(:class_name => "Arcs")
-      when "Morse Code"           then context.start_ruboto_activity(:class_name => "MorseCode")
-      when "Sensors"              then context.start_ruboto_activity(:class_name => "Sensors")
-      when "Buttons"              then context.start_ruboto_activity(:class_name => "Buttons")
-      when "Chronometer"          then context.start_ruboto_activity(:class_name => "ChronometerDemo")
-      when "1. Dialog"            then context.start_ruboto_activity(:class_name => "DateDialog")
-      when "2. Inline"            then context.start_ruboto_activity(:class_name => "DateInline")
+      when "Custom Dialog"        then context.start_ruboto_dialog("CustomDialog")
+      when "Custom Title"         then context.start_ruboto_activity("CustomTitle")
+      when "Forwarding"           then context.start_ruboto_activity("Forwarding")
+      when "Hello World"          then context.start_ruboto_activity("HelloWorld")
+      when "Persistent State"     then context.start_ruboto_activity("PersistentState")
+      when "Save & Restore State" then context.start_ruboto_activity("SaveAndRestoreState")
+      when "Arcs"                 then context.start_ruboto_activity("Arcs")
+      when "Morse Code"           then context.start_ruboto_activity("MorseCode")
+      when "Sensors"              then context.start_ruboto_activity("Sensors")
+      when "Buttons"              then context.start_ruboto_activity("Buttons")
+      when "Chronometer"          then context.start_ruboto_activity("ChronometerDemo")
+      when "1. Dialog"            then context.start_ruboto_activity("DateDialog")
+      when "2. Inline"            then context.start_ruboto_activity("DateInline")
       else
         context.toast "Not Implemented Yet"
       end
     end
   end
 
-  def self.launch_list(context, var, title, list_id, extra_text=nil)
+  def self.launch_list(context, title, list_id, extra_text=nil)
     ruboto_import_widgets :LinearLayout, :TextView, :ListView
 
     context.start_ruboto_activity(var) do
@@ -676,6 +676,6 @@ end
 # Start
 #
 
-RubotoActivity.launch_list $activity, "$main_list", "Api Demos", :main,
-  "This is a Ruboto demo that attempts to duplicate the standard Android API Demo using Ruboto. It is in the early stages (more samples will be completed in the future)."
+RubotoActivity.launch_list($irb, "Api Demos", :main,
+  "This is a Ruboto demo that attempts to duplicate a few of the standard Android API Demo using Ruboto.")
 
