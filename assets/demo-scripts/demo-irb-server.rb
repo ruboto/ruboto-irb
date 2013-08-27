@@ -38,8 +38,9 @@ $irb.start_ruboto_activity("$irb_activity") do
 
     setContentView(
       linear_layout(:orientation => :vertical) do
-        @start_button = toggle_button :enabled => false, :checked => ($server && $server.running?),
-                          :layout => {:width= => :wrap_content}, :on_click_listener => (proc{$server.toggle})
+        @start_button = toggle_button :enabled => false, 
+                          :layout => {:width= => :wrap_content}, 
+                          :on_click_listener => (proc{$server.toggle})
         @status_text = text_view :text => "Initializing..."
       end
     )
@@ -63,6 +64,8 @@ end
 
 Thread.with_large_stack do
   java.lang.Thread.currentThread.setUncaughtExceptionHandler($default_exception_handler)
+
+  sleep 0.5
 
   require 'webrick/httpserver.rb' 
   require 'stringio'
