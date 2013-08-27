@@ -14,38 +14,54 @@ if `#{ANT_CMD} -version` !~ /version (\d+)\.(\d+)\.(\d+)/ || $1.to_i < 1 || ($1.
   exit 1
 end
 
+#
+# OS independent "which"
+# From: http://stackoverflow.com/questions/2108727/which-in-ruby-checking-if-program-exists-in-path-from-ruby
+#
+def which(cmd)
+  exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+  ENV['PATH'].gsub('\\', '/').split(File::PATH_SEPARATOR).each do |path|
+    exts.each do |ext|
+      exe = File.join(path, "#{cmd}#{ext}")
+      return exe if File.executable? exe
+    end
+  end
+  nil
+end
+
 adb_version_str = `adb version`
 (puts 'Android SDK platform tools not in PATH (adb command not found).'; exit 1) unless $? == 0
 (puts "Unrecognized adb version: #$1"; exit 1) unless adb_version_str =~ /Android Debug Bridge version (\d+\.\d+\.\d+)/
 (puts "adb version 1.0.31 or later required.  Version found: #$1"; exit 1) unless Gem::Version.new($1) >= Gem::Version.new('1.0.31')
-unless ENV['ANDROID_HOME']
-  unless ON_WINDOWS
-    begin
-      adb_path = `which adb`
-      ENV['ANDROID_HOME'] = File.dirname(File.dirname(adb_path)) if $? == 0
-    rescue Errno::ENOENT
-      puts "Unable to detect adb location: #$!"
-    end
+android_home = ENV['ANDROID_HOME']
+android_home = android_home.gsub("\\", "/") unless android_home.nil?
+if android_home.nil?
+  if (adb_path = which('adb'))
+    android_home = File.dirname(File.dirname(adb_path))
+  else
+    abort 'You need to set the ANDROID_HOME environment variable.'
   end
+else
+  android_home.gsub! '\\', '/'
 end
-(puts 'You need to set the ANDROID_HOME environment variable.'; exit 1) unless ENV['ANDROID_HOME']
 
-# FIXME(uwe):  On windows the file is called dx.bat
-dx_filename = File.join(ENV['ANDROID_HOME'], 'platform-tools', ON_WINDOWS ? 'dx.bat' : 'dx')
-unless File.exists? dx_filename
-  puts 'You need to install the Android SDK Platform-tools!'
+# FIXME(uwe): Simplify when we stop supporting Android SDK < 22: Don't look in platform-tools for dx
+dx_filename = Dir[File.join(android_home, '{build-tools/*,platform-tools}', ON_WINDOWS ? 'dx.bat' : 'dx')][-1]
+# EMXIF
+
+unless dx_filename
+  puts 'You need to install the Android SDK Build-tools!'
   exit 1
 end
 new_dx_content = File.read(dx_filename).dup
 
-# FIXME(uwe): Set Xmx on windows bat script:
-# set defaultXmx=-Xmx1024M
-
-xmx_pattern = /^defaultMx="-Xmx(\d+)(M|m|G|g|T|t)"/
+xmx_pattern = ON_WINDOWS ? /^set defaultXmx=-Xmx(\d+)(M|m|G|g|T|t)/ : /^defaultMx="-Xmx(\d+)(M|m|G|g|T|t)"/
+MINIMUM_DX_HEAP_SIZE = 1600
 if new_dx_content =~ xmx_pattern &&
-    ($1.to_i * 1024 ** {'M' => 2, 'G' => 3, 'T' => 4}[$2.upcase]) < 2560*1024**2
-  puts "Increasing max heap space from #$1#$2 to 2560M in #{dx_filename}"
-  new_dx_content.sub!(xmx_pattern, 'defaultMx="-Xmx2560M"')
+    ($1.to_i * 1024 ** {'M' => 2, 'G' => 3, 'T' => 4}[$2.upcase]) < MINIMUM_DX_HEAP_SIZE*1024**2
+  puts "Increasing max heap space from #$1#$2 to #{MINIMUM_DX_HEAP_SIZE}M in #{dx_filename}"
+  new_xmx_value = ON_WINDOWS ? %Q{set defaultXmx=-Xmx#{MINIMUM_DX_HEAP_SIZE}M} : %Q{defaultMx="-Xmx#{MINIMUM_DX_HEAP_SIZE}M"}
+  new_dx_content.sub!(xmx_pattern, new_xmx_value)
   File.open(dx_filename, 'w') { |f| f << new_dx_content } rescue puts "\n!!! Unable to increase dx heap size !!!\n\n"
 end
 
@@ -63,21 +79,37 @@ MANIFEST_FILE = File.expand_path 'AndroidManifest.xml'
 PROJECT_PROPS_FILE = File.expand_path 'project.properties'
 RUBOTO_CONFIG_FILE = File.expand_path 'ruboto.yml'
 GEM_FILE = File.expand_path 'Gemfile.apk'
-GEM_LOCK_FILE = File.expand_path 'Gemfile.apk.lock'
+GEM_LOCK_FILE = "#{GEM_FILE}.lock"
 RELEASE_APK_FILE = File.expand_path "bin/#{build_project_name}-release.apk"
 APK_FILE = File.expand_path "bin/#{build_project_name}-debug.apk"
 TEST_APK_FILE = File.expand_path "test/bin/#{build_project_name}Test-debug.apk"
-JRUBY_JARS = Dir[File.expand_path 'libs/jruby-*.jar']
+JRUBY_JARS = Dir[File.expand_path 'libs/{jruby-*,dx}.jar']
+JARS = Dir[File.expand_path 'libs/*.jar'] - JRUBY_JARS
 RESOURCE_FILES = Dir[File.expand_path 'res/**/*']
 JAVA_SOURCE_FILES = Dir[File.expand_path 'src/**/*.java']
 RUBY_SOURCE_FILES = Dir[File.expand_path 'src/**/*.rb']
-APK_DEPENDENCIES = [MANIFEST_FILE, RUBOTO_CONFIG_FILE, BUNDLE_JAR] + JRUBY_JARS + JAVA_SOURCE_FILES + RESOURCE_FILES + RUBY_SOURCE_FILES
+CLASSES_CACHE = "#{PROJECT_DIR}/bin/#{build_project_name}-debug-unaligned.apk.d"
+APK_DEPENDENCIES = [MANIFEST_FILE, RUBOTO_CONFIG_FILE, BUNDLE_JAR, CLASSES_CACHE] + JRUBY_JARS + JARS + JAVA_SOURCE_FILES + RESOURCE_FILES + RUBY_SOURCE_FILES
 KEYSTORE_FILE = (key_store = File.readlines('ant.properties').grep(/^key.store=/).first) ? File.expand_path(key_store.chomp.sub(/^key.store=/, '').sub('${user.home}', '~')) : "#{build_project_name}.keystore"
 KEYSTORE_ALIAS = (key_alias = File.readlines('ant.properties').grep(/^key.alias=/).first) ? key_alias.chomp.sub(/^key.alias=/, '') : build_project_name
+APK_FILE_REGEXP = /^-rw-r--r--\s+(?:system|\d+\s+\d+)\s+(?:system|\d+)\s+(\d+)\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}|\w{3} \d{2}\s+(?:\d{4}|\d{2}:\d{2}))\s+(.*)$/
+JRUBY_ADAPTER_FILE = "#{PROJECT_DIR}/src/org/ruboto/JRubyAdapter.java"
 
 CLEAN.include('bin', 'gen', 'test/bin', 'test/gen')
 
 task :default => :debug
+
+if File.exists?(CLASSES_CACHE)
+  expected_jars = File.readlines(CLASSES_CACHE).grep(%r{#{PROJECT_DIR}/libs/(.*\.jar) \\}).map { |l| l =~ %r{#{PROJECT_DIR}/libs/(.*\.jar) \\}; $1 }
+  actual_jars = Dir['libs/*.jar'].map { |f| f =~ /libs\/(.*\.jar)/; $1 }
+  changed_jars = ((expected_jars | actual_jars) - (expected_jars & actual_jars))
+  unless changed_jars.empty?
+    puts "Jars have changed: #{changed_jars.join(', ')}"
+    FileUtils.touch(CLASSES_CACHE)
+  end
+end
+
+file CLASSES_CACHE
 
 file JRUBY_JARS => RUBOTO_CONFIG_FILE do
   next unless File.exists? RUBOTO_CONFIG_FILE
@@ -101,7 +133,7 @@ task :debug => APK_FILE
 
 namespace :debug do
   desc 'build debug package if compiled files have changed'
-  task :quick => [MANIFEST_FILE, RUBOTO_CONFIG_FILE, BUNDLE_JAR] + JRUBY_JARS + JAVA_SOURCE_FILES + RESOURCE_FILES do |t|
+  task :quick => APK_DEPENDENCIES - RUBY_SOURCE_FILES do |t|
     build_apk(t, false)
   end
 end
@@ -115,7 +147,7 @@ desc 'uninstall, build, and install the application'
 task :reinstall => [:uninstall, APK_FILE, :install]
 
 namespace :install do
-  # FIXME(uwe):  Remove in 2013
+  # FIXME(uwe):  Remove December 2013
   desc 'Deprecated:  use "reinstall" instead.'
   task :clean => :reinstall do
     puts '"rake install:clean" is deprecated.  Use "rake reinstall" instead.'
@@ -161,10 +193,13 @@ task :tag do
   sh 'git push origin master --tags'
 end
 
-desc 'Start the emulator with larger disk'
+# FIXME(uwe):  Remove December 2013
+desc 'Deprecated:  Use "ruboto emulator" instead.'
 task :emulator do
-  start_emulator
+  puts '"rake emulator" is deprecated.  Use "ruboto emulator" instead.'
+  sh 'ruboto emulator'
 end
+# EMXIF
 
 desc 'Start the application on the device/emulator.'
 task :start do
@@ -189,10 +224,37 @@ file MANIFEST_FILE => PROJECT_PROPS_FILE do
   manifest = old_manifest.dup
   manifest.sub!(/(android:minSdkVersion=').*?(')/) { "#$1#{sdk_level}#$2" }
   manifest.sub!(/(android:targetSdkVersion=').*?(')/) { "#$1#{sdk_level}#$2" }
-  File.open(MANIFEST_FILE, 'w') { |f| f << manifest } if manifest != old_manifest
+  if manifest != old_manifest
+    puts "\nUpdating #{File.basename MANIFEST_FILE} with target from #{File.basename PROJECT_PROPS_FILE}\n\n"
+    File.open(MANIFEST_FILE, 'w') { |f| f << manifest }
+  end
 end
 
 file RUBOTO_CONFIG_FILE
+
+file JRUBY_ADAPTER_FILE => RUBOTO_CONFIG_FILE do
+  require 'yaml'
+  if (heap_alloc = YAML.load(File.read(RUBOTO_CONFIG_FILE))['heap_alloc'])
+  config = <<EOF
+            // BEGIN Ruboto HeapAlloc
+            @SuppressWarnings("unused")
+            byte[] arrayForHeapAllocation = new byte[#{heap_alloc} * 1024 * 1024];
+            arrayForHeapAllocation = null;
+            // END Ruboto HeapAlloc
+EOF
+  else
+    config = <<EOF
+            // BEGIN Ruboto HeapAlloc
+            // @SuppressWarnings("unused")
+            // byte[] arrayForHeapAllocation = new byte[13 * 1024 * 1024];
+            // arrayForHeapAllocation = null;
+            // END Ruboto HeapAlloc
+EOF
+  end
+  source = File.read(JRUBY_ADAPTER_FILE)
+  heap_alloc_pattern = %r{^\s*// BEGIN Ruboto HeapAlloc\n.*^\s*// END Ruboto HeapAlloc\n}m
+  File.open(JRUBY_ADAPTER_FILE, 'w'){|f| f << source.sub(heap_alloc_pattern, config)}
+end
 
 file APK_FILE => APK_DEPENDENCIES do |t|
   build_apk(t, false)
@@ -258,46 +320,51 @@ file BUNDLE_JAR => [GEM_FILE, GEM_LOCK_FILE] do
   next unless File.exists? GEM_FILE
   puts "Generating #{BUNDLE_JAR}"
   require 'bundler'
-  require 'bundler/vendored_thor'
+  if Gem::Version.new(Bundler::VERSION) <= Gem::Version.new('1.3.5')
+    require 'bundler/vendored_thor'
 
-  # Store original RubyGems/Bundler environment
-  platforms = Gem.platforms
-  ruby_engine = defined?(RUBY_ENGINE) && RUBY_ENGINE
-  gem_paths = {'GEM_HOME' => Gem.path, 'GEM_PATH' => Gem.dir}
+    # Store original RubyGems/Bundler environment
+    platforms = Gem.platforms
+    ruby_engine = defined?(RUBY_ENGINE) && RUBY_ENGINE
+    gem_paths = {'GEM_HOME' => Gem.path, 'GEM_PATH' => Gem.dir}
 
-  # Override RUBY_ENGINE (we can bundle from MRI for JRuby)
-  Gem.platforms = [Gem::Platform::RUBY, Gem::Platform.new('universal-java')]
-  Gem.paths = {'GEM_HOME' => BUNDLE_PATH, 'GEM_PATH' => BUNDLE_PATH}
-  old_verbose, $VERBOSE = $VERBOSE, nil
-  begin
-    Object.const_set('RUBY_ENGINE', 'jruby')
-  ensure
-    $VERBOSE = old_verbose
+    # Override RUBY_ENGINE (we can bundle from MRI for JRuby)
+    Gem.platforms = [Gem::Platform::RUBY, Gem::Platform.new("universal-dalvik-#{sdk_level}"), Gem::Platform.new('universal-java')]
+    Gem.paths = {'GEM_HOME' => BUNDLE_PATH, 'GEM_PATH' => BUNDLE_PATH}
+    old_verbose, $VERBOSE = $VERBOSE, nil
+    begin
+      Object.const_set('RUBY_ENGINE', 'jruby')
+    ensure
+      $VERBOSE = old_verbose
+    end
+
+    ENV['BUNDLE_GEMFILE'] = GEM_FILE
+    Bundler.ui = Bundler::UI::Shell.new
+    Bundler.bundle_path = Pathname.new BUNDLE_PATH
+    definition = Bundler.definition
+    definition.validate_ruby!
+    Bundler::Installer.install(Bundler.root, definition)
+
+    # Restore RUBY_ENGINE (limit the scope of this hack)
+    old_verbose, $VERBOSE = $VERBOSE, nil
+    begin
+      Object.const_set('RUBY_ENGINE', ruby_engine)
+    ensure
+      $VERBOSE = old_verbose
+    end
+    Gem.platforms = platforms
+    Gem.paths = gem_paths["GEM_PATH"]
+  else
+    # Bundler.settings[:platform] = Gem::Platform::DALVIK
+    sh "bundle install --gemfile #{GEM_FILE} --path=#{BUNDLE_PATH} --platform=dalvik#{sdk_level}"
   end
-
-  ENV['BUNDLE_GEMFILE'] = GEM_FILE
-  Bundler.ui = Bundler::UI::Shell.new
-  Bundler.bundle_path = Pathname.new BUNDLE_PATH
-  definition = Bundler.definition
-  definition.validate_ruby!
-  Bundler::Installer.install(Bundler.root, definition)
-
-  # Restore RUBY_ENGINE (limit the scope of this hack)
-  old_verbose, $VERBOSE = $VERBOSE, nil
-  begin
-    Object.const_set('RUBY_ENGINE', ruby_engine)
-  ensure
-    $VERBOSE = old_verbose
-  end
-  Gem.platforms = platforms
-  Gem.paths = gem_paths
 
   gem_paths = Dir["#{BUNDLE_PATH}/gems"]
   raise 'Gem path not found' if gem_paths.empty?
   raise "Found multiple gem paths: #{gem_paths}" if gem_paths.size > 1
   gem_path = gem_paths[0]
   puts "Found gems in #{gem_path}"
-
+  
   if package != 'org.ruboto.core' && JRUBY_JARS.none? { |f| File.exists? f }
     Dir.chdir gem_path do
       Dir['{activerecord-jdbc-adapter,jruby-openssl}-*'].each do |g|
@@ -417,24 +484,14 @@ Java::json.ext.ParserService.new.basicLoad(JRuby.runtime)
     end
   end
 
-
   FileUtils.rm_f BUNDLE_JAR
   Dir["#{gem_path}/*"].each_with_index do |gem_dir, i|
-    `jar #{i == 0 ? 'c' : 'u'}f #{BUNDLE_JAR} -C #{gem_dir}/lib .`
+    `jar #{i == 0 ? 'c' : 'u'}f "#{BUNDLE_JAR}" -C "#{gem_dir}/lib" .`
   end
   FileUtils.rm_rf BUNDLE_PATH
 end
 
 # Methods
-
-API_LEVEL_TO_VERSION = {
-    7 => '2.1', 8 => '2.2', 10 => '2.3.3', 11 => '3.0', 12 => '3.1',
-    13 => '3.2', 14 => '4.0', 15 => '4.0.3', 16 => '4.1.2', 17 => '4.2.2',
-}
-
-def sdk_level_name
-  API_LEVEL_TO_VERSION[sdk_level]
-end
 
 def sdk_level
   File.read(PROJECT_PROPS_FILE).scan(/(?:target=android-)(\d+)/)[0][0].to_i
@@ -482,36 +539,20 @@ end
 # Return nil if the package is not installed.
 def package_installed?(test = false)
   package_name = "#{package}#{'.tests' if test}"
-  %w( -0 -1 -2).each do |i|
-    path = "/data/app/#{package_name}#{i}.apk"
-    o = `adb shell ls -l #{path}`.chomp
-    if o =~ /^-rw-r--r-- system\s+system\s+(\d+)\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s+#{File.basename(path)}$/
-      installed_apk_size = $1.to_i
-      installed_timestamp = Time.parse($2)
-      apk_file = test ? TEST_APK_FILE : APK_FILE
-      if !File.exists?(apk_file) || (installed_apk_size == File.size(apk_file) &&
-          installed_timestamp >= File.mtime(apk_file))
-        return true
-      else
-        return false
-      end
-    end
-
-    sdcard_path = "/mnt/asec/#{package_name}#{i}/pkg.apk"
-    o = `adb shell ls -l #{sdcard_path}`.chomp
-    if o =~ /^-r-xr-xr-x system\s+root\s+(\d+)\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s+#{File.basename(sdcard_path)}$/
-      installed_apk_size = $1.to_i
-      installed_timestamp = Time.parse($2)
-      apk_file = test ? TEST_APK_FILE : APK_FILE
-      if !File.exists?(apk_file) || (installed_apk_size == File.size(apk_file) &&
-          installed_timestamp >= File.mtime(apk_file))
-        return true
-      else
-        return false
-      end
-    end
+  loop do
+    path_line = `adb shell pm path #{package_name}`.chomp
+    return nil if $? == 0 && path_line.empty?
+    break if $? == 0 && path_line =~ /^package:(.*)$/
+    sleep 0.5
   end
-  nil
+  path = $1
+  o = `adb shell ls -l #{path}`.chomp
+  raise "Unexpected ls output: #{o}" if o !~ APK_FILE_REGEXP
+  installed_apk_size = $1.to_i
+  installed_timestamp = Time.parse($2)
+  apk_file = test ? TEST_APK_FILE : APK_FILE
+  !File.exists?(apk_file) || (installed_apk_size == File.size(apk_file) &&
+      installed_timestamp >= File.mtime(apk_file))
 end
 
 def replace_faulty_code(faulty_file, faulty_code)
@@ -533,7 +574,7 @@ def build_apk(t, release)
   apk_file = release ? RELEASE_APK_FILE : APK_FILE
   if File.exist?(apk_file)
     changed_prereqs = t.prerequisites.select do |p|
-      File.file?(p) && !Dir[p].empty? && Dir[p].map { |f| File.mtime(f) }.max > File.mtime(APK_FILE)
+      File.file?(p) && !Dir[p].empty? && Dir[p].map { |f| File.mtime(f) }.max > File.mtime(apk_file)
     end
     return false if changed_prereqs.empty?
     changed_prereqs.each { |f| puts "#{f} changed." }
@@ -561,7 +602,7 @@ def install_apk
     install_retry_count = 0
     begin
       timeout 120 do
-        output = `adb install -r #{APK_FILE} 2>&1`
+        output = `adb install -r "#{APK_FILE}" 2>&1`
       end
     rescue Timeout::Error
       puts "Installing package #{package} timed out."
@@ -571,7 +612,7 @@ def install_apk
         retry
       end
       puts 'Trying one final time to install the package:'
-      output = `adb install -r #{APK_FILE} 2>&1`
+      output = `adb install -r "#{APK_FILE}" 2>&1`
     end
     if $? == 0 && output !~ failure_pattern && output =~ success_pattern
       clear_update
@@ -594,7 +635,7 @@ def install_apk
   install_retry_count = 0
   begin
     timeout 120 do
-      output = `adb install #{APK_FILE} 2>&1`
+      output = `adb install "#{APK_FILE}" 2>&1`
     end
   rescue Timeout::Error
     puts "Installing package #{package} timed out."
@@ -604,7 +645,7 @@ def install_apk
       retry
     end
     puts 'Trying one final time to install the package:'
-    output = `adb install #{APK_FILE} 2>&1`
+    output = `adb install "#{APK_FILE}" 2>&1`
   end
   puts output
   raise "Install failed (#{$?}) #{$1 ? "[#$1}]" : output}" if $? != 0 || output =~ failure_pattern || output !~ success_pattern
@@ -644,142 +685,4 @@ end
 def stop_app
   output = `adb shell ps | grep #{package} | awk '{print $2}' | xargs adb shell kill`
   output !~ /Operation not permitted/
-end
-
-def start_emulator
-  STDOUT.sync = true
-  # FIXME(uwe):  Use RBConfig instead
-  if `uname -m`.chomp == 'x86_64'
-    emulator_cmd = 'emulator64-arm'
-  else
-    emulator_cmd = 'emulator-arm'
-  end
-  
-  emulator_opts = '-partition-size 256'
-  if ENV['DISPLAY'].nil?
-    emulator_opts << ' -no-window -no-audio'
-  end
-
-  avd_name = "Android_#{sdk_level_name}"
-  new_snapshot = false
-  loop do
-    `killall -0 #{emulator_cmd} 2> /dev/null`
-    if $? == 0
-      `killall #{emulator_cmd}`
-      10.times do |i|
-        `killall -0 #{emulator_cmd} 2> /dev/null`
-        if $? != 0
-          break
-        end
-        if i == 3
-          print 'Waiting for emulator to die: ...'
-        elsif i > 3
-          print '.'
-        end
-        sleep 1
-      end
-      puts
-      `killall -0 #{emulator_cmd} 2> /dev/null`
-      if $? == 0
-        puts 'Emulator still running.'
-        `killall -9 #{emulator_cmd}`
-        sleep 1
-      end
-    end
-
-    if [17, 16, 15, 13, 11].include? sdk_level
-      abi_opt = '--abi armeabi-v7a'
-    elsif sdk_level == 10
-      abi_opt = '--abi armeabi'
-    end
-
-    unless File.exists? "#{ENV['HOME']}/.android/avd/#{avd_name}.avd"
-      puts "Creating AVD #{avd_name}"
-      heap_size = (File.read('AndroidManifest.xml') =~ /largeHeap/) ? 256 : 48
-      # FIXME(uwe):  Use Ruby instead.
-      # FIXME(uwe):  Only change the heap size to be larger.
-      # `sed -i.bak -e "s/vm.heapSize=[0-9]*/vm.heapSize=#{heap_size}/" #{ENV['ANDROID_HOME']}/platforms/*/*/*/hardware.ini`
-      `echo n | android create avd -a -n #{avd_name} -t android-#{sdk_level} #{abi_opt} -c 64M -s HVGA`
-      `sed -i.bak -e "s/vm.heapSize=[0-9]*/vm.heapSize=#{heap_size}/" #{ENV['HOME']}/.android/avd/#{avd_name}.avd/config.ini`
-      new_snapshot = true
-    end
-  
-    puts 'Start emulator'
-    system "emulator -avd #{avd_name} #{emulator_opts} &"
-  
-    3.times do |i|
-      sleep 1
-      `killall -0 #{emulator_cmd} 2> /dev/null`
-      if $? == 0
-        break
-      end
-      if i == 3
-        print 'Waiting for emulator: ...'
-      elsif i > 3
-          print '.'
-      end
-    end
-    puts
-    `killall -0 #{emulator_cmd} 2> /dev/null`
-    if $? != 0
-      puts 'Unable to start the emulator.  Retrying without loading snapshot.'
-      system "emulator -no-snapshot-load -avd #{avd_name} #{emulator_opts} &"
-      10.times do |i|
-        `killall -0 #{emulator_cmd} 2> /dev/null`
-        if $? == 0
-          new_snapshot = true
-          break
-        end
-        if i == 3
-          print 'Waiting for emulator: ...'
-        elsif i > 3
-            print '.'
-        end
-        sleep 1
-      end
-    end
-  
-    `killall -0 #{emulator_cmd} 2> /dev/null`
-    if $? == 0
-      print 'Emulator started: '
-      50.times do
-        if `adb get-state`.chomp == 'device'
-          break
-        end
-        print '.'
-        sleep 1
-      end
-      puts
-      if `adb get-state`.chomp == 'device'
-        break
-      end
-    end
-    puts 'Unable to start the emulator.'
-  end
-
-  if new_snapshot
-    puts 'Allow the emulator to calm down a bit.'
-    sleep 15
-  end
-  
-  system %Q{(
-    set +e
-    for i in 1 2 3 4 5 6 7 8 9 10 ; do
-      sleep 6
-      adb shell input keyevent 82 >/dev/null 2>&1
-      if [ "$?" == "0" ] ; then
-        set -e
-        adb shell input keyevent 82 >/dev/null 2>&1
-        adb shell input keyevent 4 >/dev/null 2>&1
-        exit 0
-      fi
-    done
-    echo "Failed to unlock screen"
-    set -e
-    exit 1
-  ) &}
-  
-  system "adb logcat > adb_logcat.log &"
-  
-  puts "Emulator #{avd_name} started OK."
 end
