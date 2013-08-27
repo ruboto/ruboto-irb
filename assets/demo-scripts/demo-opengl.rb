@@ -190,9 +190,5 @@ end
 # Needed because this is called from inside of Ruboto IRB
 #
 
-$irb.start_ruboto_activity :class_name => "OpenGLDemo"
-
-# The other option is the remove the line above and to replace
-# the "class OpenGLDemo" line with this:
-#   $irb.start_ruboto_activity "$glsurface" do
+$irb.start_ruboto_activity "OpenGLDemo"
 
