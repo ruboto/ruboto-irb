@@ -74,7 +74,7 @@ import android.widget.Toast;
 
 import org.ruboto.JRubyAdapter;
 
-public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickListener,
+public class IRB extends IRBEntryPointActivity implements OnItemClickListener,
 		OnTabChangeListener {
 	//////////////////////////////////////////////////////////////
 	// Stores names of traversed directories
@@ -170,11 +170,15 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		} 
 	}
 
+  private boolean configuredIRB = false;
+
   protected void fireRubotoActivity() {
+    if (configuredIRB) return;
     JRubyAdapter.put("$irb", this);
-    if(appStarted) return;
+//    if(getScriptInfo().isLoaded()) return;
     super.fireRubotoActivity();
     configScriptsDir(true);
+    configuredIRB = true;
   }
 
   public boolean rubotoAttachable() {
@@ -254,7 +258,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 				try {
 					irbOutput.append("=> ");
          	        JRubyAdapter.setScriptFilename("eval");
-					irbOutput.append(JRubyAdapter.execute(rubyCode));
+					irbOutput.append(runScriptlet(rubyCode));
 				} catch (RuntimeException e) {
           reportExecption(e);
 				}
@@ -329,6 +333,11 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 			irbOutput.append(ste.toString() + "\n");
 		}
 	}
+
+  private  String runScriptlet(String code) {
+    Object rtn = JRubyAdapter.runScriptlet(code);
+    return (String)JRubyAdapter.runRubyMethod(String.class, rtn, "inspect");
+  }
 
 	/*********************************************************************************************
 	 *
@@ -735,8 +744,7 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 		try {
 			irbOutput.append("=> ");
      	JRubyAdapter.setScriptFilename(currentScript.getName());
-			irbOutput.append(JRubyAdapter.execute(sourceEditor.getText()
-					.toString()));
+			irbOutput.append(runScriptlet(sourceEditor.getText().toString()));
 		} catch (RuntimeException e) {
 			reportExecption(e);
 		}
@@ -937,13 +945,13 @@ public class IRB extends org.ruboto.EntryPointActivity implements OnItemClickLis
 	 * Activity Results: Make activity result available to Ruby
 	 */
 
-	@Override
+/*	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		JRubyAdapter.defineGlobalVariable("$last_activity_result",
 				new ActivityResult(requestCode, resultCode, data));
 	}
-
+*/
 	public static class ActivityResult {
 		public int requestCode, resultCode;
 		public Intent data;
