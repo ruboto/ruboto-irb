@@ -26,11 +26,13 @@ $default_exception_handler = proc do |t, e|
 
 ruboto_import_widgets :LinearLayout, :TextView, :ToggleButton
 
-$irb.start_ruboto_activity("$irb_activity") do
+$irb.start_ruboto_activity do
   attr_reader :ruboto_java_instance
 
   def on_create(bundle)
     super
+    
+    @setting_toggle_state = false
 
     $ui_thread = java.lang.Thread.currentThread
     $ui_thread.setUncaughtExceptionHandler($default_exception_handler)
@@ -40,7 +42,7 @@ $irb.start_ruboto_activity("$irb_activity") do
       linear_layout(:orientation => :vertical) do
         @start_button = toggle_button :enabled => false, 
                           :layout => {:width= => :wrap_content}, 
-                          :on_click_listener => (proc{$server.toggle})
+                          :on_click_listener => (proc{$server.toggle unless @setting_toggle_state})
         @status_text = text_view :text => "Initializing..."
       end
     )
@@ -49,6 +51,9 @@ $irb.start_ruboto_activity("$irb_activity") do
   def set_status(status_text, button_enabled=@start_button.enabled?)
     @start_button.enabled = button_enabled
     @status_text.text = status_text
+    @setting_toggle_state = true
+    @start_button.checked = $server.running?
+    @setting_toggle_state = false
   end
 
   def start
@@ -399,4 +404,5 @@ Thread.with_large_stack do
   $irb_activity.runOnUiThread(proc{$irb_activity.set_status($server.running? ? "Server already running" : "Press to start a server", true)})
   $irb_activity.runOnUiThread(proc{$irb_activity.start})
 end
+
 
