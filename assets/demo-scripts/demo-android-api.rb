@@ -74,7 +74,7 @@ class RubotoActivity
   def self.launch_list(context, title, list_id, extra_text=nil)
     ruboto_import_widgets :LinearLayout, :TextView, :ListView
 
-    context.start_ruboto_activity(var) do
+    context.start_ruboto_activity do
       @@list_id = list_id
       @@extra_text = extra_text
 
