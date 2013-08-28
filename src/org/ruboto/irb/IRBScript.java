@@ -140,7 +140,8 @@ public class IRBScript extends Script {
 
     public String execute() throws IOException {
     	JRubyAdapter.setScriptFilename(getName());
-        return JRubyAdapter.execute(getContents());
+      Object rtn = JRubyAdapter.runScriptlet(getContents());
+      return (String)JRubyAdapter.runRubyMethod(String.class, rtn, "inspect");
     }
 
     public boolean delete() {
