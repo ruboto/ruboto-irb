@@ -6,9 +6,19 @@
 #
 #######################################################
 
-file_dir = $irb.getFilesDir.getAbsolutePath + "/scripts"
+class ScriptLaunch
+  def onCreate(b)
+    super
 
-$LOAD_PATH << file_dir unless $LOAD_PATH.include?(file_dir)
-$LOAD_PATH << "/sdcard/jruby" unless $LOAD_PATH.include?("/sdcard/jruby")
+    files_dir = getFilesDir.getAbsolutePath + "/scripts"
+    $LOAD_PATH << "/sdcard/jruby" unless $LOAD_PATH.include?("/sdcard/jruby")
+    $LOAD_PATH << files_dir unless $LOAD_PATH.include?(files_dir)
 
-load $irb.getIntent.getExtras.getString("org.ruboto.extra.SCRIPT_NAME")
+    old_irb, $irb = $irb, self
+    load getIntent.getExtras.getString(org.ruboto.irb.ShortcutBuilder::SCRIPT_NAME)
+    $irb = old_irb
+    
+    finish
+  end
+end
+
