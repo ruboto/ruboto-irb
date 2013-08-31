@@ -16,7 +16,7 @@
                 <data android:pathPattern='.*\\.rb'/>
             </intent-filter>
         </activity>
-        <activity android:name='ShortcutBuilder'>
+        <activity android:name='ShortcutBuilder' android:configChanges='orientation|screenSize'>
             <intent-filter>
                 <action android:name='android.intent.action.CREATE_SHORTCUT'/>
                 <category android:name='android.intent.category.DEFAULT'/>
