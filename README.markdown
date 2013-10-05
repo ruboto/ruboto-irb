@@ -20,7 +20,7 @@ Copy *local.properties.EXAMPLE* to *local.properties* and edit *local.properties
 
 ###Override default memory settings (SDK Version 4 only):
 
-  If your are using API SDK version 4 (or earlier?), you'll probably need to override the low default memory setting for that platform (more recent SDKs default to 1024 MB and generally do not need to be changed). To do this:
+  If you are using API SDK version 4 (or earlier?), you'll probably need to override the low default memory setting for that platform (more recent SDKs default to 1024 MB and generally do not need to be changed). To do this:
 
      $ vi $ANDROID_SDK_PATH/platforms/android-4/tools/dx
      #
