@@ -11,6 +11,7 @@ public class IRBEntryPointActivity extends android.app.Activity {
       fireRubotoActivity();
     } else {
       showSplash();
+      finish();
     }
     super.onResume();
   }
@@ -19,7 +20,16 @@ public class IRBEntryPointActivity extends android.app.Activity {
   }
 
   private void showSplash() {
-    Intent splashIntent = new Intent(this, SplashActivity.class);
-    startActivity(splashIntent);
+      Intent splashIntent = new Intent(this, SplashActivity.class);
+      splashIntent.putExtra(Intent.EXTRA_INTENT, futureIntent());
+      startActivity(splashIntent);
+  }
+
+  protected Intent futureIntent() {
+      if (!getIntent().getAction().equals(Intent.ACTION_VIEW)) {
+          return new Intent(getIntent()).setAction(Intent.ACTION_VIEW);
+      } else {
+          return getIntent();
+      }
   }
 }
