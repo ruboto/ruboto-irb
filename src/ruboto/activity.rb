@@ -28,7 +28,7 @@ module Ruboto
         java_import 'org.ruboto.RubotoDialog'
         options[:java_class] = RubotoDialog
       end
- 
+
       options[:theme] = android.R.style::Theme_Dialog unless options.key?(:theme)
 
       start_ruboto_activity(class_name, options, &block)
@@ -46,7 +46,7 @@ module Ruboto
 
       # FIXME(uwe):  Deprecated.  Remove june 2014.
       if options[:class_name]
-        puts "\nDEPRECATON: The ':class_name' option is deprecated.  Put the class name in the first argument instead."
+        puts "\nDEPRECATION: The ':class_name' option is deprecated.  Put the class name in the first argument instead."
       end
 
       java_class = options.delete(:java_class) || RubotoActivity
@@ -58,11 +58,13 @@ module Ruboto
       # EMXIF
 
       script_name = options.delete(:script)
+      extras = options.delete(:extras)
       raise "Unknown options: #{options}" unless options.empty?
 
       if class_name.nil? && block_given?
+        src_desc = source_descriptor(block)
         class_name =
-            "#{java_class.name.split('::').last}_#{source_descriptor(block)[0].split('/').last.gsub(/[.-]+/, '_')}_#{source_descriptor(block)[1]}"
+            "#{java_class.name.split('::').last}_#{src_desc[0].split('/').last.gsub(/[.-]+/, '_')}_#{src_desc[1]}"
       end
 
       class_name = class_name.to_s
@@ -77,14 +79,15 @@ module Ruboto
       i.putExtra(Ruboto::THEME_KEY, theme) if theme
       i.putExtra(Ruboto::CLASS_NAME_KEY, class_name) if class_name
       i.putExtra(Ruboto::SCRIPT_NAME_KEY, script_name) if script_name
+      extras.each { |k, v| i.putExtra(k.to_s, v) } if extras
       startActivity i
       self
     end
 
     private
 
-    def source_descriptor(proc)
-      if md = /^#<Proc:0x[0-9A-Fa-f]+@(.+):(\d+)(?: \(lambda\))?>$/.match(proc.inspect)
+    def source_descriptor(src_proc)
+      if (md = /^#<Proc:0x[0-9A-Fa-f-]+@(.+):(\d+)(?: \(lambda\))?>$/.match(src_proc.inspect))
         filename, line = md.captures
         return filename, line.to_i
       end

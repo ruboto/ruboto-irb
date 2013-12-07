@@ -47,26 +47,36 @@ View.class_eval do
   def configure(context, params = {})
     if width = params.delete(:width)
       getLayoutParams.width = View.convert_constant(width)
+      puts "\nDEPRECATION: The ':width' option is deprecated.  Use :layout => {:width => XX} instead."
     end
 
     if height = params.delete(:height)
       getLayoutParams.height = View.convert_constant(height)
+      puts "\nDEPRECATION: The ':height' option is deprecated.  Use :height => {:width => XX} instead."
     end
 
     if margins = params.delete(:margins)
       getLayoutParams.set_margins(*margins)
+      puts "\nDEPRECATION: The ':margins' option is deprecated.  Use :layout => {:margins => XX} instead."
     end
 
     if layout = params.delete(:layout)
       lp = getLayoutParams
       layout.each do |k, v|
-        method_name = k.to_s.gsub(/_([a-z])/) { $1.upcase }
+        method_name = k.to_s
+        if lp.respond_to?("#{k}=")
+          method_name = "#{k}="
+        elsif method_name.include?("_")
+          method_name = method_name.gsub(/_([a-z])/){$1.upcase}
+          method_name = "#{method_name}=" if lp.respond_to?("#{method_name}=")
+        end
+          
         invoke_with_converted_arguments(lp, method_name, v)
       end
     end
 
     params.each do |k, v|
-      method_name = "set#{k.to_s.gsub(/(^|_)([a-z])/) { $2.upcase }}"
+      method_name = self.respond_to?("#{k}=") ? "#{k}=" : k
       invoke_with_converted_arguments(self, method_name, v)
     end
   end
@@ -109,7 +119,7 @@ def ruboto_import_widget(class_name, package_name='android.widget')
 
   return unless klass
 
-  RubotoActivity.class_eval "
+  method_str = "
      def #{(class_name.to_s.gsub(/([A-Z])/) { '_' + $1.downcase })[1..-1]}(params={})
         if force_style = params.delete(:default_style)
           rv = #{class_name}.new(self, nil, force_style)
@@ -134,6 +144,13 @@ def ruboto_import_widget(class_name, package_name='android.widget')
         rv
      end
    "
+  RubotoActivity.class_eval method_str
+
+  # FIXME(uwe): Remove condition when we stop support for api level < 11
+  if android.os.Build::VERSION::SDK_INT >= 11
+    android.app.Fragment.class_eval method_str.gsub('self', 'activity')
+  end
+  # EMXIF
 
   setup_list_view if class_name == :ListView
   setup_spinner if class_name == :Spinner
@@ -166,14 +183,12 @@ def setup_image_button
 end
 
 def setup_list_view
-  Java::android.widget.ListView.__persistent__ = true
-  Java::android.widget.ListView.class_eval do
+  android.widget.ListView.__persistent__ = true
+  android.widget.ListView.class_eval do
     def configure(context, params = {})
       if (list = params.delete(:list))
-        @adapter_list = Java::java.util.ArrayList.new
-        @adapter_list.addAll(list)
         item_layout = params.delete(:item_layout) || R::layout::simple_list_item_1
-        params[:adapter] = Java::android.widget.ArrayAdapter.new(context, item_layout, @adapter_list)
+        params[:adapter] = android.widget.ArrayAdapter.new(context, item_layout, list)
       end
       super(context, params)
     end
@@ -188,19 +203,14 @@ def setup_list_view
 end
 
 def setup_spinner
-  Java::android.widget.Spinner.__persistent__ = true
-  Java::android.widget.Spinner.class_eval do
-    attr_reader :adapter, :adapter_list
-
+  android.widget.Spinner.__persistent__ = true
+  android.widget.Spinner.class_eval do
     def configure(context, params = {})
-      if params.has_key? :list
-        @adapter_list = Java::java.util.ArrayList.new
-        @adapter_list.addAll(params[:list])
-        item_layout = params.delete(:item_layout) || R::layout::simple_spinner_item
-        @adapter = Java::android.widget.ArrayAdapter.new(context, item_layout, @adapter_list)
-        @adapter.setDropDownViewResource(params.delete(:dropdown_layout) || R::layout::simple_spinner_dropdown_item)
-        setAdapter @adapter
-        params.delete :list
+      if (list = params.delete(:list))
+        item_layout = params.delete(:item_layout)
+        params[:adapter] = android.widget.ArrayAdapter.new(context, item_layout || R::layout::simple_spinner_item, list)
+        dropdown_layout = params.delete(:dropdown_layout)
+        params[:adapter].setDropDownViewResource(dropdown_layout) if dropdown_layout
       end
       super(context, params)
     end
