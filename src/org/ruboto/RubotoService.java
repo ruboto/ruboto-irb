@@ -86,6 +86,24 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
     }
   }
 
+    public void onDestroy() {
+        if (ScriptLoader.isCalledFromJRuby()) {
+            super.onDestroy();
+            return;
+        }
+        if (!JRubyAdapter.isInitialized()) {
+            Log.i("Method called before JRuby runtime was initialized: RubotoActivity#onDestroy");
+            super.onDestroy();
+            return;
+        }
+        String rubyClassName = scriptInfo.getRubyClassName();
+        if (rubyClassName == null) {
+            super.onDestroy();
+            return;
+        }
+        ScriptLoader.callOnDestroy(this);
+    }
+
 
   /****************************************************************************************
    * 
@@ -100,32 +118,17 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
     }
     String rubyClassName = scriptInfo.getRubyClassName();
     if (rubyClassName == null) {super.onConfigurationChanged(newConfig); return;}
-    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_configuration_changed}")) {
-      JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_configuration_changed", newConfig);
+    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onConfigurationChanged}")) {
+      JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onConfigurationChanged", newConfig);
     } else {
-      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onConfigurationChanged}")) {
-        JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onConfigurationChanged", newConfig);
+      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_configuration_changed}")) {
+        JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_configuration_changed", newConfig);
       } else {
-        {super.onConfigurationChanged(newConfig); return;}
-      }
-    }
-  }
-
-  public void onDestroy() {
-    if (ScriptLoader.isCalledFromJRuby()) {super.onDestroy(); return;}
-    if (!JRubyAdapter.isInitialized()) {
-      Log.i("Method called before JRuby runtime was initialized: RubotoService#onDestroy");
-      {super.onDestroy(); return;}
-    }
-    String rubyClassName = scriptInfo.getRubyClassName();
-    if (rubyClassName == null) {super.onDestroy(); return;}
-    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_destroy}")) {
-      JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_destroy");
-    } else {
-      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onDestroy}")) {
-        JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onDestroy");
-      } else {
-        {super.onDestroy(); return;}
+        if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(true).any?{|m| m.to_sym == :on_configuration_changed}")) {
+          JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_configuration_changed", newConfig);
+        } else {
+          JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onConfigurationChanged", newConfig);
+        }
       }
     }
   }
@@ -138,13 +141,17 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
     }
     String rubyClassName = scriptInfo.getRubyClassName();
     if (rubyClassName == null) {super.onLowMemory(); return;}
-    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_low_memory}")) {
-      JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_low_memory");
+    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onLowMemory}")) {
+      JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onLowMemory");
     } else {
-      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onLowMemory}")) {
-        JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onLowMemory");
+      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_low_memory}")) {
+        JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_low_memory");
       } else {
-        {super.onLowMemory(); return;}
+        if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(true).any?{|m| m.to_sym == :on_low_memory}")) {
+          JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_low_memory");
+        } else {
+          JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onLowMemory");
+        }
       }
     }
   }
@@ -157,13 +164,17 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
     }
     String rubyClassName = scriptInfo.getRubyClassName();
     if (rubyClassName == null) {super.onRebind(intent); return;}
-    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_rebind}")) {
-      JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_rebind", intent);
+    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onRebind}")) {
+      JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onRebind", intent);
     } else {
-      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onRebind}")) {
-        JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onRebind", intent);
+      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_rebind}")) {
+        JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_rebind", intent);
       } else {
-        {super.onRebind(intent); return;}
+        if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(true).any?{|m| m.to_sym == :on_rebind}")) {
+          JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "on_rebind", intent);
+        } else {
+          JRubyAdapter.runRubyMethod(scriptInfo.getRubyInstance(), "onRebind", intent);
+        }
       }
     }
   }
@@ -176,13 +187,17 @@ public class RubotoService extends android.app.Service implements org.ruboto.Rub
     }
     String rubyClassName = scriptInfo.getRubyClassName();
     if (rubyClassName == null) return super.onUnbind(intent);
-    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_unbind}")) {
-      return (Boolean) JRubyAdapter.runRubyMethod(Boolean.class, scriptInfo.getRubyInstance(), "on_unbind", intent);
+    if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onUnbind}")) {
+      return (Boolean) JRubyAdapter.runRubyMethod(Boolean.class, scriptInfo.getRubyInstance(), "onUnbind", intent);
     } else {
-      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :onUnbind}")) {
-        return (Boolean) JRubyAdapter.runRubyMethod(Boolean.class, scriptInfo.getRubyInstance(), "onUnbind", intent);
+      if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(false).any?{|m| m.to_sym == :on_unbind}")) {
+        return (Boolean) JRubyAdapter.runRubyMethod(Boolean.class, scriptInfo.getRubyInstance(), "on_unbind", intent);
       } else {
-        return super.onUnbind(intent);
+        if ((Boolean)JRubyAdapter.runScriptlet(rubyClassName + ".instance_methods(true).any?{|m| m.to_sym == :on_unbind}")) {
+          return (Boolean) JRubyAdapter.runRubyMethod(Boolean.class, scriptInfo.getRubyInstance(), "on_unbind", intent);
+        } else {
+          return (Boolean) JRubyAdapter.runRubyMethod(Boolean.class, scriptInfo.getRubyInstance(), "onUnbind", intent);
+        }
       }
     }
   }

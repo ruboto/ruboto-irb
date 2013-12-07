@@ -270,7 +270,9 @@ public class JRubyAdapter {
                 }
 
                 addLoadPath(scriptsDirName(appContext));
-    	          put("$package_name", appContext.getPackageName());
+                put("$package_name", appContext.getPackageName());
+
+                runScriptlet("::RUBOTO_JAVA_PROXIES = {}");
 
                 initialized = true;
             } catch (ClassNotFoundException e) {
@@ -353,7 +355,7 @@ public class JRubyAdapter {
     // FIXME(uwe):  Remove when we stop supporting Ruby 1.8
     @Deprecated public static boolean isRubyOneNine() {
     String rv = ((String)get("RUBY_VERSION"));
-        return rv.startsWith("2.0.") || rv.startsWith("1.9.");
+        return rv.startsWith("2.1.") || rv.startsWith("2.0.") || rv.startsWith("1.9.");
     }
 
     static void printStackTrace(Throwable t) {
