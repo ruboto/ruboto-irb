@@ -18,6 +18,9 @@ module Kernel
   def method_missing(method, *args, &block)
     return @ruboto_java_instance.send(method, *args, &block) if @ruboto_java_instance && @ruboto_java_instance.respond_to?(method)
     old_method_missing(method, *args, &block)
+    rescue => e
+      puts e.message
+      puts e.backtrace.join("\n")
   end
 end
 
