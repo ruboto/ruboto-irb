@@ -71,6 +71,9 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.FileReader;
 
 import org.ruboto.JRubyAdapter;
 
@@ -236,6 +239,22 @@ public class IRB extends IRBEntryPointActivity implements OnItemClickListener,
 		editorSetUp();
 		scriptsListSetUp();
 
+    Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+        public void uncaughtException(Thread t, Throwable e) {
+          try {
+            BufferedWriter buffer = new BufferedWriter(new FileWriter(IRBScript.getDir() + "/error.log"));
+            buffer.write(e.getMessage() + "\n");
+            for (java.lang.StackTraceElement ste : e.getStackTrace()) {
+              buffer.append(ste.toString() + "\n");
+            }
+            buffer.close();
+          } catch (IOException ioe) {
+          }
+          System.exit(0);
+        }
+      }
+    );
+
     autoLoadScript();
   }
 
@@ -266,6 +285,22 @@ public class IRB extends IRBEntryPointActivity implements OnItemClickListener,
 				irbInput.setText("");
 			}
 		});
+
+    File err = new File(IRBScript.getDir() + "/error.log");
+    try {
+      BufferedReader buffer = new BufferedReader(new FileReader(err), 8192);
+      irbOutput.append("Previous run exited:\n");
+      while (true) {
+        String line = buffer.readLine();
+			  if (line == null) break;
+        irbOutput.append(line);
+        irbOutput.append("\n");
+      }
+      buffer.close();
+      err.delete();
+    } catch (java.io.FileNotFoundException fe) {
+    } catch (java.io.IOException ioe) {
+    }
 	}
 
 	private void editorSetUp() {
