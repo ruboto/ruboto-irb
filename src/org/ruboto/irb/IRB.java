@@ -233,7 +233,7 @@ public class IRB extends IRBEntryPointActivity implements OnItemClickListener,
 		  }));
 
 	    JRubyAdapter.setOutputStream(printStream);
-        irbOutput.append(">> ");
+      irbOutput.append(">> ");
 
 		configScriptsDir(false);
 		editorSetUp();
@@ -251,6 +251,17 @@ public class IRB extends IRBEntryPointActivity implements OnItemClickListener,
           } catch (IOException ioe) {
           }
           System.exit(0);
+        }
+      }
+    );
+
+    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+        public void uncaughtException(Thread t, Throwable e) {
+          IRB.appendToIRB(e.getMessage() + "\n");
+          for (java.lang.StackTraceElement ste : e.getStackTrace()) {
+            IRB.appendToIRB(ste.toString() + "\n");
+          }
+          IRB.appendToIRB("\n>> ");
         }
       }
     );
