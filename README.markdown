@@ -4,7 +4,7 @@
 
 ##Installation
 
-The simplest way to get started with ruboto-irb is to install a prebuilt binary package.  These packages can be found at [https://github.com/ruboto/ruboto-irb/tree/master/apks](https://github.com/ruboto/ruboto-irb/tree/master/apks).
+The simplest way to get started with ruboto-irb is to install a prebuilt binary package.  These packages can be found at [https://github.com/ruboto/ruboto-irb/tree/master/dist](https://github.com/ruboto/ruboto-irb/tree/master/dist).
 
 If you'd like more control over the build and installation process, you can do it manually using the following instructions.
 
