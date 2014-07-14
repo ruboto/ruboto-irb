@@ -19,9 +19,11 @@ class SampleActivity
 
     self.content_view =
         linear_layout :orientation => :vertical do
-          @text_view = text_view :text => 'What hath Matz wrought?', :id => 42, :width => :match_parent,
+          @text_view = text_view :text => 'What hath Matz wrought?', :id => 42, 
+                                 :layout => {:width => :match_parent},
                                  :gravity => :center, :text_size => 48.0
-          button :text => 'M-x butterfly', :width => :match_parent, :id => 43, :on_click_listener => proc { butterfly }
+          button :text => 'M-x butterfly', :layout => {:width => :match_parent}, 
+                                 :id => 43, :on_click_listener => proc { butterfly }
         end
   rescue
     puts "Exception creating activity: #{$!}"
@@ -36,4 +38,4 @@ class SampleActivity
   end
 end
 
-$irb.start_ruboto_activity :class_name => "SampleActivity"
+$irb.start_ruboto_activity "SampleActivity"
