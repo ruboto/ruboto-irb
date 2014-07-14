@@ -65,5 +65,5 @@ class CameraDemo
   end
 end
 
-$irb.start_ruboto_activity "$camera_demo", RubotoActivity, R.style::Theme_NoTitleBar_Fullscreen, 
-                             :class_name => "CameraDemo"
+$irb.start_ruboto_activity "CameraDemo", :theme => R.style::Theme_NoTitleBar_Fullscreen
+
