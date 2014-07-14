@@ -176,15 +176,15 @@ class CrapsActivity
       end
       @point_view = text_view :text => "Come-out"
       linear_layout(:orientation => :horizontal) do
-        button :text => "Roll", :width => :wrap_content, :on_click_listener => (proc{roll}) 
+        button :text => "Roll", :layout => {:width => :wrap_content}, :on_click_listener => (proc{roll}) 
         @roll_view = text_view :text => ""
       end
-      button :text => "Place a Bet", :width => :wrap_content, :on_click_listener => (proc{launch_bets})
+      button :text => "Place a Bet", :layout => {:width => :wrap_content}, :on_click_listener => (proc{launch_bets})
     end)
   end
 
   def launch_bets
-    start_ruboto_activity :class_name => "BetList"
+    start_ruboto_activity "BetList"
   end
 
   def roll
@@ -231,7 +231,7 @@ class BetList
 
   def item_clicked(pos)
     MoneyDialog.klass = $AVAILABLE_BETS[pos]
-    start_ruboto_activity :class_name => "MoneyDialog"
+    start_ruboto_activity "MoneyDialog"
     finish
   end
 end
@@ -262,4 +262,4 @@ class MoneyDialog
   end
 end
 
-$irb.start_ruboto_activity :class_name => "CrapsActivity"
+$irb.start_ruboto_activity "CrapsActivity"
