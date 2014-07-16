@@ -164,7 +164,7 @@ end
 
 ################################################################################
 
-$irb.start_ruboto_activity("$ruboto_irb") do
+$irb.start_ruboto_activity do
   attr_reader :ruboto_java_instance
 
   #
@@ -182,14 +182,15 @@ $irb.start_ruboto_activity("$ruboto_irb") do
     @cursor = 0
 
     @tabs = TabHost.new(@ruboto_java_instance, nil) # Needs to be created this way to avoid bug introduced Android >= 3.0
-    @tab_container = linear_layout(:orientation => :vertical, :height => :fill_parent, 
+    @tab_container = linear_layout(:orientation => :vertical, :layout => {:height => :fill_parent}, 
                                    :parent => @tabs, :background_color => android.graphics.Color::BLACK)
 
     tab_widget(:id => AndroidIds::tabs, :parent => @tab_container)
-    frame_layout(:id => AndroidIds::tabcontent, :height => :fill_parent, :parent => @tab_container) do
-      linear_layout(:id => 55555, :height => :fill_parent, :orientation => :vertical) do
+    frame_layout(:id => AndroidIds::tabcontent, :layout => {:height => :fill_parent}, :parent => @tab_container) do
+      linear_layout(:id => 55555, :layout => {:height => :fill_parent}, :orientation => :vertical) do
         @irb_edit = edit_text(:lines => 1, :on_key_listener => (proc{|v,kc,e| my_key_listener(v,kc,e)}))
-        @irb_text = text_view(:text => "#{explanation_text}\n\n>> ", :height => :fill_parent, 
+        @irb_text = text_view(:text => "#{explanation_text}\n\n>> ", 
+                        :layout => {:height => :fill_parent}, 
                         :gravity => (Gravity::BOTTOM | Gravity::CLIP_VERTICAL), 
                         :text_color => android.graphics.Color::WHITE,
                         :movement_method => ScrollingMovementMethod.new)
