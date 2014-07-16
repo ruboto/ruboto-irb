@@ -41,7 +41,7 @@ class Activity
   end
 end
 
-$irb.start_ruboto_activity("$source_picker") do
+$irb.start_ruboto_activity do
   def on_create(b)
     super
     setTitle "Script Market - Select a source"
@@ -62,7 +62,7 @@ $irb.start_ruboto_activity("$source_picker") do
 
   def on_options_item_selected(mi)
     case mi.title.to_s
-    when "About" then start_ruboto_activity(:class_name => "AboutActivity")
+    when "About" then start_ruboto_activity("AboutActivity")
     when "Add Github Source" then edit_github_source
     when "Add Web Source" then edit_web_source
     end
@@ -124,7 +124,7 @@ $irb.start_ruboto_activity("$source_picker") do
   end 
 
   def launch_script_list(list, &block)
-    start_ruboto_activity("$script_list") do
+    start_ruboto_activity do
       @@block = block
       @@list = list
 
@@ -195,7 +195,7 @@ $irb.start_ruboto_activity("$source_picker") do
 
   def edit_github_source(name="", user="", project="", branch="", dir="")
     caller = self
-    start_ruboto_activity("$edit_github_source") do
+    start_ruboto_activity do
       @@name = name
       @@user = user
       @@project = project
@@ -250,7 +250,7 @@ $irb.start_ruboto_activity("$source_picker") do
 
   def edit_web_source(name="", site="", list_path="", get_path="")
     caller = self
-    start_ruboto_activity("$edit_web_source") do
+    start_ruboto_activity do
       @@name = name
       @@site = site
       @@list_path = list_path
