@@ -25,14 +25,14 @@ class ScriptList
     super
     setTitle "Ruboto Scripts"
     setContentView(list_view :list => Dir.glob("*.rb").sort, 
-                              :on_item_click_listener => (proc{|av, v, p, i| ScriptEditor.edit(self, v.text)}))
+                              :on_item_click_listener => (proc{|av, v, p, i| ScriptEditor.edit(self, v.text.to_s)}))
   end
 end
 
 class ScriptEditor
   def self.edit(context, script)
     @@script = script
-    context.start_ruboto_activity :class_name => "ScriptEditor"
+    context.start_ruboto_activity "ScriptEditor"
   end
 
   def page(name)
@@ -81,4 +81,4 @@ class ScriptEditor
   end 
 end
 
-$irb.start_ruboto_activity :class_name => "ScriptList"
+$irb.start_ruboto_activity "ScriptList"
