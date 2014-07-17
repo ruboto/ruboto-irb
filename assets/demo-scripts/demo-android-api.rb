@@ -85,7 +85,7 @@ class RubotoActivity
           linear_layout(:orientation => :vertical) do
             text_view(:text => @@extra_text) if @@extra_text
             list_view(:list => @@lists[@@list_id], 
-                      :on_item_click_listener => (proc{|av, v, p, i| RubotoActivity.resolve_click self, v.getText}))
+                      :on_item_click_listener => (proc{|av, v, p, i| RubotoActivity.resolve_click self, v.text.to_s}))
           end)
       end
     end
@@ -187,13 +187,13 @@ class Forwarding
       linear_layout(:orientation => :vertical) do
         text_view :text => "Press the button to go forward to the next activity.  This activity will stop, so you will no longer see it when going back."
         linear_layout(:gravity => android.view.Gravity::CENTER_HORIZONTAL) do
-        button :text => "Go", :width => :wrap_content, :on_click_listener => (proc{|v| my_click(v)})
+        button :text => "Go", :layout => {:width => :wrap_content}, :on_click_listener => (proc{|v| my_click(v)})
       end
     end)
   end
 
   def my_click(view)
-    self.start_ruboto_activity "$forwarding2" do
+    self.start_ruboto_activity do
       def on_create (bundle)
         super
         setTitle "App/Activity/Forwarding"
@@ -422,7 +422,7 @@ class MorseCode
     setContentView(
       linear_layout(:orientation => :vertical) do
         @et = edit_text
-        button :text => "Vibrate", :width => :wrap_content, 
+        button :text => "Vibrate", :layout => {:width => :wrap_content}, 
                  :on_click_listener => (proc{|v| handle_click(v)})
       end)
   end
@@ -602,12 +602,12 @@ class ChronometerDemo
     setTitle "Views/Chronometer"
     setContentView(
       linear_layout(:orientation => :vertical, :gravity => Gravity::CENTER_HORIZONTAL) do
-        @c = chronometer :format => "Initial format: %s", :width => :wrap_content, :padding => [0,30,0,30] 
-        button :text => "Start", :width => :wrap_content, :on_click_listener => proc{@c.start}
-        button :text => "Stop", :width => :wrap_content, :on_click_listener => proc{@c.stop}
-        button :text => "Reset", :width => :wrap_content, :on_click_listener => proc{@c.setBase SystemClock.elapsedRealtime}
-        button :text => "Set format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat("Formatted time (%s)")}
-        button :text => "Clear format string", :width => :wrap_content, :on_click_listener => proc{@c.setFormat(nil)}
+        @c = chronometer :format => "Initial format: %s", :layout => {:width => :wrap_content}, :padding => [0,30,0,30] 
+        button :text => "Start", :layout => {:width => :wrap_content}, :on_click_listener => proc{@c.start}
+        button :text => "Stop", :layout => {:width => :wrap_content}, :on_click_listener => proc{@c.stop}
+        button :text => "Reset", :layout => {:width => :wrap_content}, :on_click_listener => proc{@c.setBase SystemClock.elapsedRealtime}
+        button :text => "Set format string", :layout => {:width => :wrap_content}, :on_click_listener => proc{@c.setFormat("Formatted time (%s)")}
+        button :text => "Clear format string", :layout => {:width => :wrap_content}, :on_click_listener => proc{@c.setFormat(nil)}
       end)
   end
 end
@@ -619,10 +619,10 @@ class Buttons
     setTitle "Views/Buttons"
     setContentView(
       linear_layout(:orientation => :vertical) do
-        button :text => "Normal", :width => :wrap_content
-        button :text => "Small", :width => :wrap_content, 
+        button :text => "Normal", :layout => {:width => :wrap_content}
+        button :text => "Small", :layout => {:width => :wrap_content}, 
                :default_style => JavaUtilities.get_proxy_class("android.R$attr")::buttonStyleSmall
-        toggle_button :width => :wrap_content
+        toggle_button :layout => {:width => :wrap_content}
       end)
   end
 end
@@ -641,8 +641,8 @@ class DateDialog
     setContentView(
       linear_layout(:orientation => :vertical) do
         @tv = text_view :text => @time.strftime("%m-%d-%Y %R")
-        button :text => "change the date", :width => :wrap_content, :on_click_listener => proc{date_picker.show}
-        button :text => "change the time", :width => :wrap_content, :on_click_listener => proc{time_picker.show}
+        button :text => "change the date", :layout => {:width => :wrap_content}, :on_click_listener => proc{date_picker.show}
+        button :text => "change the time", :layout => {:width => :wrap_content}, :on_click_listener => proc{time_picker.show}
       end)
   end
 
