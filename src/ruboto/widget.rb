@@ -76,7 +76,10 @@ View.class_eval do
     end
 
     params.each do |k, v|
-      method_name = self.respond_to?("#{k}=") ? "#{k}=" : k
+      setter_method = "set#{k.to_s.gsub(/(^|_)([a-z])/) { $2.upcase }}"
+      assign_method = "#{k}="
+      method_name = self.respond_to?(assign_method) ? assign_method :
+          (self.respond_to?(setter_method) ? setter_method : k)
       invoke_with_converted_arguments(self, method_name, v)
     end
   end
@@ -194,8 +197,8 @@ def setup_list_view
     end
 
     def reload_list(list)
-      @adapter_list.clear
-      @adapter_list.addAll(list)
+      adapter.clear
+      adapter.addAll(list)
       adapter.notifyDataSetChanged
       invalidate
     end
@@ -216,9 +219,9 @@ def setup_spinner
     end
 
     def reload_list(list)
-      @adapter.clear
-      @adapter.addAll(list)
-      @adapter.notifyDataSetChanged
+      adapter.clear
+      adapter.addAll(list)
+      adapter.notifyDataSetChanged
       invalidate
     end
   end
