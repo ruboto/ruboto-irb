@@ -12,17 +12,10 @@ public class RubotoBroadcastReceiver extends android.content.BroadcastReceiver i
     }
 
     public RubotoBroadcastReceiver() {
-        this(null);
-    }
-
-    public RubotoBroadcastReceiver(String name) {
         super();
-
-        if (name != null) {
-            scriptInfo.setScriptName(name);
-            if (JRubyAdapter.isInitialized()) {
-                ScriptLoader.loadScript(this);
-            }
+        scriptInfo.setRubyClassName(getClass().getSimpleName());
+        if (JRubyAdapter.isInitialized()) {
+            ScriptLoader.loadScript(this);
         }
     }
 
