@@ -647,12 +647,12 @@ class DateDialog
   end
 
   def date_picker
-    @date_set_listener ||= proc{|v, y, m, d| @tv.text = ("%d-%d-%d #{@tv.text.split(' ')[1]}" % [m+1, d, y])}
+    @date_set_listener ||= proc{|v, y, m, d| @tv.text = ("%d-%d-%d #{@tv.text.to_s.split(' ')[1]}" % [m+1, d, y])}
     @date_picker ||= DatePickerDialog.new(@ruboto_java_instance, @date_set_listener, @time.year, @time.month-1, @time.day)
   end
 
   def time_picker
-    @time_set_listener ||= proc{|v, h, m| @tv.text = ("#{@tv.text.split(' ')[0]} %02d:%02d" % [h, m])}
+    @time_set_listener ||= proc{|v, h, m| @tv.text = ("#{@tv.text.to_s.split(' ')[0]} %02d:%02d" % [h, m])}
     @time_picker ||= TimePickerDialog.new(@ruboto_java_instance, @time_set_listener, @time.hour, @time.min, false)
   end
 end
