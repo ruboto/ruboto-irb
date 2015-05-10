@@ -24,6 +24,7 @@
 					android:id="@+id/irb_edittext"
           android:imeOptions="actionGo"
           android:inputType="text"
+          android:typeface="monospace"
 					android:layout_width="fill_parent"
 					android:layout_height="wrap_content"
 				/>
@@ -34,6 +35,7 @@
 					android:gravity="bottom|clip_vertical"
 	    			android:textColor="#ffffffff"
 	    			android:scrollbars="vertical"
+          			android:typeface="monospace"
 				/>
 			</LinearLayout>
 			<LinearLayout
