@@ -1,7 +1,9 @@
 *~
+*.iml
 *.keystore
 .DS_Store
 /.gradle
 /.idea
+/build
 local.properties
 
