@@ -7,5 +7,6 @@ local.properties
 generated_libs
 .rvmrc
 .DS_Store
-.idea
+/.gradle
+/.idea
 test/coverage.em
